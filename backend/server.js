@@ -1,3 +1,5 @@
+// quick-queue/backend/server.js
+
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -27,6 +29,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`server running on port ${PORT}`);
-  console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
 });
