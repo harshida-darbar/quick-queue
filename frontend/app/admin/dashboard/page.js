@@ -1,3 +1,4 @@
+// quick-queue/frontend/app/admin/dashboard/page.js
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 
 export default function page() {

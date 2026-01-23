@@ -1,8 +1,9 @@
+// quick-queue/frontend/app/organizer/dashboard/page.js
 "use client";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { useAuth } from "@/app/context/Authcontext";
 import React, { useState } from "react";
-import { IoExitOutline, IoBusinessOutline } from "react-icons/io5";
+import { IoBusinessOutline } from "react-icons/io5";
 
 function OrganizerDashboard() {
   const { user, logout } = useAuth();
@@ -12,7 +13,7 @@ function OrganizerDashboard() {
   return (
     <ProtectedRoute allowedRoles={[2]}>
       <div className="min-h-screen flex flex-col bg-[#F6F3FB]">
-        {/* ================= NAVBAR ================= */}
+        {/* NAVBAR */}
         <nav className="bg-gradient-to-r from-[#7132CA] to-[#8C00FF] text-white px-6 py-4 flex items-center justify-between shadow-md">
           <h1 className="text-2xl font-bold tracking-wide">
             Quick Queue · Organizer
@@ -45,7 +46,7 @@ function OrganizerDashboard() {
           </div>
         </nav>
 
-        {/* ================= MAIN CONTENT ================= */}
+        {/* MAIN CONTENT */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1 */}
@@ -68,7 +69,7 @@ function OrganizerDashboard() {
           </div>
         </main>
 
-        {/* ================= FOOTER ================= */}
+        {/* FOOTER */}
         <footer className="bg-[#7132CA] text-white py-4 text-center">
           © {new Date().getFullYear()} Quick Queue · Organizer Panel
         </footer>

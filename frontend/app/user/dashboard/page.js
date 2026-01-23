@@ -1,3 +1,4 @@
+// quick-queue/frontend/app/user/dashboard/page.js
 "use client";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { useAuth } from "@/app/context/Authcontext";

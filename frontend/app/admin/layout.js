@@ -1,3 +1,4 @@
+// quick-queue/frontend/app/admin/layout.js
 "use client";
 import { useState } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";

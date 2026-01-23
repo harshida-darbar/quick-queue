@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/context/Authcontext.js
+
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,7 +21,6 @@ export const AuthProvider = ({ children }) => {
 
   // LOGIN
   const login = (data) => {
-    // Store under ONE key: "quick-queue"
     localStorage.setItem(
       "quick-queue",
       JSON.stringify({
@@ -32,7 +33,6 @@ export const AuthProvider = ({ children }) => {
 
     const roleId = data.user.role;
 
-    // Use router.replace so user cannot go back to login page
     if (roleId === 1) {
       router.replace("/admin/dashboard");
     } else if (roleId === 2) {

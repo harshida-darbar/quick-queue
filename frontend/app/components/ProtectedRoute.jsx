@@ -1,3 +1,4 @@
+// quick-queue/frontend/app/components/protectedroute.jsx
 "use client";
 import { useAuth } from "../context/Authcontext";
 import { useRouter } from "next/navigation";
