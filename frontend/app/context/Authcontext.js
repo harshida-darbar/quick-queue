@@ -8,29 +8,48 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
+  // Load from localStorage on app start
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const storedData = localStorage.getItem("quick-queue");
+    if (storedData) {
+      const parsed = JSON.parse(storedData);
+      if (parsed.user) setUser(parsed.user);
     }
   }, []);
 
+  // LOGIN
   const login = (data) => {
-    localStorage.setItem("quick-queue" ,"token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    // Store under ONE key: "quick-queue"
+    localStorage.setItem(
+      "quick-queue",
+      JSON.stringify({
+        user: data.user,
+        token: data.token,
+      })
+    );
+
     setUser(data.user);
 
-    if (data.user.role === "organizer") {
-      router.push("/organizer/dashboard");
-    } else {
-      router.push("/user/dashboard");
+    const roleId = data.user.role;
+
+    // Use router.replace so user cannot go back to login page
+    if (roleId === 1) {
+      router.replace("/admin/dashboard");
+    } else if (roleId === 2) {
+      router.replace("/organizer/dashboard");
+    } else if (roleId === 3) {
+      router.replace("/user/dashboard");
     }
+
+    console.log("Login role:", data.user.role);
   };
 
+  // LOGOUT
   const logout = () => {
-    localStorage.clear();
+    // Remove the entire quick-queue object
+    localStorage.removeItem("quick-queue");
     setUser(null);
-    router.push("/login");
+    router.replace("/login"); // replace so back button doesn't go back
   };
 
   return (

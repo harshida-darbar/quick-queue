@@ -6,32 +6,52 @@ const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
   try {
-    const { role, name, email, password } = req.body;
+    console.log("SIGNUP BODY:", req.body);
+    const { name, email, password, role } = req.body;
 
-    // role must be number: 1,2,3
-    if (![1, 2, 3].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
+    // 1️⃣ Validate
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields required" });
     }
 
-    let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "User Already Exists." });
+    // 2️⃣ Prevent admin creation via signup
+    if (role === 1) {
+      return res.status(403).json({ message: "Admin cannot signup" });
+    }
 
+    // 3️⃣ Check existing user
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // 4️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    user = new User({
-      role,
+    // 5️⃣ Create user
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      role: Number(role), // VERY IMPORTANT
     });
 
-    await user.save();
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
 
-    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Signup error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.login = async (req, res) => {
   try {
