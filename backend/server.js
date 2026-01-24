@@ -6,22 +6,25 @@ const dotenv = require("dotenv");
 const connectDB = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
 const userRoutes = require("./src/routes/userRoutes");
+const queueRoutes = require("./src/routes/queueRoutes");
 
 dotenv.config();
 connectDB();
-
+  
 const app = express();
 
-app.use(cors({
-  origin:"http://localhost:3000",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
-
+app.use("/api/queue", queueRoutes);
 app.get("/", (req, res) => {
   res.send("Quick Queue Backend Running");
 });
@@ -29,5 +32,4 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`server running on port ${PORT}`);
-
 });

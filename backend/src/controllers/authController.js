@@ -45,13 +45,16 @@ exports.signup = async (req, res) => {
         role: user.role,
       },
     });
-
+    console.log("User found:", user);
+    console.log(
+      "Password match:",
+      await bcrypt.compare(password, user.password),
+    );
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 exports.login = async (req, res) => {
   try {

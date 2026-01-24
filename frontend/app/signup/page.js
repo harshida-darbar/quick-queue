@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import Link from "next/link";
 import PublicRoute from "../components/PublicRoute";
-import { HEAD_REQUEST_KEY } from "next/dist/shared/lib/segment-cache/segment-value-encoding";
 
 function SignupPage() {
   const router = useRouter();
