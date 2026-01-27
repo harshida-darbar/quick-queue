@@ -9,7 +9,7 @@ const userRoutes = require("./src/routes/userRoutes");
 const queueRoutes = require("./src/routes/queueRoutes");
 
 dotenv.config();
-connectDB();
+connectDB();  
   
 const app = express();
 

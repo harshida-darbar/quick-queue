@@ -1,3 +1,5 @@
+// quick-queue/backend/src/models/queueentry.js
+
 const mongoose = require("mongoose");
 
 const queueEntrySchema = new mongoose.Schema(

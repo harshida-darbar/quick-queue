@@ -1,6 +1,7 @@
 // quick-queue/frontend/app/organizer/dashboard/page.js
 "use client";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import OrganizerQueues from "../components/OrganizerQueues";
 import { useAuth } from "@/app/context/Authcontext";
 import React, { useState } from "react";
 import { IoBusinessOutline } from "react-icons/io5";
@@ -49,6 +50,11 @@ function OrganizerDashboard() {
         {/* MAIN CONTENT */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* LEFT: QUEUE MANAGER */}
+            <div className="md:col-span-3">
+              <OrganizerQueues />
+            </div>
+
             {/* Card 1 */}
             <div className="p-6 rounded-xl bg-gradient-to-r from-[#7F55B1] to-[#B153D7] text-white shadow">
               <h2 className="text-lg font-semibold mb-2">Manage Queues</h2>

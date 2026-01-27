@@ -15,8 +15,8 @@ const queueSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["created", "active", "paused", "closed"],
-      default: "created",
+      enum: ["inactive", "active", "paused", "closed"],
+      default: "inactive",
     },
     currentToken: {
       type: Number,
