@@ -10,12 +10,17 @@ exports.startQueue = async (req, res) => {
       return res.status(404).json({ message: "Queue not found" });
     }
 
-    // Only organizer can start their own queue
     if (queue.organizer.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     queue.status = "active";
+
+    // 🔥 THIS WAS MISSING
+    if (!queue.currentToken || queue.currentToken === 0) {
+      queue.currentToken = 1;
+    }
+
     await queue.save();
 
     res.json({
@@ -23,7 +28,6 @@ exports.startQueue = async (req, res) => {
       queue,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -160,7 +164,7 @@ exports.joinQueue = async (req, res) => {
 
     res.status(201).json({
       message: "Joined queue successfully",
-      token: entry,
+      token: nextToken,
     });
   } catch (error) {
     console.error(error);
@@ -205,7 +209,7 @@ exports.nextToken = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
-}; 
+};
 
 exports.getMyToken = async (req, res) => {
   try {
@@ -223,7 +227,9 @@ exports.getMyToken = async (req, res) => {
     });
 
     if (!myEntry) {
-      return res.status(404).json({ message: "You have not joined this queue" });
+      return res
+        .status(404)
+        .json({ message: "You have not joined this queue" });
     }
 
     const waitingAhead = await QueueEntry.countDocuments({
@@ -244,4 +250,40 @@ exports.getMyToken = async (req, res) => {
   }
 };
 
+exports.getActiveQueues = async (req, res) => {
+  console.log("ACTIVE QUEUES HIT ✅", req.user);
+  const queues = await Queue.aggregate([
+    { $match: { status: "active" } },
+    {
+      $lookup: {
+        from: "queueentries",
+        localField: "_id",
+        foreignField: "queue",
+        as: "entries",
+      },
+    },
+    {
+      $addFields: {
+        waitingCount: {
+          $size: {
+            $filter: {
+              input: "$entries",
+              as: "e",
+              cond: { $eq: ["$$e.status", "waiting"] },
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        currentToken: 1,
+        waitingCount: 1,
+      },
+    },
+  ]);
+
+  res.json(queues);
+};
 

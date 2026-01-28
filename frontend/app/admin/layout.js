@@ -6,7 +6,7 @@ import { useAuth } from "../context/Authcontext";
 
 export default function AdminLayout({ children }) {
   const { logout } = useAuth();
-
+  
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   return (

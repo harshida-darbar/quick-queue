@@ -11,6 +11,8 @@ function OrganizerDashboard() {
   const [showDropDown, setShowDropDown] = useState(false);
   const [logoutPopup, setLogoutPopup] = useState(false);
 
+ 
+
   return (
     <ProtectedRoute allowedRoles={[2]}>
       <div className="min-h-screen flex flex-col bg-[#F6F3FB]">

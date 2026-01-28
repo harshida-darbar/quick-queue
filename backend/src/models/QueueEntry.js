@@ -1,4 +1,4 @@
-// quick-queue/backend/src/models/queueentry.js
+// quick-queue/backend/src/models/QueueEntry.js
 
 const mongoose = require("mongoose");
 

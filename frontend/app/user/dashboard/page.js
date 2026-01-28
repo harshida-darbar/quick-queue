@@ -2,13 +2,54 @@
 "use client";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import { useAuth } from "@/app/context/Authcontext";
-import React, { useState } from "react";
+import api from "@/app/utils/api";
+import React, { useState, useEffect } from "react";
 import { FaUserAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 function UserDashboard() {
   const { user, logout } = useAuth();
   const [showDropDown, setShowDropDown] = useState(false);
   const [logoutPopup, setLogoutPopup] = useState(false);
+  const [queues, setQueues] = useState([]);
+  const [myQueueId, setMyQueueId] = useState(null);
+
+  useEffect(() => {
+    api.get("/queue/active").then((res) => setQueues(res.data));
+  }, []);
+
+  const joinQueue = async (id) => {
+    const res = await api.post(`/queue/${id}/join`);
+    toast.success(`Your token: ${res.data.token}`);
+    setMyQueueId(id);
+  };
+
+  useEffect(() => {
+    loadQueues();
+
+    const interval = setInterval(loadQueues, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadQueues = async () => {
+    const res = await api.get("/queue/active");
+    setQueues(res.data);
+  };
+
+  useEffect(() => {
+  if (!myQueueId) return;
+
+  const interval = setInterval(async () => {
+    const res = await api.get(`/queue/${myQueueId}/my-token`);
+
+    if (res.data.myStatus === "served") {
+      toast.success("🎉 It's your turn! Please proceed.");
+      clearInterval(interval);
+    }
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, [myQueueId]);
 
   return (
     <ProtectedRoute allowedRoles={[3]}>
@@ -60,6 +101,35 @@ function UserDashboard() {
               <p>Manage your profile information.</p>
             </div>
           </div>
+          {queues.map((q) => (
+            <div
+              key={q._id}
+              className="bg-white rounded-xl shadow-md p-5 flex flex-col gap-3 mt-4"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-lg font-semibold text-[#7132CA]">
+                    {q.name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {/* Current Token: {q.tokens?.length || 0} */}
+                    People Waiting: {q.waitingCount}
+                  </p>
+                </div>
+
+                <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700">
+                  Active
+                </span>
+              </div>
+
+              <button
+                onClick={() => joinQueue(q._id)}
+                className="self-start bg-gradient-to-r from-[#7132CA] to-[#8C00FF] text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition"
+              >
+                Join Queue
+              </button>
+            </div>
+          ))}
         </main>
 
         {/* Footer */}
@@ -67,6 +137,7 @@ function UserDashboard() {
           &copy; {new Date().getFullYear()} Quick Queue. All rights reserved.
         </footer>
       </div>
+
       {logoutPopup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 animate-fadeIn">

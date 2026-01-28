@@ -46,6 +46,13 @@ export default function OrganizerQueues() {
     }
   };
 
+   useEffect(() => {
+      loadQueues();
+  
+      const interval = setInterval(loadQueues, 3000);
+      return () => clearInterval(interval);
+    }, []);
+
   return (
     <div className="bg-white rounded-xl p-6 shadow">
       <h2 className="text-xl font-semibold text-[#7132CA] mb-4">
@@ -75,8 +82,10 @@ export default function OrganizerQueues() {
           >
             <div>
               <p className="font-semibold">{q.name}</p>
+
               <p className="text-sm text-gray-600">
-                Status: {q.status} | Token: {q.currentToken || 0}
+                Status: {q.status} | Serving: {q.currentToken || 0} | Waiting:{" "}
+                {q.waitingCount}
               </p>
             </div>
 
