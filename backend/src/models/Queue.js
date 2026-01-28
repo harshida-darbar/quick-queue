@@ -3,10 +3,28 @@ const mongoose = require("mongoose");
 
 const queueSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
       trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    serviceType: {
+      type: String,
+      enum: ["hospital", "restaurant", "salon"],
+      required: true,
+    },
+    photo: {
+      type: String,
+      default: "",
+    },
+    maxCapacity: {
+      type: Number,
+      required: true,
+      min: 1,
     },
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -18,7 +36,7 @@ const queueSchema = new mongoose.Schema(
       enum: ["inactive", "active", "paused", "closed"],
       default: "inactive",
     },
-    currentToken: {
+    currentServing: {
       type: Number,
       default: 0,
     },

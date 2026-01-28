@@ -1,172 +1,347 @@
-// quick-queue/frontend/app/user/dashboard/page.js
 "use client";
-import ProtectedRoute from "@/app/components/ProtectedRoute";
-import { useAuth } from "@/app/context/Authcontext";
-import api from "@/app/utils/api";
-import React, { useState, useEffect } from "react";
-import { FaUserAlt } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
+import Image from "next/image";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes } from "react-icons/fa";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import api from "../../utils/api";
+import Navbar from "../../components/Navbar";
+import ProtectedRoute from "../../components/ProtectedRoute";
 
 function UserDashboard() {
-  const { user, logout } = useAuth();
-  const [showDropDown, setShowDropDown] = useState(false);
-  const [logoutPopup, setLogoutPopup] = useState(false);
-  const [queues, setQueues] = useState([]);
-  const [myQueueId, setMyQueueId] = useState(null);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
-    api.get("/queue/active").then((res) => setQueues(res.data));
+    fetchServices();
   }, []);
 
-  const joinQueue = async (id) => {
-    const res = await api.post(`/queue/${id}/join`);
-    toast.success(`Your token: ${res.data.token}`);
-    setMyQueueId(id);
-  };
-
-  useEffect(() => {
-    loadQueues();
-
-    const interval = setInterval(loadQueues, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadQueues = async () => {
-    const res = await api.get("/queue/active");
-    setQueues(res.data);
-  };
-
-  useEffect(() => {
-  if (!myQueueId) return;
-
-  const interval = setInterval(async () => {
-    const res = await api.get(`/queue/${myQueueId}/my-token`);
-
-    if (res.data.myStatus === "served") {
-      toast.success("🎉 It's your turn! Please proceed.");
-      clearInterval(interval);
+  const fetchServices = async () => {
+    try {
+      const response = await api.get("/queue/services");
+      const servicesWithStatus = await Promise.all(
+        response.data.map(async (service) => {
+          try {
+            const statusResponse = await api.get(`/queue/services/${service._id}/status`);
+            return { ...service, userStatus: statusResponse.data };
+          } catch (error) {
+            return { ...service, userStatus: null };
+          }
+        })
+      );
+      setServices(servicesWithStatus);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        router.push("/login");
+        return;
+      }
+      console.error("Error fetching services:", error);
+      toast.error("Failed to fetch services");
+    } finally {
+      setLoading(false);
     }
-  }, 4000);
+  };
 
-  return () => clearInterval(interval);
-}, [myQueueId]);
+  const joinFormik = useFormik({
+    initialValues: {
+      groupSize: 1,
+      memberNames: [''],
+    },
+    validationSchema: Yup.object({
+      groupSize: Yup.number()
+        .min(1, "Group size must be at least 1")
+        .max(20, "Group size cannot exceed 20")
+        .required("Group size is required"),
+      memberNames: Yup.array().of(
+        Yup.string().required("Name is required")
+      ),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        await api.post(`/queue/services/${selectedService._id}/join`, {
+          groupSize: values.groupSize,
+          memberNames: values.memberNames.slice(0, values.groupSize),
+        });
+        toast.success(`Successfully joined queue for ${values.groupSize} people!`);
+        setShowJoinForm(false);
+        setSelectedService(null);
+        joinFormik.resetForm();
+        fetchServices();
+      } catch (error) {
+        console.error("Error joining queue:", error);
+        toast.error(error.response?.data?.message || "Failed to join queue");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  const handleJoinClick = (service, e) => {
+    e.stopPropagation();
+    setSelectedService(service);
+    setShowJoinForm(true);
+  };
+
+  const handleCardClick = async (service) => {
+    try {
+      const response = await api.get(`/queue/services/${service._id}/status`);
+      const { status, tokenNumber, waitingAhead } = response.data;
+      
+      let message = '';
+      if (status === 'serving') {
+        message = `🟢 You are currently being served! Token #${tokenNumber}`;
+        toast.success(message);
+      } else if (status === 'waiting') {
+        message = `🟡 You are in waiting list. Token #${tokenNumber}. ${waitingAhead} people ahead of you.`;
+        toast(message, { icon: '⏳' });
+      } else if (status === 'complete') {
+        message = `✅ Your service is completed! Token #${tokenNumber}`;
+        toast.success(message);
+      }
+    } catch (error) {
+      if (error.response?.status === 404) {
+        toast.error('You have not joined this queue yet. Click "Join Queue" to join.');
+      } else {
+        toast.error('Failed to get queue status');
+      }
+    }
+  };
+
+  const handleGroupSizeChange = (e) => {
+    const newSize = parseInt(e.target.value) || 1;
+    const newNames = Array(newSize).fill('').map((_, i) => 
+      joinFormik.values.memberNames[i] || ''
+    );
+    joinFormik.setFieldValue('groupSize', newSize);
+    joinFormik.setFieldValue('memberNames', newNames);
+  };
+
+  const getServiceIcon = (type) => {
+    const iconProps = { size: 32, className: "text-[#62109F]" };
+    switch (type) {
+      case "hospital": return <FaHospital {...iconProps} />;
+      case "restaurant": return <FaUtensils {...iconProps} />;
+      case "salon": return <FaCut {...iconProps} />;
+      default: return <FaBuilding {...iconProps} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-xl text-[#62109F]">Loading services...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ProtectedRoute allowedRoles={[3]}>
-      <div className="min-h-screen flex flex-col bg-[#F6F3FB]">
-        {/* Navbar */}
-        <nav className="bg-gradient-to-r from-[#7132CA] to-[#8C00FF] text-white flex items-center justify-between px-6 py-4 shadow-md">
-          <h1 className="text-2xl font-bold">Quick Queue - User Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
+      <Navbar />
+      <Toaster position="top-right" />
+      
+      <div className="max-w-6xl mx-auto p-6">
+        <h1 className="text-3xl font-bold text-[#62109F] mb-8">Available Services</h1>
+        
+        {services.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-[#62109F] text-lg font-medium">No active services available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service) => (
+              <div
+                key={service._id}
+                className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer"
+                onClick={() => handleCardClick(service)}
+              >
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-center mb-4">
+                    {getServiceIcon(service.serviceType)}
+                    <div className="ml-3">
+                      <h3 className="text-xl font-semibold text-[#62109F]">{service.title}</h3>
+                      <p className="text-sm text-[#85409D] capitalize">{service.serviceType}</p>
+                    </div>
+                  </div>
+                  
+                  {service.photo && (
+                    <div className="relative w-full h-32 mb-4">
+                      <Image 
+                        src={service.photo} 
+                        alt={service.title}
+                        fill
+                        className="object-cover rounded-lg"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+                  
+                  <p className="text-gray-600 mb-4 flex-1 min-h-[3rem]">{service.description}</p>
+                  
+                  <div className="flex justify-between items-center mb-4 mt-auto">
+                    <div className="text-sm text-[#85409D]">
+                      <span className="font-medium">Capacity:</span> {service.servingCapacity || 0}/{service.maxCapacity}
+                    </div>
+                    <div className="text-sm text-[#85409D]">
+                      <span className="font-medium">Waiting:</span> {service.waitingCount}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      service.isFull 
+                        ? "bg-red-100 text-red-800" 
+                        : "bg-green-100 text-green-800"
+                    }`}>
+                      {service.isFull ? "Full" : "Available"}
+                    </div>
+                    
+                    {service.userStatus ? (
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        service.userStatus.status === 'serving' ? 'bg-green-100 text-green-800' :
+                        service.userStatus.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {service.userStatus.status === 'serving' ? `🟢 Serving #${service.userStatus.tokenNumber}` :
+                         service.userStatus.status === 'waiting' ? `🟡 Waiting #${service.userStatus.tokenNumber}` :
+                         `✅ Complete #${service.userStatus.tokenNumber}`}
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => handleJoinClick(service, e)}
+                        className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-4 py-2 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
+                      >
+                        Join Queue
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-          {/* User Box */}
-          <div className="relative">
-            <button
-              onClick={() => setShowDropDown(!showDropDown)}
-              className="flex items-center gap-2 border border-[#BB8ED0] bg-white px-4 py-2 rounded-lg cursor-pointer outline-none text-[#7132CA] font-semibold hover:bg-[#BB8ED0] hover:text-white transition"
-            >
-              <FaUserAlt />
-              <span className="capitalize">{user?.name || user?.email}</span>
-            </button>
-
-            {/* Dropdown */}
-            {showDropDown && (
-              <div className="absolute right-0 mt-2 w-32 bg-white text-black rounded-lg shadow-lg z-20">
+        {/* Join Queue Modal */}
+        {showJoinForm && selectedService && (
+          <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-[#62109F]">
+                  Join {selectedService.title}
+                </h2>
                 <button
                   onClick={() => {
-                    setShowDropDown(false);
-                    setLogoutPopup(true);
+                    setShowJoinForm(false);
+                    setSelectedService(null);
+                    joinFormik.resetForm();
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 outline-none cursor-pointer rounded-lg"
+                  className="text-gray-500 hover:text-gray-700 outline-none cursor-pointer"
                 >
-                  Logout
+                  <FaTimes size={20} />
                 </button>
               </div>
-            )}
-          </div>
-        </nav>
 
-        {/* Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl bg-gradient-to-r from-[#7F55B1] to-[#B153D7] text-white shadow">
-              <h2 className="text-lg font-semibold mb-2">My Queues</h2>
-              <p>View and manage your active queues here.</p>
-            </div>
-            <div className="p-6 rounded-xl bg-gradient-to-r from-[#725CAD] to-[#C47BE4] text-white shadow">
-              <h2 className="text-lg font-semibold mb-2">History</h2>
-              <p>See your completed queue history.</p>
-            </div>
-            <div className="p-6 rounded-xl bg-gradient-to-r from-[#85409D] to-[#8C00FF] text-white shadow">
-              <h2 className="text-lg font-semibold mb-2">Profile</h2>
-              <p>Manage your profile information.</p>
-            </div>
-          </div>
-          {queues.map((q) => (
-            <div
-              key={q._id}
-              className="bg-white rounded-xl shadow-md p-5 flex flex-col gap-3 mt-4"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-lg font-semibold text-[#7132CA]">
-                    {q.name}
+              <form onSubmit={joinFormik.handleSubmit}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    How many people in your group?
+                  </label>
+                  <input
+                    name="groupSize"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={joinFormik.values.groupSize}
+                    onChange={handleGroupSizeChange}
+                    onBlur={joinFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                  {joinFormik.touched.groupSize && joinFormik.errors.groupSize && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {joinFormik.errors.groupSize}
+                    </div>
+                  )}
+                </div>
+
+                {/* Member Names */}
+                {joinFormik.values.groupSize > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Enter names for all members:
+                    </label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {Array.from({ length: joinFormik.values.groupSize }, (_, index) => (
+                        <input
+                          key={index}
+                          type="text"
+                          placeholder={`Person ${index + 1} name`}
+                          value={joinFormik.values.memberNames[index] || ''}
+                          onChange={(e) => {
+                            const newNames = [...joinFormik.values.memberNames];
+                            newNames[index] = e.target.value;
+                            joinFormik.setFieldValue('memberNames', newNames);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                        />
+                      ))}
+                    </div>
+                    {joinFormik.touched.memberNames && joinFormik.errors.memberNames && (
+                      <div className="text-red-500 text-sm mt-1">
+                        All names are required
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="bg-gray-50 p-3 rounded-md mb-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Service:</span> {selectedService.title}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {/* Current Token: {q.tokens?.length || 0} */}
-                    People Waiting: {q.waitingCount}
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Current Queue:</span> {selectedService.servingCapacity || 0}/{selectedService.maxCapacity} capacity used, {selectedService.waitingCount} waiting
                   </p>
                 </div>
 
-                <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700">
-                  Active
-                </span>
-              </div>
-
-              <button
-                onClick={() => joinQueue(q._id)}
-                className="self-start bg-gradient-to-r from-[#7132CA] to-[#8C00FF] text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition"
-              >
-                Join Queue
-              </button>
-            </div>
-          ))}
-        </main>
-
-        {/* Footer */}
-        <footer className="bg-[#7132CA] text-white py-4 text-center mt-auto">
-          &copy; {new Date().getFullYear()} Quick Queue. All rights reserved.
-        </footer>
-      </div>
-
-      {logoutPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 animate-fadeIn">
-            <h2 className="text-xl font-semibold text-[#7132CA] mb-3">
-              Confirm Logout
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to logout?
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setLogoutPopup(false)}
-                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 outline-none hover:bg-gray-300 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={logout}
-                className="px-4 py-2 rounded-lg outline-none bg-gradient-to-r from-[#7132CA] to-[#8C00FF] text-white cursor-pointer font-semibold hover:opacity-90"
-              >
-                Logout
-              </button>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowJoinForm(false);
+                      setSelectedService(null);
+                      joinFormik.resetForm();
+                    }}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors outline-none cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={joinFormik.isSubmitting}
+                    className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
+                  >
+                    {joinFormik.isSubmitting ? "Joining..." : "Join Queue"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
-      )}
-    </ProtectedRoute>
+        )}
+      </div>
+    </div>
   );
 }
 
-export default UserDashboard;
+export default function ProtectedUserDashboard() {
+  return (
+    <ProtectedRoute allowedRoles={[3]}>
+      <UserDashboard />
+    </ProtectedRoute>
+  );
+}

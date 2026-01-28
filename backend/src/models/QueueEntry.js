@@ -18,9 +18,19 @@ const queueEntrySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    groupSize: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 20,
+    },
+    memberNames: {
+      type: [String],
+      default: [],
+    },
     status: {
       type: String,
-      enum: ["waiting", "served", "cancelled"],
+      enum: ["waiting", "serving", "complete"],
       default: "waiting",
     },
   },
