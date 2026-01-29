@@ -25,6 +25,8 @@ export default function ServiceManagement({ params }) {
   const fetchServiceDetails = async () => {
     try {
       const response = await api.get(`/queue/services/${resolvedParams.id}`);
+      console.log('Service data:', response.data.service);
+      console.log('Serving capacity:', response.data.service.servingCapacity);
       setService(response.data.service);
       setServingUsers(response.data.servingUsers);
       setWaitingUsers(response.data.waitingUsers);
@@ -225,20 +227,14 @@ export default function ServiceManagement({ params }) {
                     <div className="flex flex-col space-y-2">
                       <button
                         onClick={() => handleMoveToServing(entry._id)}
-                        disabled={servingUsers.length >= service.maxCapacity}
-                        className={`px-3 py-2 rounded-md transition-all duration-300 text-sm cursor-pointer outline-none${
-                          servingUsers.length >= service.maxCapacity
+                        disabled={(service.servingCapacity || 0) + entry.groupSize > service.maxCapacity}
+                        className={`px-3 py-2 rounded-md transition-all duration-300 text-sm cursor-pointer outline-none ${
+                          (service.servingCapacity || 0) + entry.groupSize > service.maxCapacity
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
                         }`}
                       >
-                        Start Serving
-                      </button>
-                      <button
-                        onClick={() => handleMarkComplete(entry._id)}
-                        className="px-3 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-md hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 text-sm  cursor-pointer outline-none"
-                      >
-                        Complete
+                        Start Serving ({entry.groupSize} people)
                       </button>
                     </div>
                   </div>
@@ -283,12 +279,7 @@ export default function ServiceManagement({ params }) {
                       )}
                     </div>
                     <div className="flex flex-col space-y-2">
-                      <button
-                        onClick={() => handleMoveToWaiting(entry._id)}
-                        className="px-3 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 text-sm  cursor-pointer outline-none  "
-                      >
-                        Move to Waiting
-                      </button>
+                      
                       <button
                         onClick={() => handleMarkComplete(entry._id)}
                         className="px-3 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-md hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 text-sm  cursor-pointer outline-none"

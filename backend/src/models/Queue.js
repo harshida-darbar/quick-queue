@@ -14,7 +14,6 @@ const queueSchema = new mongoose.Schema(
     },
     serviceType: {
       type: String,
-      enum: ["hospital", "restaurant", "salon"],
       required: true,
     },
     photo: {

@@ -127,15 +127,24 @@ exports.getServiceDetails = async (req, res) => {
       status: "complete",
     }).populate("user", "name email").sort({ updatedAt: -1 });
 
+    // Calculate serving capacity (sum of group sizes)
+    const servingCapacity = servingUsers.reduce((sum, entry) => sum + entry.groupSize, 0);
+
+    // Add servingCapacity to service object
+    const serviceWithCapacity = {
+      ...service.toObject(),
+      servingCapacity
+    };
+
     res.json({
-      service,
+      service: serviceWithCapacity,
       servingUsers,
       waitingUsers,
       completedUsers,
       servingCount: servingUsers.length,
       waitingCount: waitingUsers.length,
       completedCount: completedUsers.length,
-      isFull: servingUsers.length >= service.maxCapacity,
+      isFull: servingCapacity >= service.maxCapacity,
     });
   } catch (error) {
     console.error(error);
@@ -376,7 +385,7 @@ exports.getUserQueueStatus = async (req, res) => {
     });
 
     if (!entry) {
-      return res.status(404).json({ message: "Not in queue" });
+      return res.json({ status: null, message: "Not in queue" });
     }
 
     const waitingAhead = await QueueEntry.countDocuments({

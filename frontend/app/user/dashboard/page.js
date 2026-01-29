@@ -28,7 +28,7 @@ function UserDashboard() {
         response.data.map(async (service) => {
           try {
             const statusResponse = await api.get(`/queue/services/${service._id}/status`);
-            return { ...service, userStatus: statusResponse.data };
+            return { ...service, userStatus: statusResponse.data.status ? statusResponse.data : null };
           } catch (error) {
             return { ...service, userStatus: null };
           }
@@ -55,7 +55,7 @@ function UserDashboard() {
     validationSchema: Yup.object({
       groupSize: Yup.number()
         .min(1, "Group size must be at least 1")
-        .max(20, "Group size cannot exceed 20")
+        .max(selectedService?.maxCapacity || 20, `Group size cannot exceed service capacity of ${selectedService?.maxCapacity || 20} people`)
         .required("Group size is required"),
       memberNames: Yup.array().of(
         Yup.string().required("Name is required")
@@ -114,6 +114,13 @@ function UserDashboard() {
 
   const handleGroupSizeChange = (e) => {
     const newSize = parseInt(e.target.value) || 1;
+    
+    // Check if group size exceeds service capacity
+    if (newSize > selectedService?.maxCapacity) {
+      toast.error(`service capacity of ${selectedService.maxCapacity} people`);
+      return;
+    }
+    
     const newNames = Array(newSize).fill('').map((_, i) => 
       joinFormik.values.memberNames[i] || ''
     );
@@ -129,6 +136,35 @@ function UserDashboard() {
       case "salon": return <FaCut {...iconProps} />;
       default: return <FaBuilding {...iconProps} />;
     }
+  };
+
+  const getButtonText = (service) => {
+    if (service.isFull) {
+      return "Join Queue";
+    }
+    
+    const serviceType = service.serviceType.toLowerCase();
+    const buttonMapping = {
+      hospital: "Book Appointment",
+      clinic: "Book Appointment",
+      doctor: "Book Appointment",
+      restaurant: "Book Table",
+      cafe: "Book Table",
+      salon: "Book Slot",
+      spa: "Book Slot",
+      gym: "Book Session",
+      bank: "Get Token",
+      atm: "Get Token",
+      library: "Reserve Seat",
+      cinema: "Book Ticket",
+      theater: "Book Ticket",
+      carwash: "Book Service",
+      mechanic: "Book Service",
+      dentist: "Book Appointment",
+      pharmacy: "Get Medicine"
+    };
+    
+    return buttonMapping[serviceType] || `Book ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}`;
   };
 
   if (loading) {
@@ -218,10 +254,11 @@ function UserDashboard() {
                         onClick={(e) => handleJoinClick(service, e)}
                         className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-4 py-2 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
                       >
-                        Join Queue
+                        {getButtonText(service)}
                       </button>
                     )}
                   </div>
+                  
                 </div>
               </div>
             ))}
@@ -257,7 +294,7 @@ function UserDashboard() {
                     name="groupSize"
                     type="number"
                     min="1"
-                    max="20"
+                    max={selectedService?.maxCapacity || 20}
                     value={joinFormik.values.groupSize}
                     onChange={handleGroupSizeChange}
                     onBlur={joinFormik.handleBlur}
