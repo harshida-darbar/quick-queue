@@ -18,12 +18,14 @@ const validationSchema = Yup.object({
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
     .required("Max capacity is required"),
+  appointmentEnabled: Yup.boolean(),
 });
 
 function OrganizerDashboard() {
   const [services, setServices] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [timeSlots, setTimeSlots] = useState([]);
   const router = useRouter();
 
   const formik = useFormik({
@@ -33,14 +35,22 @@ function OrganizerDashboard() {
       serviceType: "",
       photo: "",
       maxCapacity: 10,
+      appointmentEnabled: false,
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        await api.post("/queue/services", values);
+        const serviceData = {
+          ...values,
+          timeSlots: values.appointmentEnabled ? timeSlots : []
+        };
+        console.log('Sending service data:', serviceData); // Debug log
+        console.log('Time slots being sent:', timeSlots); // Debug log
+        await api.post("/queue/services", serviceData);
         toast.success("Service created successfully!");
         setShowCreateForm(false);
         resetForm();
+        setTimeSlots([]);
         fetchServices();
       } catch (error) {
         console.error("Error creating service:", error);
@@ -94,6 +104,31 @@ function OrganizerDashboard() {
       default:
         return <FaBuilding {...iconProps} />;
     }
+  };
+
+  const getButtonText = (service) => {
+    const serviceType = service.serviceType.toLowerCase();
+    const buttonMapping = {
+      hospital: "Manage Appointments",
+      clinic: "Manage Appointments",
+      doctor: "Manage Appointments",
+      restaurant: "Manage Tables",
+      cafe: "Manage Tables",
+      salon: "Manage Slots",
+      spa: "Manage Slots",
+      gym: "Manage Sessions",
+      bank: "Manage Tokens",
+      atm: "Manage Tokens",
+      library: "Manage Seats",
+      cinema: "Manage Tickets",
+      theater: "Manage Tickets",
+      carwash: "Manage Services",
+      mechanic: "Manage Services",
+      dentist: "Manage Appointments",
+      pharmacy: "Manage Queue"
+    };
+    
+    return buttonMapping[serviceType] || "Manage Queue";
   };
 
   const getStatusColor = (status) => {
@@ -243,6 +278,106 @@ function OrganizerDashboard() {
                   )}
                 </div>
 
+                <div className="mb-6">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      name="appointmentEnabled"
+                      type="checkbox"
+                      checked={formik.values.appointmentEnabled}
+                      onChange={formik.handleChange}
+                      className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2]"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Enable Appointment Booking
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Allow users to book specific time slots in advance
+                  </p>
+                </div>
+
+                {/* Time Slots Section */}
+                {formik.values.appointmentEnabled && (
+                  <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Available Time Slots
+                    </h4>
+                    
+                    {timeSlots.length === 0 ? (
+                      <p className="text-xs text-gray-500 mb-3">No time slots added yet</p>
+                    ) : (
+                      <div className="space-y-2 mb-3">
+                        {timeSlots.map((slot, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <span className="text-sm">
+                              {slot.date} | {slot.startTime} - {slot.endTime} (Capacity: {slot.capacity})
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setTimeSlots(timeSlots.filter((_, i) => i !== index))}
+                              className="text-red-500 hover:text-red-700 text-xs"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <input
+                        type="date"
+                        id="slotDate"
+                        className="px-2 py-1 border border-gray-300 rounded text-xs"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Capacity"
+                        min="1"
+                        id="slotCapacity"
+                        className="px-2 py-1 border border-gray-300 rounded text-xs"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="time"
+                        placeholder="Start Time"
+                        id="startTime"
+                        className="px-2 py-1 border border-gray-300 rounded text-xs"
+                      />
+                      <input
+                        type="time"
+                        placeholder="End Time"
+                        id="endTime"
+                        className="px-2 py-1 border border-gray-300 rounded text-xs"
+                      />
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const date = document.getElementById('slotDate').value;
+                        const startTime = document.getElementById('startTime').value;
+                        const endTime = document.getElementById('endTime').value;
+                        const capacity = parseInt(document.getElementById('slotCapacity').value);
+                        
+                        if (date && startTime && endTime && capacity) {
+                          setTimeSlots([...timeSlots, { date, startTime, endTime, capacity }]);
+                          document.getElementById('slotDate').value = '';
+                          document.getElementById('startTime').value = '';
+                          document.getElementById('endTime').value = '';
+                          document.getElementById('slotCapacity').value = '';
+                        } else {
+                          toast.error('Please fill all time slot fields');
+                        }
+                      }}
+                      className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4]"
+                    >
+                      Add Time Slot
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -322,7 +457,7 @@ function OrganizerDashboard() {
                     {service.maxCapacity}
                   </div>
                   <div
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(service.status)}`}
+                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
                   >
                     {service.status}
                   </div>
@@ -344,8 +479,19 @@ function OrganizerDashboard() {
                     }
                     className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white py-2 px-4 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
                   >
-                    Manage
+                    {getButtonText(service)}
                   </button>
+                  
+                  {service.appointmentEnabled && (
+                    <button
+                      onClick={() =>
+                        router.push(`/organizer/appointments/${service._id}`)
+                      }
+                      className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white py-2 px-4 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
+                    >
+                      Appointments
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

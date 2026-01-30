@@ -144,7 +144,7 @@ function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full h-11 rounded-xl bg-gradient-to-r from-[#7132CA] to-[#8C00FF] 
+            className={`w-full h-11 rounded-xl bg-gradient-to-r from-[#7132CA] to-[#8C00FF]  cursor-pointer
             text-white font-semibold flex items-center justify-center gap-2
             ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
           >

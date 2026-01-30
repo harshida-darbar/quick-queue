@@ -148,8 +148,8 @@ export default function ServiceManagement({ params }) {
             <div
               className={`px-4 py-2 rounded-full text-sm font-medium ${
                 service.status === "active"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
+                  ? "bg-green-100 text-green-800 capitalize"
+                  : "bg-gray-100 text-gray-800 capitalize"
               }`}
             >
               {service.status}
@@ -159,17 +159,17 @@ export default function ServiceManagement({ params }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-gradient-to-br from-[#B7A3E3] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">
-                {servingUsers.length}
+                {service.servingCapacity || 0}
               </div>
               <div className="text-sm text-white opacity-90">
-                Currently Serving
+                People Serving
               </div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#85409D] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">
                 {waitingUsers.length}
               </div>
-              <div className="text-sm text-white opacity-90">Waiting</div>
+              <div className="text-sm text-white opacity-90">Groups Waiting</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#4D2FB2] to-[#62109F] rounded-lg">
               <div className="text-2xl font-bold text-white">
@@ -179,10 +179,10 @@ export default function ServiceManagement({ params }) {
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#6F00FF] to-[#8C00FF] rounded-lg">
               <div className="text-2xl font-bold text-white">
-                {service.maxCapacity - servingUsers.length}
+                {service.maxCapacity - (service.servingCapacity || 0)}
               </div>
               <div className="text-sm text-white opacity-90">
-                Available Slots
+                Available Spots
               </div>
             </div>
           </div>
@@ -247,7 +247,7 @@ export default function ServiceManagement({ params }) {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold text-[#62109F] mb-4 flex items-center">
               <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-              Currently Serving ({servingUsers.length}/{service.maxCapacity})
+              Currently Serving ({service.servingCapacity || 0}/{service.maxCapacity} people)
             </h2>
 
             {servingUsers.length === 0 ? (
@@ -346,23 +346,23 @@ export default function ServiceManagement({ params }) {
           </h3>
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="text-[#85409D]">
-              <span className="font-medium">Total Queue:</span>{" "}
-              {servingUsers.length + waitingUsers.length} users
+              <span className="font-medium">Total People:</span>{" "}
+              {(service.servingCapacity || 0) + waitingUsers.reduce((sum, user) => sum + user.groupSize, 0)} people
             </div>
             <div className="text-[#85409D]">
               <span className="font-medium">Capacity Usage:</span>{" "}
-              {Math.round((servingUsers.length / service.maxCapacity) * 100)}%
+              {Math.round(((service.servingCapacity || 0) / service.maxCapacity) * 100)}%
             </div>
             <div className="text-[#85409D]">
               <span className="font-medium">Status:</span>
               <span
                 className={`ml-1 font-semibold ${
-                  servingUsers.length >= service.maxCapacity
+                  (service.servingCapacity || 0) >= service.maxCapacity
                     ? "text-red-600"
                     : "text-green-600"
                 }`}
               >
-                {servingUsers.length >= service.maxCapacity
+                {(service.servingCapacity || 0) >= service.maxCapacity
                   ? "Full"
                   : "Available"}
               </span>

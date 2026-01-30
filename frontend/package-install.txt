@@ -1,0 +1,7 @@
+Run these commands in your frontend directory:
+
+npm install react-big-calendar moment
+npm install --save-dev @types/react-big-calendar
+
+Then restart your development server:
+npm run dev

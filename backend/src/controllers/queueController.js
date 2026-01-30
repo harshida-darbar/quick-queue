@@ -1,11 +1,15 @@
 // quick-queue/backend/src/controllers/queueController.js
 const Queue = require("../models/Queue");
 const QueueEntry = require("../models/QueueEntry");
+const Appointment = require("../models/Appointment");
 
 // Create a new service
 exports.createService = async (req, res) => {
   try {
-    const { title, description, serviceType, photo, maxCapacity } = req.body;
+    const { title, description, serviceType, photo, maxCapacity, appointmentEnabled, timeSlots } = req.body;
+    
+    console.log('Received service data:', req.body); // Debug log
+    console.log('Time slots received:', timeSlots); // Debug log
 
     if (!title || !description || !serviceType || !maxCapacity) {
       return res.status(400).json({ message: "All fields are required" });
@@ -18,7 +22,11 @@ exports.createService = async (req, res) => {
       photo: photo || "",
       maxCapacity,
       organizer: req.user.id,
+      appointmentEnabled: appointmentEnabled || false,
+      timeSlots: timeSlots || [],
     });
+
+    console.log('Created service:', service); // Debug log
 
     res.status(201).json({
       message: "Service created successfully",
@@ -90,6 +98,8 @@ exports.getAllServices = async (req, res) => {
           servingCapacity: 1,
           servingCount: 1,
           waitingCount: 1,
+          appointmentEnabled: 1,
+          timeSlots: 1,
           isFull: { $gte: ["$servingCapacity", "$maxCapacity"] },
         },
       },
@@ -368,6 +378,106 @@ exports.startService = async (req, res) => {
 
     res.json({ message: "Service started successfully", service });
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Book appointment
+exports.bookAppointment = async (req, res) => {
+  try {
+    const { queueId, timeSlotId, groupSize, memberNames, date, startTime, endTime } = req.body;
+    const userId = req.user.id;
+
+    if (!queueId || !timeSlotId || !groupSize || !memberNames || !date || !startTime || !endTime) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const service = await Queue.findById(queueId);
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    if (!service.appointmentEnabled) {
+      return res.status(400).json({ message: "Appointments not enabled for this service" });
+    }
+
+    // Find the time slot
+    const timeSlot = service.timeSlots.id(timeSlotId);
+    if (!timeSlot) {
+      return res.status(404).json({ message: "Time slot not found" });
+    }
+
+    // Check existing appointments for this time slot
+    const existingAppointments = await Appointment.find({
+      queue: queueId,
+      startTime,
+      endTime,
+      date: new Date(date),
+      status: { $ne: "cancelled" }
+    });
+
+    const bookedCapacity = existingAppointments.reduce((sum, apt) => sum + apt.groupSize, 0);
+    
+    if (bookedCapacity + groupSize > timeSlot.capacity) {
+      return res.status(400).json({ 
+        message: `Not enough capacity. Available: ${timeSlot.capacity - bookedCapacity}, Requested: ${groupSize}` 
+      });
+    }
+
+    const appointment = await Appointment.create({
+      queue: queueId,
+      user: userId,
+      date: new Date(date),
+      startTime,
+      endTime,
+      groupSize,
+      memberNames: memberNames.map(name => name.trim()),
+      status: "confirmed"
+    });
+
+    res.status(201).json({
+      message: "Appointment booked successfully",
+      appointment
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Add time slot to service
+exports.addTimeSlot = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    const { date, startTime, endTime, capacity } = req.body;
+    
+    const service = await Queue.findById(serviceId);
+    if (!service || service.organizer.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    service.timeSlots.push({ date, startTime, endTime, capacity });
+    await service.save();
+
+    res.json({ message: "Time slot added successfully", service });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get appointments for a service (accessible to all users)
+exports.getServiceAppointments = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    
+    const appointments = await Appointment.find({ queue: serviceId })
+      .populate('user', 'name email')
+      .sort({ date: 1, startTime: 1 });
+
+    res.json(appointments);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
