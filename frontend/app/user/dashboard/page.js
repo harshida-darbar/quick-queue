@@ -6,6 +6,10 @@ import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes, FaCheck } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -19,6 +23,8 @@ function UserDashboard() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [checkedTimeSlots, setCheckedTimeSlots] = useState(new Set());
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [selectedCalendarSlot, setSelectedCalendarSlot] = useState(null);
   const appointmentFormik = useFormik({
     initialValues: {
       groupSize: 1,
@@ -34,32 +40,37 @@ function UserDashboard() {
       ),
     }),
     onSubmit: async (values) => {
-      if (!selectedTimeSlot) {
-        toast.error('Please select a time slot');
+      if (!selectedCalendarSlot) {
+        toast.error('Please select a time slot from the calendar');
         return;
       }
       
       try {
         await api.post(`/queue/appointments`, {
           queueId: selectedService._id,
-          timeSlotId: selectedTimeSlot._id,
           groupSize: values.groupSize,
           memberNames: values.memberNames.slice(0, values.groupSize).map(name => name.trim()),
-          date: selectedTimeSlot.date,
-          startTime: selectedTimeSlot.startTime,
-          endTime: selectedTimeSlot.endTime
+          date: selectedCalendarSlot.date,
+          startTime: selectedCalendarSlot.startTime,
+          endTime: selectedCalendarSlot.endTime
         });
         
         toast.success(`Appointment booked successfully for ${values.groupSize} people!`);
         setShowAppointmentForm(false);
         setSelectedService(null);
-        setAvailableSlots([]);
-        setSelectedTimeSlot(null);
+        setSelectedCalendarSlot(null);
+        setCalendarEvents([]);
         appointmentFormik.resetForm();
         fetchServices();
       } catch (error) {
         console.error('Error booking appointment:', error);
-        toast.error(error.response?.data?.message || 'Failed to book appointment');
+        if (error.response?.status === 409) {
+          toast.error('This time slot was just booked by someone else. Please select another time.');
+          // Refresh calendar events
+          handleAppointmentClick(selectedService, { stopPropagation: () => {} });
+        } else {
+          toast.error(error.response?.data?.message || 'Failed to book appointment');
+        }
       }
     },
   });
@@ -144,29 +155,64 @@ function UserDashboard() {
     setAppointmentGroupSize(1);
     setAppointmentNames(['']);
     
-    // Use actual time slots from the service (created by organizer)
-    console.log('Service data:', service); // Debug log
-    const serviceSlots = service.timeSlots || [];
-    console.log('Time slots:', serviceSlots); // Debug log
-    setAvailableSlots(serviceSlots);
-    
-    // Get booked counts for each slot
-    const counts = {};
+    // Load availability windows and booked slots
     try {
-      const appointmentsRes = await api.get(`/queue/services/${service._id}/appointments`);
-      const appointments = appointmentsRes.data;
+      const response = await api.get(`/queue/services/${service._id}/availability`);
+      const { availabilityWindows, bookedSlots } = response.data;
       
-      serviceSlots.forEach(slot => {
-        const slotAppointments = appointments.filter(apt => 
-          apt.startTime === slot.startTime && 
-          apt.endTime === slot.endTime &&
-          new Date(apt.date).toDateString() === new Date(slot.date).toDateString()
-        );
-        counts[slot._id] = slotAppointments.reduce((sum, apt) => sum + apt.groupSize, 0);
+      console.log('Raw availability data:', { availabilityWindows, bookedSlots }); // Debug log
+      
+      // Convert to calendar events
+      const events = [];
+      
+      // Add availability windows as background events
+      availabilityWindows.forEach(window => {
+        // Parse date properly - window.date might be a Date object or string
+        let dateStr;
+        if (typeof window.date === 'string') {
+          dateStr = window.date.split('T')[0]; // Get YYYY-MM-DD part
+        } else {
+          dateStr = new Date(window.date).toISOString().split('T')[0];
+        }
+        
+        console.log('Processing window:', { date: dateStr, startTime: window.startTime, endTime: window.endTime }); // Debug log
+        
+        events.push({
+          id: `availability-${window._id}`,
+          title: 'Available',
+          start: `${dateStr}T${window.startTime}`,
+          end: `${dateStr}T${window.endTime}`,
+          display: 'background',
+          backgroundColor: '#E0F2FE',
+          borderColor: '#0EA5E9'
+        });
       });
-      setBookedCounts(counts);
+      
+      // Add booked slots as events
+      bookedSlots.forEach(slot => {
+        let dateStr;
+        if (typeof slot.date === 'string') {
+          dateStr = slot.date.split('T')[0];
+        } else {
+          dateStr = new Date(slot.date).toISOString().split('T')[0];
+        }
+        
+        events.push({
+          id: `booked-${slot._id}`,
+          title: `Booked (${slot.groupSize} people)`,
+          start: `${dateStr}T${slot.startTime}`,
+          end: `${dateStr}T${slot.endTime}`,
+          backgroundColor: '#FEE2E2',
+          borderColor: '#EF4444',
+          textColor: '#DC2626'
+        });
+      });
+      
+      console.log('Final calendar events:', events); // Debug log
+      setCalendarEvents(events);
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('Error fetching availability:', error);
+      toast.error('Failed to load availability');
     }
     
     setShowAppointmentForm(true);
@@ -185,15 +231,43 @@ function UserDashboard() {
     setAppointmentNames(newNames);
   };
 
-  const handleTimeSlotCheckbox = (slotId, e) => {
-    e.stopPropagation();
-    const newChecked = new Set(checkedTimeSlots);
-    if (newChecked.has(slotId)) {
-      newChecked.delete(slotId);
-    } else {
-      newChecked.add(slotId);
+  const handleDateSelect = (selectInfo) => {
+    const start = new Date(selectInfo.start);
+    const end = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+    
+    // Check if selected time is within availability window
+    const isAvailable = calendarEvents.some(event => 
+      event.display === 'background' && 
+      new Date(event.start) <= start && 
+      new Date(event.end) >= end
+    );
+    
+    if (!isAvailable) {
+      toast.error('Please select a time within the available window');
+      return;
     }
-    setCheckedTimeSlots(newChecked);
+    
+    // Check for conflicts with booked slots
+    const hasConflict = calendarEvents.some(event => 
+      event.id.startsWith('booked-') && 
+      new Date(event.start) < end && 
+      new Date(event.end) > start
+    );
+    
+    if (hasConflict) {
+      toast.error('This time slot is already booked. Please select another time.');
+      return;
+    }
+    
+    setSelectedCalendarSlot({
+      start: start.toISOString(),
+      end: end.toISOString(),
+      startTime: start.toTimeString().slice(0, 5),
+      endTime: end.toTimeString().slice(0, 5),
+      date: start.toISOString().split('T')[0]
+    });
+    
+    toast.success(`Selected: ${start.toTimeString().slice(0, 5)} - ${end.toTimeString().slice(0, 5)}`);
   };
 
   const handleCardClick = async (service) => {
@@ -377,7 +451,7 @@ function UserDashboard() {
                           onClick={(e) => handleAppointmentClick(service, e)}
                           className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-3 py-2 text-sm rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
                         >
-                          📅 Book Appointment
+                          Book Appointment
                         </button>
                       </div>
                     )}
@@ -499,64 +573,69 @@ function UserDashboard() {
 
         {/* Appointment Booking Modal */}
         {showAppointmentForm && selectedService && (
-          <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#62109F]">
-                  📅 Book Appointment - {selectedService.title}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowAppointmentForm(false);
-                    setSelectedService(null);
-                    setAvailableSlots([]);
-                  }}
-                  className="text-gray-500 hover:text-gray-700 outline-none cursor-pointer"
-                >
-                  <FaTimes size={20} />
-                </button>
+          <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg z-10">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-[#62109F]">
+                    📅 Book Appointment - {selectedService.title}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowAppointmentForm(false);
+                      setSelectedService(null);
+                      setAvailableSlots([]);
+                    }}
+                    className="text-gray-500 hover:text-gray-700 outline-none cursor-pointer p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <FaTimes size={18} />
+                  </button>
+                </div>
               </div>
 
-              {/* Group Size and Names Form */}
-              <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-[#62109F] mb-4">
-                  Booking Details
-                </h3>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    How many people in your group?
-                  </label>
-                  <input
-                    name="groupSize"
-                    type="number"
-                    min="1"
-                    max={selectedService?.maxCapacity || 20}
-                    value={appointmentFormik.values.groupSize}
-                    onChange={(e) => {
-                      const newSize = parseInt(e.target.value) || 1;
-                      const newNames = Array(newSize).fill('').map((_, i) => appointmentFormik.values.memberNames[i] || '');
-                      appointmentFormik.setFieldValue('groupSize', newSize);
-                      appointmentFormik.setFieldValue('memberNames', newNames);
-                    }}
-                    onBlur={appointmentFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
-                  />
-                  {appointmentFormik.touched.groupSize && appointmentFormik.errors.groupSize && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {appointmentFormik.errors.groupSize}
+              <div className="p-6">
+                {/* Group Size and Names Form */}
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-base font-semibold text-[#62109F] mb-3">
+                    👥 Booking Details
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Group Size
+                      </label>
+                      <input
+                        name="groupSize"
+                        type="number"
+                        min="1"
+                        max={selectedService?.maxCapacity || 20}
+                        value={appointmentFormik.values.groupSize}
+                        onChange={(e) => {
+                          const newSize = parseInt(e.target.value) || 1;
+                          const newNames = Array(newSize).fill('').map((_, i) => appointmentFormik.values.memberNames[i] || '');
+                          appointmentFormik.setFieldValue('groupSize', newSize);
+                          appointmentFormik.setFieldValue('memberNames', newNames);
+                        }}
+                        onBlur={appointmentFormik.handleBlur}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm"
+                      />
+                      {appointmentFormik.touched.groupSize && appointmentFormik.errors.groupSize && (
+                        <div className="text-red-500 text-xs mt-1">
+                          {appointmentFormik.errors.groupSize}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter names for all members:
-                  </label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {Array.from({ length: appointmentFormik.values.groupSize }, (_, index) => (
-                      <div key={index}>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Member Names
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-32 overflow-y-auto">
+                      {Array.from({ length: appointmentFormik.values.groupSize }, (_, index) => (
                         <input
+                          key={index}
                           type="text"
                           placeholder={`Person ${index + 1} name`}
                           value={appointmentFormik.values.memberNames[index] || ''}
@@ -566,128 +645,194 @@ function UserDashboard() {
                             appointmentFormik.setFieldValue('memberNames', newNames);
                           }}
                           onBlur={() => appointmentFormik.setFieldTouched(`memberNames[${index}]`, true)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm"
                         />
-                        {appointmentFormik.touched.memberNames?.[index] && appointmentFormik.errors.memberNames?.[index] && (
-                          <div className="text-red-500 text-sm mt-1">
-                            {appointmentFormik.errors.memberNames[index]}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-[#62109F] mb-4">
-                  Select Time Slot
-                </h3>
-                
-                {availableSlots.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No time slots available</p>
-                    <p className="text-xs text-gray-400 mt-1">The organizer hasn't set up appointment times yet</p>
+                <div className="mb-6">
+                  <h3 className="text-base font-semibold text-[#62109F] mb-3">
+                    🕒 Select Your Appointment Time
+                  </h3>
+                  
+                  {selectedCalendarSlot && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-800 font-medium text-sm">
+                        ✅ Selected: {selectedCalendarSlot.startTime} - {selectedCalendarSlot.endTime}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <FullCalendar
+                      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                      initialView="timeGridWeek"
+                      headerToolbar={{
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                      }}
+                      events={calendarEvents}
+                      selectable={true}
+                      selectMirror={true}
+                      select={handleDateSelect}
+                      height={350}
+                      slotMinTime="08:00:00"
+                      slotMaxTime="20:00:00"
+                      slotDuration="00:30:00"
+                      snapDuration="00:30:00"
+                      allDaySlot={false}
+                      eventDisplay="block"
+                      eventTextColor="#ffffff"
+                      selectConstraint={{
+                        start: '08:00',
+                        end: '20:00'
+                      }}
+                      businessHours={{
+                        daysOfWeek: [1, 2, 3, 4, 5, 6, 0],
+                        startTime: '08:00',
+                        endTime: '20:00'
+                      }}
+                      eventClassNames="cursor-pointer"
+                      dayHeaderClassNames="bg-[#F8F6FF] text-[#62109F] font-medium text-sm"
+                      eventBackgroundColor="#62109F"
+                      eventBorderColor="#4D2FB2"
+                      selectColor="#C47BE4"
+                      titleFormat={{ year: 'numeric', month: 'short', day: 'numeric' }}
+                      dayHeaderFormat={{ weekday: 'short' }}
+                      slotLabelFormat={{
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        omitZeroMinute: false,
+                        meridiem: 'short'
+                      }}
+                      scrollTime="09:00:00"
+                      scrollTimeReset={false}
+                      nowIndicator={true}
+                      slotEventOverlap={false}
+                      eventOverlap={false}
+                      expandRows={true}
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {availableSlots.map((slot, index) => {
-                      const bookedCount = bookedCounts[slot._id] || 0;
-                      const isSelected = selectedTimeSlot?._id === slot._id;
-                      const isFull = bookedCount >= slot.capacity;
-                      
-                      return (
-                        <div 
-                          key={index} 
-                          className={`border-2 ${isSelected ? 'border-[#62109F] bg-[#F3F0FF]' : 'border-[#4D2FB2] bg-[#F8F6FF]'} ${isFull ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#F0EDFF] cursor-pointer'} rounded-lg p-4 transition-all duration-300 relative`}
-                          onClick={() => {
-                            if (!isFull) {
-                              setSelectedTimeSlot(slot);
-                              toast.success(`Selected: ${slot.startTime} - ${slot.endTime}`);
-                            } else {
-                              toast.error('This time slot is full');
-                            }
-                          }}
-                        >
-                          {/* Checkbox for slot selection */}
-                          <div 
-                            className="absolute -top-1 right-1 cursor-pointer p-1"
-                            onClick={(e) => handleTimeSlotCheckbox(slot._id, e)}
-                          >
-                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all duration-200 ${
-                              checkedTimeSlots.has(slot._id) 
-                                ? 'bg-[#62109F] border-[#62109F]' 
-                                : 'border-gray-400 hover:border-[#62109F]'
-                            }`}>
-                              {checkedTimeSlots.has(slot._id) && (
-                                <FaCheck className="text-white text-xs" />
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* Checkmark for selected slot */}
-                          {isSelected && (
-                            <div className="absolute -top-1 right-7 w-6 h-6 bg-[#62109F] rounded-full flex items-center justify-center">
-                              <FaCheck className="text-white text-xs" />
-                            </div>
-                          )}
-                          
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="font-semibold text-[#62109F]">
-                              Time Slot {index + 1}
-                            </div>
-                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              isFull ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                            }`}>
-                              {isFull ? 'Full' : 'Available'}
-                            </div>
-                          </div>
-                          
-                          <div className="text-lg font-medium text-gray-700 mb-1">
-                            {slot.startTime} - {slot.endTime}
-                          </div>
-                          
-                          <div className="text-sm text-gray-600">
-                            Booked: {bookedCount}/{slot.capacity} people
-                          </div>
-                        </div>
-                      );
-                    })}
+                  
+                  {/* Available Time Windows Display */}
+                  <div className="mt-4 p-4 bg-gradient-to-r from-[#E0F2FE] to-[#F0F9FF] rounded-lg border border-blue-200">
+                    <h4 className="text-sm font-semibold text-[#0EA5E9] mb-3">
+                      📋 Available Time Windows
+                    </h4>
+                    {calendarEvents.filter(event => event.display === 'background').length > 0 ? (
+                      <div className="space-y-2">
+                        {calendarEvents
+                          .filter(event => event.display === 'background')
+                          .map((event, index) => {
+                            const startDateTime = event.start;
+                            const endDateTime = event.end;
+                            const datePart = startDateTime.split('T')[0];
+                            const startTimePart = startDateTime.split('T')[1];
+                            const endTimePart = endDateTime.split('T')[1];
+                            
+                            const [year, month, day] = datePart.split('-');
+                            const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            
+                            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric'
+                            });
+                            
+                            const formatTime = (timeStr) => {
+                              const [hours, minutes] = timeStr.split(':');
+                              const hour24 = parseInt(hours);
+                              const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                              const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                              return `${hour12}:${minutes} ${ampm}`;
+                            };
+                            
+                            const startTime = formatTime(startTimePart);
+                            const endTime = formatTime(endTimePart);
+                            
+                            // Check if this window has any booked slots
+                            const hasBookedSlots = calendarEvents.some(bookedEvent => 
+                              bookedEvent.id.startsWith('booked-') &&
+                              bookedEvent.start.split('T')[0] === datePart
+                            );
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                  <div>
+                                    <p className="font-medium text-gray-800 text-sm">{formattedDate}</p>
+                                    <p className="text-xs text-gray-600">{startTime} - {endTime}</p>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-blue-600 font-medium">
+                                  {hasBookedSlots ? 'Partially Booked' : 'Available'}
+                                </div>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <p className="text-gray-600 text-sm">⚠️ No availability windows set by organizer.</p>
+                        <p className="text-xs text-gray-500 mt-1">Please contact the service provider.</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                  
+                  <div className="mt-3 text-xs text-gray-600">
+                    <div className="flex items-center justify-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
+                        <span>Available</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                        <span>Booked</span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-center">
+                      Click and drag on the calendar to select a 30-minute slot.
+                    </p>
+                  </div>
+                </div>
 
-
-              <div className="flex justify-end space-x-3 mb-4">
-                <button
-                  onClick={() => {
-                    setShowAppointmentForm(false);
-                    setSelectedService(null);
-                    setAvailableSlots([]);
-                  }}
-                  className="px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors  cursor-pointer outline-none"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={appointmentFormik.handleSubmit}
-                  disabled={appointmentFormik.isSubmitting}
-                  className="px-6 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50  cursor-pointer outline-none"
-                >
-                  {appointmentFormik.isSubmitting ? "Booking..." : "Book Appointment"}
-                </button>
-              </div>
-
-              <div className="bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] p-4 rounded-lg">
-                <h4 className="font-semibold text-white mb-2">
-                  How Appointment Booking Works
-                </h4>
-                <ul className="text-white text-sm space-y-1">
-                  <li>• Select your preferred time slot above</li>
-                  <li>• Confirm your booking details</li>
-                  <li>• Arrive 5 minutes before your scheduled time</li>
-                  <li>• No waiting in line - direct service!</li>
-                </ul>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200">
+                  <div className="bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] p-3 rounded-lg flex-1">
+                    <h4 className="font-semibold text-white mb-1 text-sm">
+                      💡 Quick Tips
+                    </h4>
+                    <ul className="text-white text-xs space-y-1">
+                      <li>• Select time slot above</li>
+                      <li>• Arrive 5 minutes early</li>
+                      <li>• No waiting in line!</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowAppointmentForm(false);
+                        setSelectedService(null);
+                        setAvailableSlots([]);
+                      }}
+                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={appointmentFormik.handleSubmit}
+                      disabled={appointmentFormik.isSubmitting || !selectedCalendarSlot}
+                      className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none text-sm"
+                    >
+                      {appointmentFormik.isSubmitting ? "Booking..." : "Book Appointment"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

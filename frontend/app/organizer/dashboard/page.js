@@ -25,7 +25,7 @@ function OrganizerDashboard() {
   const [services, setServices] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [timeSlots, setTimeSlots] = useState([]);
+  const [availabilityWindows, setAvailabilityWindows] = useState([]);
   const router = useRouter();
 
   const formik = useFormik({
@@ -42,15 +42,13 @@ function OrganizerDashboard() {
       try {
         const serviceData = {
           ...values,
-          timeSlots: values.appointmentEnabled ? timeSlots : []
+          availabilityWindows: values.appointmentEnabled ? availabilityWindows : []
         };
-        console.log('Sending service data:', serviceData); // Debug log
-        console.log('Time slots being sent:', timeSlots); // Debug log
         await api.post("/queue/services", serviceData);
         toast.success("Service created successfully!");
         setShowCreateForm(false);
         resetForm();
-        setTimeSlots([]);
+        setAvailabilityWindows([]);
         fetchServices();
       } catch (error) {
         console.error("Error creating service:", error);
@@ -296,25 +294,28 @@ function OrganizerDashboard() {
                   </p>
                 </div>
 
-                {/* Time Slots Section */}
+                {/* Availability Windows Section */}
                 {formik.values.appointmentEnabled && (
                   <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Available Time Slots
+                      Availability Windows
                     </h4>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Set time windows when appointments are available (e.g., 4:00 PM - 7:00 PM). Users can book 30-minute slots within these windows.
+                    </p>
                     
-                    {timeSlots.length === 0 ? (
-                      <p className="text-xs text-gray-500 mb-3">No time slots added yet</p>
+                    {availabilityWindows.length === 0 ? (
+                      <p className="text-xs text-gray-500 mb-3">No availability windows added yet</p>
                     ) : (
                       <div className="space-y-2 mb-3">
-                        {timeSlots.map((slot, index) => (
+                        {availabilityWindows.map((window, index) => (
                           <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                             <span className="text-sm">
-                              {slot.date} | {slot.startTime} - {slot.endTime} (Capacity: {slot.capacity})
+                              {window.date} | {window.startTime} - {window.endTime}
                             </span>
                             <button
                               type="button"
-                              onClick={() => setTimeSlots(timeSlots.filter((_, i) => i !== index))}
+                              onClick={() => setAvailabilityWindows(availabilityWindows.filter((_, i) => i !== index))}
                               className="text-red-500 hover:text-red-700 text-xs"
                             >
                               Remove
@@ -324,17 +325,10 @@ function OrganizerDashboard() {
                       </div>
                     )}
                     
-                    <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="grid grid-cols-1 gap-2 mb-2">
                       <input
                         type="date"
-                        id="slotDate"
-                        className="px-2 py-1 border border-gray-300 rounded text-xs"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Capacity"
-                        min="1"
-                        id="slotCapacity"
+                        id="windowDate"
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                     </div>
@@ -342,13 +336,13 @@ function OrganizerDashboard() {
                       <input
                         type="time"
                         placeholder="Start Time"
-                        id="startTime"
+                        id="windowStartTime"
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                       <input
                         type="time"
                         placeholder="End Time"
-                        id="endTime"
+                        id="windowEndTime"
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                     </div>
@@ -356,24 +350,26 @@ function OrganizerDashboard() {
                     <button
                       type="button"
                       onClick={() => {
-                        const date = document.getElementById('slotDate').value;
-                        const startTime = document.getElementById('startTime').value;
-                        const endTime = document.getElementById('endTime').value;
-                        const capacity = parseInt(document.getElementById('slotCapacity').value);
+                        const date = document.getElementById('windowDate').value;
+                        const startTime = document.getElementById('windowStartTime').value;
+                        const endTime = document.getElementById('windowEndTime').value;
                         
-                        if (date && startTime && endTime && capacity) {
-                          setTimeSlots([...timeSlots, { date, startTime, endTime, capacity }]);
-                          document.getElementById('slotDate').value = '';
-                          document.getElementById('startTime').value = '';
-                          document.getElementById('endTime').value = '';
-                          document.getElementById('slotCapacity').value = '';
+                        if (date && startTime && endTime) {
+                          if (startTime >= endTime) {
+                            toast.error('End time must be after start time');
+                            return;
+                          }
+                          setAvailabilityWindows([...availabilityWindows, { date, startTime, endTime }]);
+                          document.getElementById('windowDate').value = '';
+                          document.getElementById('windowStartTime').value = '';
+                          document.getElementById('windowEndTime').value = '';
                         } else {
-                          toast.error('Please fill all time slot fields');
+                          toast.error('Please fill all availability window fields');
                         }
                       }}
                       className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4]"
                     >
-                      Add Time Slot
+                      Add Availability Window
                     </button>
                   </div>
                 )}
@@ -417,81 +413,83 @@ function OrganizerDashboard() {
             {services.map((service) => (
               <div
                 key={service._id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300"
+                className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
               >
-                <div className="flex items-center mb-4">
-                  <span className="text-4xl mr-3">
-                    {getServiceIcon(service.serviceType)}
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-semibold text-[#62109F]">
-                      {service.title}
-                    </h3>
-                    <p className="text-sm text-[#85409D] capitalize">
-                      {service.serviceType}
-                    </p>
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-center mb-4">
+                    <span className="text-4xl mr-3">
+                      {getServiceIcon(service.serviceType)}
+                    </span>
+                    <div>
+                      <h3 className="text-xl font-semibold text-[#62109F]">
+                        {service.title}
+                      </h3>
+                      <p className="text-sm text-[#85409D] capitalize">
+                        {service.serviceType}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {service.photo && (
-                  <div className="relative w-full h-32 mb-4">
-                    <Image
-                      src={service.photo}
-                      alt={service.title}
-                      fill
-                      className="object-cover rounded-lg"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                      }}
-                    />
-                  </div>
-                )}
-
-                <p className="text-gray-600 mb-4 line-clamp-2">
-                  {service.description}
-                </p>
-
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium">Capacity:</span>{" "}
-                    {service.maxCapacity}
-                  </div>
-                  <div
-                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
-                  >
-                    {service.status}
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  {service.status === "inactive" && (
-                    <button
-                      onClick={() => handleStartService(service._id)}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
-                    >
-                      Start Service
-                    </button>
+                  {service.photo && (
+                    <div className="relative w-full h-32 mb-4">
+                      <Image
+                        src={service.photo}
+                        alt={service.title}
+                        fill
+                        className="object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
                   )}
 
-                  <button
-                    onClick={() =>
-                      router.push(`/organizer/service/${service._id}`)
-                    }
-                    className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white py-2 px-4 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
-                  >
-                    {getButtonText(service)}
-                  </button>
-                  
-                  {service.appointmentEnabled && (
+                  <p className="text-gray-600 mb-4 flex-1 min-h-[3rem] line-clamp-3">
+                    {service.description}
+                  </p>
+
+                  <div className="flex justify-between items-center mb-4 mt-auto">
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium">Capacity:</span>{" "}
+                      {service.maxCapacity}
+                    </div>
+                    <div
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
+                    >
+                      {service.status}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col space-y-2">
+                    {service.status === "inactive" && (
+                      <button
+                        onClick={() => handleStartService(service._id)}
+                        className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                      >
+                        Start Service
+                      </button>
+                    )}
+
                     <button
                       onClick={() =>
-                        router.push(`/organizer/appointments/${service._id}`)
+                        router.push(`/organizer/service/${service._id}`)
                       }
-                      className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white py-2 px-4 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
+                      className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-4 py-2 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
                     >
-                      Appointments
+                      {getButtonText(service)}
                     </button>
-                  )}
+                    
+                    {service.appointmentEnabled && (
+                      <button
+                        onClick={() =>
+                          router.push(`/organizer/appointments/${service._id}`)
+                        }
+                        className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-4 py-2 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
+                      >
+                        Appointments
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

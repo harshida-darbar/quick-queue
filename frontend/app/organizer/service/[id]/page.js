@@ -14,6 +14,8 @@ export default function ServiceManagement({ params }) {
   const [waitingUsers, setWaitingUsers] = useState([]);
   const [completedUsers, setCompletedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,11 +70,19 @@ export default function ServiceManagement({ params }) {
   };
 
   const handleMarkComplete = async (entryId) => {
+    const entry = servingUsers.find(u => u._id === entryId);
+    setSelectedEntry(entry);
+    setShowConfirmModal(true);
+  };
+
+  const confirmComplete = async () => {
     try {
       await api.patch(`/queue/services/${resolvedParams.id}/complete`, {
-        entryId,
+        entryId: selectedEntry._id,
       });
       toast.success("User marked as complete!");
+      setShowConfirmModal(false);
+      setSelectedEntry(null);
       fetchServiceDetails();
     } catch (error) {
       console.error("Error marking complete:", error);
@@ -201,7 +211,7 @@ export default function ServiceManagement({ params }) {
                 No one is waiting
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {waitingUsers.map((entry, index) => (
                   <div
                     key={entry._id}
@@ -255,7 +265,7 @@ export default function ServiceManagement({ params }) {
                 No one is currently being served
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {servingUsers.map((entry) => (
                   <div
                     key={entry._id}
@@ -370,6 +380,37 @@ export default function ServiceManagement({ params }) {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && selectedEntry && (
+        <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#62109F] mb-4">
+              Confirm Completion
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to mark <strong>{selectedEntry.user.name}</strong> (Token #{selectedEntry.tokenNumber}) as complete?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setSelectedEntry(null);
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
+              >
+                No, Cancel
+              </button>
+              <button
+                onClick={confirmComplete}
+                className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#8C00FF] transition-colors cursor-pointer outline-none"
+              >
+                Yes, Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

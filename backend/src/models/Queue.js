@@ -1,25 +1,60 @@
 // quick-queue/backend/src/models/Queue.js
 const mongoose = require("mongoose");
 
-const timeSlotSchema = new mongoose.Schema({
-  startTime: {
-    type: String,
-    required: true, // Format: "19:00" (7 PM)
-  },
-  endTime: {
-    type: String,
-    required: true, // Format: "20:00" (8 PM)
-  },
-  capacity: {
-    type: Number,
-    required: true,
-    min: 1,
-  },
+// Availability window schema - organizer sets these
+const availabilityWindowSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
   },
+  startTime: {
+    type: String,
+    required: true, // Format: "16:00" (4 PM)
+  },
+  endTime: {
+    type: String,
+    required: true, // Format: "19:00" (7 PM)
+  },
 });
+
+// Booked slot schema - user creates these by selecting from availability
+const bookedSlotSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true,
+  },
+  startTime: {
+    type: String,
+    required: true, // Format: "16:15" (4:15 PM)
+  },
+  endTime: {
+    type: String,
+    required: true, // Format: "16:45" (4:45 PM) - always +30min
+  },
+  bookedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  bookedUserName: {
+    type: String,
+    required: true,
+  },
+  groupSize: {
+    type: Number,
+    required: true,
+    min: 1,
+  },
+  memberNames: [{
+    type: String,
+    required: true,
+  }],
+  status: {
+    type: String,
+    enum: ['booked', 'completed', 'cancelled'],
+    default: 'booked',
+  },
+}, { timestamps: true });
 
 const queueSchema = new mongoose.Schema(
   {
@@ -64,7 +99,8 @@ const queueSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    timeSlots: [timeSlotSchema],
+    availabilityWindows: [availabilityWindowSchema],
+    bookedSlots: [bookedSlotSchema],
   },
   { timestamps: true }
 );

@@ -6,10 +6,10 @@ const Appointment = require("../models/Appointment");
 // Create a new service
 exports.createService = async (req, res) => {
   try {
-    const { title, description, serviceType, photo, maxCapacity, appointmentEnabled, timeSlots } = req.body;
+    const { title, description, serviceType, photo, maxCapacity, appointmentEnabled, availabilityWindows } = req.body;
     
     console.log('Received service data:', req.body); // Debug log
-    console.log('Time slots received:', timeSlots); // Debug log
+    console.log('Availability windows received:', availabilityWindows); // Debug log
 
     if (!title || !description || !serviceType || !maxCapacity) {
       return res.status(400).json({ message: "All fields are required" });
@@ -23,7 +23,8 @@ exports.createService = async (req, res) => {
       maxCapacity,
       organizer: req.user.id,
       appointmentEnabled: appointmentEnabled || false,
-      timeSlots: timeSlots || [],
+      availabilityWindows: availabilityWindows || [],
+      bookedSlots: [],
     });
 
     console.log('Created service:', service); // Debug log
@@ -382,13 +383,36 @@ exports.startService = async (req, res) => {
   }
 };
 
-// Book appointment
+// Get service availability (availability windows and booked slots)
+exports.getServiceAvailability = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    
+    const service = await Queue.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    res.json({
+      availabilityWindows: service.availabilityWindows || [],
+      bookedSlots: service.bookedSlots || []
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Book appointment (new calendar-based system)
 exports.bookAppointment = async (req, res) => {
   try {
-    const { queueId, timeSlotId, groupSize, memberNames, date, startTime, endTime } = req.body;
+    const { queueId, groupSize, memberNames, date, startTime, endTime } = req.body;
     const userId = req.user.id;
 
-    if (!queueId || !timeSlotId || !groupSize || !memberNames || !date || !startTime || !endTime) {
+    console.log('Booking appointment request:', { queueId, groupSize, memberNames, date, startTime, endTime, userId }); // Debug log
+    console.log('User object:', req.user); // Debug log
+
+    if (!queueId || !groupSize || !memberNames || !date || !startTime || !endTime) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -397,56 +421,61 @@ exports.bookAppointment = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    if (!service.appointmentEnabled) {
-      return res.status(400).json({ message: "Appointments not enabled for this service" });
+    // Get user details
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Find the time slot
-    const timeSlot = service.timeSlots.id(timeSlotId);
-    if (!timeSlot) {
-      return res.status(404).json({ message: "Time slot not found" });
-    }
-
-    // Check existing appointments for this time slot
-    const existingAppointments = await Appointment.find({
-      queue: queueId,
-      startTime,
-      endTime,
-      date: new Date(date),
-      status: { $ne: "cancelled" }
+    // Check if time slot conflicts with existing bookings
+    const conflictingSlot = service.bookedSlots.find(slot => {
+      const slotStart = new Date(`${slot.date.toISOString().split('T')[0]}T${slot.startTime}`);
+      const slotEnd = new Date(`${slot.date.toISOString().split('T')[0]}T${slot.endTime}`);
+      const requestStart = new Date(`${date}T${startTime}`);
+      const requestEnd = new Date(`${date}T${endTime}`);
+      
+      return (requestStart < slotEnd && requestEnd > slotStart);
     });
 
-    const bookedCapacity = existingAppointments.reduce((sum, apt) => sum + apt.groupSize, 0);
-    
-    if (bookedCapacity + groupSize > timeSlot.capacity) {
-      return res.status(400).json({ 
-        message: `Not enough capacity. Available: ${timeSlot.capacity - bookedCapacity}, Requested: ${groupSize}` 
+    if (conflictingSlot) {
+      return res.status(409).json({ 
+        message: "This time slot is already booked. Please select another time." 
       });
     }
 
-    const appointment = await Appointment.create({
-      queue: queueId,
-      user: userId,
+    // Add booked slot to service
+    service.bookedSlots.push({
       date: new Date(date),
       startTime,
       endTime,
+      bookedBy: userId,
+      bookedUserName: user.name,
       groupSize,
       memberNames: memberNames.map(name => name.trim()),
-      status: "confirmed"
+      status: 'booked'
     });
+
+    await service.save();
 
     res.status(201).json({
       message: "Appointment booked successfully",
-      appointment
+      slot: {
+        date,
+        startTime,
+        endTime,
+        groupSize,
+        memberNames
+      }
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error in bookAppointment:', error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Add time slot to service
-exports.addTimeSlot = async (req, res) => {
+// Add availability window (for organizers)
+exports.addAvailabilityWindow = async (req, res) => {
   try {
     const serviceId = req.params.id;
     const { date, startTime, endTime, capacity } = req.body;
@@ -456,10 +485,10 @@ exports.addTimeSlot = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    service.timeSlots.push({ date, startTime, endTime, capacity });
+    service.availabilityWindows.push({ date, startTime, endTime, capacity });
     await service.save();
 
-    res.json({ message: "Time slot added successfully", service });
+    res.json({ message: "Availability window added successfully", service });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
