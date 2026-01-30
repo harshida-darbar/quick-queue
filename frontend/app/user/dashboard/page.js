@@ -339,43 +339,46 @@ function UserDashboard() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      service.isFull 
-                        ? "bg-red-100 text-red-800" 
-                        : "bg-green-100 text-green-800"
-                    }`}>
-                      {service.isFull ? "Full" : "Available"}
+                  <div className="flex flex-col space-y-3">
+                    {/* Status Badge Row */}
+                    <div className="flex justify-between items-center">
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        service.isFull 
+                          ? "bg-red-100 text-red-800" 
+                          : "bg-green-100 text-green-800"
+                      }`}>
+                        {service.isFull ? "Full" : "Available"}
+                      </div>
+                      
+                      {service.userStatus && (
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          service.userStatus.status === 'serving' ? 'bg-green-100 text-green-800' :
+                          service.userStatus.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {service.userStatus.status === 'serving' ? `🟢 Serving #${service.userStatus.tokenNumber}` :
+                           service.userStatus.status === 'waiting' ? `🟡 Waiting #${service.userStatus.tokenNumber}` :
+                           `✅ Complete #${service.userStatus.tokenNumber}`}
+                        </div>
+                      )}
                     </div>
                     
-                    {service.userStatus ? (
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        service.userStatus.status === 'serving' ? 'bg-green-100 text-green-800' :
-                        service.userStatus.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {service.userStatus.status === 'serving' ? `🟢 Serving #${service.userStatus.tokenNumber}` :
-                         service.userStatus.status === 'waiting' ? `🟡 Waiting #${service.userStatus.tokenNumber}` :
-                         `✅ Complete #${service.userStatus.tokenNumber}`}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col space-y-1">
+                    {/* Buttons Row */}
+                    {(!service.userStatus || service.userStatus.status === 'complete') && (
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <button 
                           onClick={(e) => handleJoinClick(service, e)}
-                          className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-3 py-1.5 text-sm rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
+                          className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-3 py-2 text-sm rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
                         >
                           {getButtonText(service)}
                         </button>
                         
-                        {/* Temporarily show appointment button for all services for testing */}
-                        {true && (
-                          <button 
-                            onClick={(e) => handleAppointmentClick(service, e)}
-                            className="bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-3 py-1.5 text-sm rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
-                          >
-                            📅 Book Appointment
-                          </button>
-                        )}
+                        <button 
+                          onClick={(e) => handleAppointmentClick(service, e)}
+                          className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-3 py-2 text-sm rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
+                        >
+                          📅 Book Appointment
+                        </button>
                       </div>
                     )}
                   </div>
