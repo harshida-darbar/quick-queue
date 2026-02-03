@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../../utils/api";
@@ -52,16 +52,9 @@ export default function ServiceDetails({ params }) {
       const response = await api.post(`/queue/services/${resolvedParams.id}/join`);
       
       if (response.data.status === 'serving') {
-        toast.success(response.data.message, { duration: 4000 });
+        toast.success(response.data.message);
       } else {
-        toast(response.data.message, { 
-          icon: '⏳',
-          duration: 4000,
-          style: {
-            background: '#FEF3C7',
-            color: '#92400E'
-          }
-        });
+        toast.warning(response.data.message);
       }
 
       await fetchServiceDetails();
@@ -117,12 +110,11 @@ export default function ServiceDetails({ params }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
       
       <div className="max-w-4xl mx-auto p-6">
         <button
           onClick={() => router.back()}
-          className="mb-6 text-[#4D2FB2] hover:text-[#62109F] flex items-center font-medium"
+          className="mb-6 text-[#4D2FB2] hover:text-[#62109F] flex items-center font-medium outline-none"
         >
           <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white hover:bg-opacity-20 rounded-lg"/> Back to Services
         </button>

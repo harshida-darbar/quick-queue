@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../utils/api";
@@ -158,7 +158,6 @@ function OrganizerDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
 
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">

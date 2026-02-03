@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes } from "react-icons/fa";
 import { useFormik } from "formik";
@@ -325,7 +325,6 @@ function UserDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
       
       <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-[#62109F] mb-8">Available Services</h1>

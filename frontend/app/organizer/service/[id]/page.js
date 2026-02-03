@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
@@ -131,7 +131,6 @@ export default function ServiceManagement({ params }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
 
       <div className="max-w-6xl mx-auto p-6">
         <button

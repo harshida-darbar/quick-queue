@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import { IoArrowBack, IoCamera, IoPerson, IoMail, IoShield } from "react-icons/io5";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
@@ -100,7 +100,6 @@ function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
       
       <div className="max-w-xl mx-auto p-4">
         <div className="flex items-center mb-6">

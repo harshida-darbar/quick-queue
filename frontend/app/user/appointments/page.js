@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "react-toastify";
 import { IoCalendarOutline, IoTimeOutline, IoPeopleOutline, IoArrowBack } from "react-icons/io5";
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
@@ -60,7 +60,6 @@ function MyAppointments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
       <Navbar />
-      <Toaster position="top-right" />
       
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center mb-8">
