@@ -403,74 +403,36 @@ exports.getServiceAvailability = async (req, res) => {
   }
 };
 
-// Book appointment (new calendar-based system)
+// Book appointment (simplified version)
 exports.bookAppointment = async (req, res) => {
   try {
     const { queueId, groupSize, memberNames, date, startTime, endTime } = req.body;
     const userId = req.user.id;
-
-    console.log('Booking appointment request:', { queueId, groupSize, memberNames, date, startTime, endTime, userId }); // Debug log
-    console.log('User object:', req.user); // Debug log
-
-    if (!queueId || !groupSize || !memberNames || !date || !startTime || !endTime) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
 
     const service = await Queue.findById(queueId);
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    // Get user details
-    const User = require('../models/User');
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if time slot conflicts with existing bookings
-    const conflictingSlot = service.bookedSlots.find(slot => {
-      const slotStart = new Date(`${slot.date.toISOString().split('T')[0]}T${slot.startTime}`);
-      const slotEnd = new Date(`${slot.date.toISOString().split('T')[0]}T${slot.endTime}`);
-      const requestStart = new Date(`${date}T${startTime}`);
-      const requestEnd = new Date(`${date}T${endTime}`);
-      
-      return (requestStart < slotEnd && requestEnd > slotStart);
-    });
-
-    if (conflictingSlot) {
-      return res.status(409).json({ 
-        message: "This time slot is already booked. Please select another time." 
-      });
-    }
-
-    // Add booked slot to service
     service.bookedSlots.push({
       date: new Date(date),
       startTime,
       endTime,
       bookedBy: userId,
-      bookedUserName: user.name,
-      groupSize,
-      memberNames: memberNames.map(name => name.trim()),
+      bookedUserName: req.user.name || 'User',
+      groupSize: Number(groupSize),
+      memberNames: memberNames || [],
       status: 'booked'
     });
 
     await service.save();
 
     res.status(201).json({
-      message: "Appointment booked successfully",
-      slot: {
-        date,
-        startTime,
-        endTime,
-        groupSize,
-        memberNames
-      }
+      message: "Appointment booked successfully"
     });
   } catch (error) {
-    console.error('Error in bookAppointment:', error);
-    res.status(500).json({ message: "Server error" });
+    console.error('bookAppointment error:', error);
+    res.status(500).json({ message: "Server error", details: error.message });
   }
 };
 
@@ -539,6 +501,55 @@ exports.getUserQueueStatus = async (req, res) => {
       waitingAhead: entry.status === "waiting" ? waitingAhead : 0,
     });
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get user's appointments
+exports.getUserAppointments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const services = await Queue.find({
+      'bookedSlots.bookedBy': userId
+    }).populate('organizer', 'name');
+    
+    const appointments = [];
+    
+    services.forEach(service => {
+      const userSlots = service.bookedSlots.filter(slot => 
+        slot.bookedBy.toString() === userId
+      );
+      
+      userSlots.forEach(slot => {
+        appointments.push({
+          _id: slot._id,
+          date: slot.date,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          groupSize: slot.groupSize,
+          memberNames: slot.memberNames,
+          status: slot.status,
+          service: {
+            _id: service._id,
+            title: service.title,
+            serviceType: service.serviceType,
+            organizer: service.organizer
+          }
+        });
+      });
+    });
+    
+    // Sort by date and time
+    appointments.sort((a, b) => {
+      const dateA = new Date(`${a.date.toISOString().split('T')[0]}T${a.startTime}`);
+      const dateB = new Date(`${b.date.toISOString().split('T')[0]}T${b.startTime}`);
+      return dateA - dateB;
+    });
+    
+    res.json(appointments);
+  } catch (error) {
+    console.error('Error fetching user appointments:', error);
     res.status(500).json({ message: "Server error" });
   }
 };

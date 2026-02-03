@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { FaArrowLeft, FaCalendarAlt, FaClock, FaUsers, FaUser } from "react-icons/fa";
+import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUser } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import ProtectedRoute from "../../../components/ProtectedRoute";
@@ -47,16 +47,6 @@ function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   };
 
   const formatTime = (timeStr) => {

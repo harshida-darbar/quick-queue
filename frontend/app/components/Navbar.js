@@ -61,6 +61,17 @@ export default function Navbar() {
                 
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    {user.role === 3 && (
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          router.push('/user/appointments');
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none"
+                      >
+                        My Appointments
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         setShowDropdown(false);

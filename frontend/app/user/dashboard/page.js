@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import Image from "next/image";
-import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes, FaCheck } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import FullCalendar from '@fullcalendar/react';
@@ -13,6 +13,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import { IoBulbOutline, IoCalendarOutline, IoPeopleOutline, IoTimeOutline, IoClipboardOutline } from "react-icons/io5";
 
 function UserDashboard() {
   const [services, setServices] = useState([]);
@@ -21,8 +22,6 @@ function UserDashboard() {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  const [checkedTimeSlots, setCheckedTimeSlots] = useState(new Set());
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [selectedCalendarSlot, setSelectedCalendarSlot] = useState(null);
   const appointmentFormik = useFormik({
@@ -74,9 +73,6 @@ function UserDashboard() {
       }
     },
   });
-  const [bookedCounts, setBookedCounts] = useState({});
-  const [appointmentGroupSize, setAppointmentGroupSize] = useState(1);
-  const [appointmentNames, setAppointmentNames] = useState(['']);
   const router = useRouter();
 
   useEffect(() => {
@@ -152,8 +148,6 @@ function UserDashboard() {
   const handleAppointmentClick = async (service, e) => {
     e.stopPropagation();
     setSelectedService(service);
-    setAppointmentGroupSize(1);
-    setAppointmentNames(['']);
     
     // Load availability windows and booked slots
     try {
@@ -216,19 +210,6 @@ function UserDashboard() {
     }
     
     setShowAppointmentForm(true);
-  };
-
-  const handleAppointmentGroupSizeChange = (e) => {
-    const newSize = parseInt(e.target.value) || 1;
-    
-    if (newSize > selectedService?.maxCapacity) {
-      toast.error(`Group size cannot exceed service capacity of ${selectedService.maxCapacity} people`);
-      return;
-    }
-    
-    setAppointmentGroupSize(newSize);
-    const newNames = Array(newSize).fill('').map((_, i) => appointmentNames[i] || '');
-    setAppointmentNames(newNames);
   };
 
   const handleDateSelect = (selectInfo) => {
@@ -328,6 +309,7 @@ function UserDashboard() {
     
     const serviceType = service.serviceType.toLowerCase();
     const buttonMapping = {
+      
       hospital: "Book Appointment",
       clinic: "Book Appointment",
       doctor: "Book Appointment",
@@ -577,8 +559,9 @@ function UserDashboard() {
             <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg z-10">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-[#62109F]">
-                    📅 Book Appointment - {selectedService.title}
+                  <h2 className="text-xl font-bold text-[#62109F] flex items-center gap-2">
+                    <IoCalendarOutline size={20} className="text-[#62109F]" />
+                    Book Appointment - {selectedService.title}
                   </h2>
                   <button
                     onClick={() => {
@@ -596,8 +579,9 @@ function UserDashboard() {
               <div className="p-6">
                 {/* Group Size and Names Form */}
                 <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-base font-semibold text-[#62109F] mb-3">
-                    👥 Booking Details
+                  <h3 className="text-base font-semibold text-[#62109F] mb-3 flex items-center gap-2">
+                    <IoPeopleOutline size={18} className="text-[#62109F]" />
+                    Booking Details
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -653,8 +637,9 @@ function UserDashboard() {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-base font-semibold text-[#62109F] mb-3">
-                    🕒 Select Your Appointment Time
+                  <h3 className="text-base font-semibold text-[#62109F] mb-3 flex items-center gap-2">
+                    <IoTimeOutline size={18} className="text-[#62109F]" />
+                    Select Your Appointment Time
                   </h3>
                   
                   {selectedCalendarSlot && (
@@ -719,8 +704,9 @@ function UserDashboard() {
                   
                   {/* Available Time Windows Display */}
                   <div className="mt-4 p-4 bg-gradient-to-r from-[#E0F2FE] to-[#F0F9FF] rounded-lg border border-blue-200">
-                    <h4 className="text-sm font-semibold text-[#0EA5E9] mb-3">
-                      📋 Available Time Windows
+                    <h4 className="text-sm font-semibold text-[#0EA5E9] mb-3 flex items-center gap-2">
+                      <IoClipboardOutline size={16} className="text-[#0EA5E9]" />
+                      Available Time Windows
                     </h4>
                     {calendarEvents.filter(event => event.display === 'background').length > 0 ? (
                       <div className="space-y-2">
@@ -778,7 +764,7 @@ function UserDashboard() {
                       </div>
                     ) : (
                       <div className="text-center py-3">
-                        <p className="text-gray-600 text-sm">⚠️ No availability windows set by organizer.</p>
+                        <p className="text-gray-600 text-sm">No availability windows set by organizer.</p>
                         <p className="text-xs text-gray-500 mt-1">Please contact the service provider.</p>
                       </div>
                     )}
@@ -803,8 +789,9 @@ function UserDashboard() {
 
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200">
                   <div className="bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] p-3 rounded-lg flex-1">
-                    <h4 className="font-semibold text-white mb-1 text-sm">
-                      💡 Quick Tips
+                    <h4 className="font-semibold text-white mb-1 text-sm flex items-center gap-2">
+                      <IoBulbOutline size={18} className="text-yellow-400"/>
+                      Quick Tips
                     </h4>
                     <ul className="text-white text-xs space-y-1">
                       <li>• Select time slot above</li>
