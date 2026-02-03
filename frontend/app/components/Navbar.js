@@ -33,7 +33,7 @@ export default function Navbar() {
                 <h1 className="text-2xl font-bold text-white">Quick<span className="text-[#C47BE4]">Queue</span></h1>
               </div>
             </div>
-            
+              
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <button
@@ -49,8 +49,16 @@ export default function Navbar() {
                   
                   {/* Desktop User Info */}
                   <div className="hidden md:flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-[#85409D] rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">{user.name?.charAt(0)}</span>
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center">
+                      {user.profileImage ? (
+                        <img
+                          src={`http://localhost:5000/api/profile/image/${user.profileImage}`}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-white">{user.name?.charAt(0)}</span>
+                      )}
                     </div>
                     <span className="font-medium">{user.name}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,6 +69,17 @@ export default function Navbar() {
                 
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    {(user.role === 2 || user.role === 3) && (
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          router.push('/profile');
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none"
+                      >
+                        My Profile
+                      </button>
+                    )}
                     {user.role === 3 && (
                       <button
                         onClick={() => {

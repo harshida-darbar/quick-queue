@@ -11,8 +11,11 @@ function AppointmentsPage() {
   const [service, setService] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
   const router = useRouter();
   const params = useParams();
+
   const serviceId = params.id;
 
   useEffect(() => {
@@ -36,7 +39,9 @@ function AppointmentsPage() {
         ...slot,
         id: slot._id,
         user: {
-          name: slot.bookedUserName
+          id: slot.bookedBy,
+          name: slot.bookedUserName,
+          profileImage: slot.bookedUserProfileImage
         }
       }));
 
@@ -55,6 +60,17 @@ function AppointmentsPage() {
     const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
     const ampm = hour24 >= 12 ? 'PM' : 'AM';
     return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const handleUserClick = async (userId) => {
+    try {
+      const response = await api.get(`/queue/user/${userId}`);
+      setSelectedUser(response.data);
+      setShowUserModal(true);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      toast.error("Failed to fetch user details");
+    }
   };
 
   const getStatusColor = (status) => {
@@ -143,8 +159,23 @@ function AppointmentsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="flex items-center">
-                            <FaUser className="text-[#85409D] mr-2 text-sm" />
+                          <div 
+                            className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                            onClick={() => handleUserClick(appointment.user.id)}
+                          >
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center mr-3">
+                              {appointment.user.profileImage ? (
+                                <img
+                                  src={`http://localhost:5000/api/profile/image/${appointment.user.profileImage}`}
+                                  alt="Profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-medium text-white">
+                                  {appointment.user.name?.charAt(0)}
+                                </span>
+                              )}
+                            </div>
                             <span className="font-medium text-gray-900 text-sm">{appointment.user.name}</span>
                           </div>
                         </td>
@@ -209,6 +240,56 @@ function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-[#62109F]">User Details</h2>
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold outline-none cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center mb-4">
+                {selectedUser.profileImage ? (
+                  <img
+                    src={`http://localhost:5000/api/profile/image/${selectedUser.profileImage}`}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold text-white">
+                    {selectedUser.name?.charAt(0)}
+                  </span>
+                )}
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{selectedUser.name}</h3>
+                <p className="text-gray-600 text-sm mb-2">{selectedUser.email}</p>
+                <span className="px-3 py-1 bg-[#B7A3E3] text-[#62109F] rounded-full text-xs font-medium">
+                  {selectedUser.role === 2 ? 'Organizer' : 'User'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowUserModal(false)}
+                className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors outline-none cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

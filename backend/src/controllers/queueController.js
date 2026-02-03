@@ -2,6 +2,7 @@
 const Queue = require("../models/Queue");
 const QueueEntry = require("../models/QueueEntry");
 const Appointment = require("../models/Appointment");
+const User = require("../models/User");
 
 // Create a new service
 exports.createService = async (req, res) => {
@@ -393,9 +394,21 @@ exports.getServiceAvailability = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
+    // Populate user details for booked slots
+    const User = require('../models/User');
+    const bookedSlotsWithUserData = await Promise.all(
+      service.bookedSlots.map(async (slot) => {
+        const user = await User.findById(slot.bookedBy).select('name profileImage');
+        return {
+          ...slot.toObject(),
+          bookedUserProfileImage: user?.profileImage || null
+        };
+      })
+    );
+
     res.json({
       availabilityWindows: service.availabilityWindows || [],
-      bookedSlots: service.bookedSlots || []
+      bookedSlots: bookedSlotsWithUserData
     });
   } catch (error) {
     console.error(error);
@@ -502,6 +515,23 @@ exports.getUserQueueStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get user details by ID (for organizers to view user info)
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

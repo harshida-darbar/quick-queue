@@ -46,6 +46,25 @@ export const AuthProvider = ({ children }) => {
     console.log("Login role:", data.user.role);
   };
 
+  // UPDATE USER (for profile changes)
+  const updateUser = (updatedUserData) => {
+    const storedData = localStorage.getItem("quick-queue");
+    if (storedData) {
+      const parsed = JSON.parse(storedData);
+      const newUserData = { ...parsed.user, ...updatedUserData };
+      
+      localStorage.setItem(
+        "quick-queue",
+        JSON.stringify({
+          user: newUserData,
+          token: parsed.token,
+        })
+      );
+      
+      setUser(newUserData);
+    }
+  };
+
   // LOGOUT
   const logout = () => {
     // Remove the entire quick-queue object
@@ -55,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

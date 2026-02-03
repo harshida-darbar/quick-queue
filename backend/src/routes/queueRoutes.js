@@ -20,6 +20,7 @@ const {
   getServiceAvailability,
   addAvailabilityWindow,
   getUserAppointments,
+  getUserById,
 } = require("../controllers/queueController");
 
 // Public routes (for users)
@@ -31,6 +32,7 @@ router.get("/services/:id/availability", protect, getServiceAvailability);
 router.get("/services/:id/appointments", protect, getServiceAppointments);
 router.post("/appointments", protect, bookAppointment);
 router.get("/my-appointments", protect, getUserAppointments);
+router.get("/user/:id", protect, getUserById);
 
 // Organizer routes
 router.post("/services", protect, authorize([2]), createService);

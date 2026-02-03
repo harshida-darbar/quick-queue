@@ -7,6 +7,7 @@ const connectDB = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const queueRoutes = require("./src/routes/queueRoutes");
+const profileRoutes = require("./src/routes/profileRoutes");
 
 dotenv.config();
 connectDB();  
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/queue", queueRoutes);
+app.use("/api/profile", profileRoutes);
 app.get("/", (req, res) => {
   res.send("Quick Queue Backend Running");
 });
