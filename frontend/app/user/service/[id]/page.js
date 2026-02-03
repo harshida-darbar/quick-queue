@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
+import { IoArrowBack } from "react-icons/io5";
 
 export default function ServiceDetails({ params }) {
   const resolvedParams = use(params);
@@ -123,7 +124,7 @@ export default function ServiceDetails({ params }) {
           onClick={() => router.back()}
           className="mb-6 text-[#4D2FB2] hover:text-[#62109F] flex items-center font-medium"
         >
-          ← Back to Services
+          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white hover:bg-opacity-20 rounded-lg"/> Back to Services
         </button>
 
         {/* Service Header */}
@@ -153,7 +154,7 @@ export default function ServiceDetails({ params }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-3 bg-gradient-to-br from-[#B7A3E3] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">{servingUsers.length}</div>
-              <div className="text-sm text-white opacity-90">Currently Serving</div>
+              <div className="text-sm text-white opacity-90">Group Serving</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#85409D] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">{waitingUsers.length}</div>
@@ -204,7 +205,7 @@ export default function ServiceDetails({ params }) {
 
         {/* Currently Serving */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#62109F] mb-4">Currently Serving</h2>
+          <h2 className="text-xl font-semibold text-[#62109F] mb-4">Currently Serving Group</h2>
           {servingUsers.length === 0 ? (
             <p className="text-gray-500">No one is currently being served</p>
           ) : (

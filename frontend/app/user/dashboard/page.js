@@ -251,29 +251,8 @@ function UserDashboard() {
     toast.success(`Selected: ${start.toTimeString().slice(0, 5)} - ${end.toTimeString().slice(0, 5)}`);
   };
 
-  const handleCardClick = async (service) => {
-    try {
-      const response = await api.get(`/queue/services/${service._id}/status`);
-      const { status, tokenNumber, waitingAhead } = response.data;
-      
-      let message = '';
-      if (status === 'serving') {
-        message = `🟢 You are currently being served! Token #${tokenNumber}`;
-        toast.success(message);
-      } else if (status === 'waiting') {
-        message = `🟡 You are in waiting list. Token #${tokenNumber}. ${waitingAhead} people ahead of you.`;
-        toast(message, { icon: '⏳' });
-      } else if (status === 'complete') {
-        message = `✅ Your service is completed! Token #${tokenNumber}`;
-        toast.success(message);
-      }
-    } catch (error) {
-      if (error.response?.status === 404) {
-        toast.error('You have not joined this queue yet. Click "Join Queue" to join.');
-      } else {
-        toast.error('Failed to get queue status');
-      }
-    }
+  const handleCardClick = (service) => {
+    router.push(`/user/service/${service._id}`);
   };
 
   const handleGroupSizeChange = (e) => {
