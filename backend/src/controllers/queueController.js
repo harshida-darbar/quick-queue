@@ -402,11 +402,28 @@ exports.markComplete = async (req, res) => {
   }
 };
 
-// Get organizer's services
+// Get organizer's services with pagination
 exports.getOrganizerServices = async (req, res) => {
   try {
-    const services = await Queue.find({ organizer: req.user.id });
-    res.json(services);
+    const { page = 1, limit = 6 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalServices = await Queue.countDocuments({ organizer: req.user.id });
+    const services = await Queue.find({ organizer: req.user.id })
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 });
+
+    const totalPages = Math.ceil(totalServices / limitNum);
+
+    res.json({
+      services,
+      totalPages,
+      currentPage: pageNum,
+      totalServices
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -636,6 +653,55 @@ exports.getUserAppointments = async (req, res) => {
     res.json(appointments);
   } catch (error) {
     console.error('Error fetching user appointments:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update service
+exports.updateService = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    const { title, description, serviceType, photo, maxCapacity } = req.body;
+    
+    const service = await Queue.findById(serviceId);
+    if (!service || service.organizer.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    service.title = title || service.title;
+    service.description = description || service.description;
+    service.serviceType = serviceType || service.serviceType;
+    service.photo = photo !== undefined ? photo : service.photo;
+    service.maxCapacity = maxCapacity || service.maxCapacity;
+    
+    await service.save();
+    
+    res.json({ message: "Service updated successfully", service });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Delete service
+exports.deleteService = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    
+    const service = await Queue.findById(serviceId);
+    if (!service || service.organizer.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Delete all queue entries for this service
+    await QueueEntry.deleteMany({ queue: serviceId });
+    
+    // Delete the service
+    await Queue.findByIdAndDelete(serviceId);
+    
+    res.json({ message: "Service deleted successfully" });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };

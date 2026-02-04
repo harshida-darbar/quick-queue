@@ -217,7 +217,7 @@ function AppointmentsPage() {
         {/* Summary */}
         {appointments.length > 0 && (
           <div className="mt-8 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] rounded-lg p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">📊 Appointments Summary</h3>
+            <h3 className="text-xl font-semibold mb-4">Appointments Summary</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold">{appointments.length}</p>

@@ -22,6 +22,8 @@ const {
   getUserAppointments,
   getUserById,
   getServiceTypes,
+  updateService,
+  deleteService,
 } = require("../controllers/queueController");
 
 // Public routes (for users)
@@ -38,6 +40,8 @@ router.get("/user/:id", protect, getUserById);
 
 // Organizer routes
 router.post("/services", protect, authorize([2]), createService);
+router.put("/services/:id", protect, authorize([2]), updateService);
+router.delete("/services/:id", protect, authorize([2]), deleteService);
 router.get("/my-services", protect, authorize([2]), getOrganizerServices);
 router.patch("/services/:id/start", protect, authorize([2]), startService);
 router.patch("/services/:id/serving", protect, authorize([2]), moveToServing);

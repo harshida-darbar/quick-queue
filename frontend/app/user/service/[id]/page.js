@@ -206,7 +206,7 @@ export default function ServiceDetails({ params }) {
                 <div key={entry._id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <div>
                     <span className="font-medium text-[#62109F]">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 ml-2">{entry.user.name}</span>
+                    <span className="text-gray-600 ml-2">{entry.user?.name || 'Unknown User'}</span>
                   </div>
                   <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs">
                     Serving
@@ -228,7 +228,7 @@ export default function ServiceDetails({ params }) {
                 <div key={entry._id} className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                   <div>
                     <span className="font-medium text-[#62109F]">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 ml-2">{entry.user.name}</span>
+                    <span className="text-gray-600 ml-2">{entry.user?.name || 'Unknown User'}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="text-sm text-gray-500 mr-2">Position: {index + 1}</span>

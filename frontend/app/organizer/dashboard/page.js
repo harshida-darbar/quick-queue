@@ -5,7 +5,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaEdit, FaTrash, FaTimes } from "react-icons/fa";
+import InfiniteScroll from 'react-infinite-scroll-component';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -24,10 +25,43 @@ const validationSchema = Yup.object({
 function OrganizerDashboard() {
   const [services, setServices] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [availabilityWindows, setAvailabilityWindows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const servicesPerPage = 6;
   const router = useRouter();
 
+  const editFormik = useFormik({
+    initialValues: {
+      title: "",
+      description: "",
+      serviceType: "",
+      photo: "",
+      maxCapacity: 10,
+      appointmentEnabled: false,
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        await api.put(`/queue/services/${editingService._id}`, values);
+        toast.success("Service updated successfully!");
+        setShowEditForm(false);
+        setEditingService(null);
+        fetchServices(true);
+      } catch (error) {
+        console.error("Error updating service:", error);
+        toast.error("Failed to update service");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
   const formik = useFormik({
     initialValues: {
       title: "",
@@ -60,13 +94,40 @@ function OrganizerDashboard() {
   });
 
   useEffect(() => {
-    fetchServices();
+    fetchServices(true);
   }, []);
 
-  const fetchServices = async () => {
+  const fetchServices = async (reset = false) => {
+    if (!reset && loadingMore) return;
+    
     try {
-      const response = await api.get("/queue/my-services");
-      setServices(response.data);
+      if (!reset) setLoadingMore(true);
+      
+      const pageToFetch = reset ? 1 : currentPage;
+      const params = new URLSearchParams();
+      params.append('page', pageToFetch.toString());
+      params.append('limit', servicesPerPage.toString());
+      
+      const response = await api.get(`/queue/my-services?${params.toString()}`);
+      
+      let fetchedServices, pages;
+      if (Array.isArray(response.data)) {
+        fetchedServices = response.data;
+        pages = 1;
+      } else {
+        fetchedServices = response.data.services || [];
+        pages = response.data.totalPages || 1;
+      }
+      
+      if (reset) {
+        setServices(fetchedServices);
+        setCurrentPage(2);
+      } else {
+        setServices(prev => [...prev, ...fetchedServices]);
+        setCurrentPage(prev => prev + 1);
+      }
+      
+      setHasMore(pageToFetch < pages);
     } catch (error) {
       if (error.response?.status === 401) {
         router.push("/login");
@@ -76,6 +137,13 @@ function OrganizerDashboard() {
       toast.error("Failed to fetch services");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const fetchMoreServices = () => {
+    if (hasMore && !loadingMore) {
+      fetchServices();
     }
   };
 
@@ -88,6 +156,38 @@ function OrganizerDashboard() {
       console.error("Error starting service:", error);
       toast.error("Failed to start service");
     }
+  };
+
+  const handleDeleteService = async () => {
+    try {
+      await api.delete(`/queue/services/${serviceToDelete._id}`);
+      toast.success("Service deleted successfully!");
+      setShowDeleteModal(false);
+      setServiceToDelete(null);
+      fetchServices(true);
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      toast.error("Failed to delete service");
+    }
+  };
+
+  const openEditModal = (service) => {
+    setEditingService(service);
+    editFormik.setValues({
+      title: service.title,
+      description: service.description,
+      serviceType: service.serviceType,
+      photo: service.photo || "",
+      maxCapacity: service.maxCapacity,
+      appointmentEnabled: service.appointmentEnabled || false,
+    });
+    setAvailabilityWindows(service.availabilityWindows || []);
+    setShowEditForm(true);
+  };
+
+  const openDeleteModal = (service) => {
+    setServiceToDelete(service);
+    setShowDeleteModal(true);
   };
 
   const getServiceIcon = (type) => {
@@ -328,6 +428,7 @@ function OrganizerDashboard() {
                       <input
                         type="date"
                         id="windowDate"
+                        min={new Date().toISOString().split('T')[0]}
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                     </div>
@@ -354,6 +455,15 @@ function OrganizerDashboard() {
                         const endTime = document.getElementById('windowEndTime').value;
                         
                         if (date && startTime && endTime) {
+                          const selectedDate = new Date(date);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          
+                          if (selectedDate < today) {
+                            toast.error('Cannot select past dates. Please choose today or a future date.');
+                            return;
+                          }
+                          
                           if (startTime >= endTime) {
                             toast.error('End time must be after start time');
                             return;
@@ -397,8 +507,161 @@ function OrganizerDashboard() {
           </div>
         )}
 
+        {/* Edit Service Modal */}
+        {showEditForm && editingService && (
+          <div className="fixed inset-0 bg-[#B7A3E3] bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4 text-[#62109F]">
+                Edit Service
+              </h2>
+              <form onSubmit={editFormik.handleSubmit}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Title
+                  </label>
+                  <input
+                    name="title"
+                    type="text"
+                    value={editFormik.values.title}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    rows="3"
+                    value={editFormik.values.description}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Type
+                  </label>
+                  <input
+                    name="serviceType"
+                    type="text"
+                    value={editFormik.values.serviceType}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Photo URL (optional)
+                  </label>
+                  <input
+                    name="photo"
+                    type="url"
+                    value={editFormik.values.photo}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Capacity
+                  </label>
+                  <input
+                    name="maxCapacity"
+                    type="number"
+                    min="1"
+                    value={editFormik.values.maxCapacity}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2]"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditForm(false);
+                      setEditingService(null);
+                    }}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editFormik.isSubmitting}
+                    className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none"
+                  >
+                    {editFormik.isSubmitting ? "Updating..." : "Update Service"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && serviceToDelete && (
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-red-600">
+                  Delete Service
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setServiceToDelete(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700 outline-none cursor-pointer"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 mb-2">
+                  Are you sure you want to delete this service?
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="font-semibold text-red-800">{serviceToDelete.title}</p>
+                  <p className="text-sm text-red-600 capitalize">{serviceToDelete.serviceType}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setServiceToDelete(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteService}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer outline-none"
+                >
+                  Delete Service
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Services Grid */}
-        {services.length === 0 ? (
+        {services.length === 0 && !loading ? (
           <div className="text-center py-12">
             <p className="text-[#62109F] text-lg font-medium">
               No services created yet
@@ -408,92 +671,140 @@ function OrganizerDashboard() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <div
-                key={service._id}
-                className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
-              >
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center mb-4">
-                    <span className="text-4xl mr-3">
-                      {getServiceIcon(service.serviceType)}
-                    </span>
-                    <div>
-                      <h3 className="text-xl font-semibold text-[#62109F]">
-                        {service.title}
-                      </h3>
-                      <p className="text-sm text-[#85409D] capitalize">
-                        {service.serviceType}
-                      </p>
-                    </div>
-                  </div>
-
-                  {service.photo && (
-                    <div className="relative w-full h-32 mb-4">
-                      <Image
-                        src={service.photo}
-                        alt={service.title}
-                        fill
-                        className="object-cover rounded-lg"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <p className="text-gray-600 mb-4 flex-1 min-h-[3rem] line-clamp-3">
-                    {service.description}
-                  </p>
-
-                  <div className="flex justify-between items-center mb-4 mt-auto">
-                    <div className="text-sm text-gray-500">
-                      <span className="font-medium">Capacity:</span>{" "}
-                      {service.maxCapacity}
-                    </div>
-                    <div
-                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
-                    >
-                      {service.status}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col space-y-2">
-                    {service.status === "inactive" && (
-                      <button
-                        onClick={() => handleStartService(service._id)}
-                        className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
-                      >
-                        Start Service
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() =>
-                        router.push(`/organizer/service/${service._id}`)
-                      }
-                      className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-4 py-2 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
-                    >
-                      {getButtonText(service)}
-                    </button>
-                    
-                    {service.appointmentEnabled && (
-                      <button
-                        onClick={() =>
-                          router.push(`/organizer/appointments/${service._id}`)
-                        }
-                        className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-4 py-2 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
-                      >
-                        Appointments
-                      </button>
-                    )}
-                  </div>
+          <InfiniteScroll
+            dataLength={services.length}
+            next={fetchMoreServices}
+            hasMore={hasMore}
+            loader={
+              <div className="flex justify-center items-center py-8">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#62109F]"></div>
+                  <span className="text-[#62109F] font-medium">Loading more services...</span>
                 </div>
               </div>
-            ))}
-          </div>
+            }
+            endMessage={
+              <div className="text-center py-8">
+                <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] text-white rounded-full">
+                  <span className="text-sm font-medium"> You've seen all your services!</span>
+                </div>
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service, index) => {
+                return (
+                  <div
+                    key={service._id}
+                    className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full transform hover:scale-105"
+                  >
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <span className="text-4xl mr-3">
+                            {getServiceIcon(service.serviceType)}
+                          </span>
+                          <div>
+                            <h3 className="text-xl font-semibold text-[#62109F]">
+                              {service.title}
+                            </h3>
+                            <p className="text-sm text-[#85409D] capitalize">
+                              {service.serviceType}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(service);
+                            }}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                            title="Edit Service"
+                          >
+                            <FaEdit size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteModal(service);
+                            }}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                            title="Delete Service"
+                          >
+                            <FaTrash size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {service.photo && (
+                        <div className="relative w-full h-32 mb-4">
+                          <Image
+                            src={service.photo}
+                            alt={service.title}
+                            fill
+                            className="object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <p className="text-gray-600 mb-4 flex-1 min-h-[3rem] line-clamp-3">
+                        {service.description}
+                      </p>
+
+                      <div className="flex justify-between items-center mb-4 mt-auto">
+                        <div className="text-sm text-gray-500">
+                          <span className="font-medium">Capacity:</span>{" "}
+                          {service.maxCapacity}
+                        </div>
+                        <div
+                          className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
+                        >
+                          {service.status}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col space-y-2">
+                        {service.status === "inactive" && (
+                          <button
+                            onClick={() => handleStartService(service._id)}
+                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                          >
+                            Start Service
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() =>
+                            router.push(`/organizer/service/${service._id}`)
+                          }
+                          className="flex-1 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-4 py-2 rounded-md hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 cursor-pointer outline-none"
+                        >
+                          {getButtonText(service)}
+                        </button>
+                        
+                        {service.appointmentEnabled && (
+                          <button
+                            onClick={() =>
+                              router.push(`/organizer/appointments/${service._id}`)
+                            }
+                            className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-4 py-2 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
+                          >
+                            Appointments
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </InfiniteScroll>
         )}
+
       </div>
     </div>
   );

@@ -221,7 +221,7 @@ export default function ServiceManagement({ params }) {
                         Token #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {entry.user.name}
+                        {entry.user?.name || 'Unknown User'}
                       </div>
                       <div className="text-xs text-gray-500">
                         Position: {index + 1}
@@ -275,10 +275,10 @@ export default function ServiceManagement({ params }) {
                         Token #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {entry.user.name}
+                        {entry.user?.name || 'Unknown User'}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {entry.user.email}
+                        {entry.user?.email || 'No email'}
                       </div>
                       {entry.memberNames && entry.memberNames.length > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
@@ -325,10 +325,10 @@ export default function ServiceManagement({ params }) {
                         Token #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {entry.user.name}
+                        {entry.user?.name || 'Unknown User'}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {entry.user.email}
+                        {entry.user?.email || 'No email'}
                       </div>
                       {entry.memberNames && entry.memberNames.length > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
@@ -388,7 +388,7 @@ export default function ServiceManagement({ params }) {
               Confirm Completion
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to mark <strong>{selectedEntry.user.name}</strong> (Token #{selectedEntry.tokenNumber}) as complete?
+              Are you sure you want to mark <strong>{selectedEntry.user?.name || 'Unknown User'}</strong> (Token #{selectedEntry.tokenNumber}) as complete?
             </p>
             <div className="flex justify-end space-x-3">
               <button
