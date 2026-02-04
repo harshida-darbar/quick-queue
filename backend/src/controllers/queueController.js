@@ -43,7 +43,10 @@ exports.createService = async (req, res) => {
 // Get all active services for user dashboard
 exports.getAllServices = async (req, res) => {
   try {
-    const { search, filter } = req.query;
+    const { search, serviceType, available, page = 1, limit = 6 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     
     // Build match conditions
     let matchConditions = { status: "active" };
@@ -57,12 +60,12 @@ exports.getAllServices = async (req, res) => {
       ];
     }
     
-    // Add filter functionality
-    if (filter && filter !== 'all' && filter !== 'available') {
-      matchConditions.serviceType = { $regex: `^${filter}$`, $options: 'i' };
+    // Add serviceType filter functionality
+    if (serviceType && serviceType !== 'all' && serviceType !== 'available') {
+      matchConditions.serviceType = { $regex: `^${serviceType}$`, $options: 'i' };
     }
 
-    const services = await Queue.aggregate([
+    const pipeline = [
       { $match: matchConditions },
       {
         $lookup: {
@@ -107,6 +110,7 @@ exports.getAllServices = async (req, res) => {
               },
             },
           },
+          isFull: { $gte: ["$servingCapacity", "$maxCapacity"] },
         },
       },
       {
@@ -121,18 +125,34 @@ exports.getAllServices = async (req, res) => {
           waitingCount: 1,
           appointmentEnabled: 1,
           timeSlots: 1,
-          isFull: { $gte: ["$servingCapacity", "$maxCapacity"] },
+          isFull: 1,
         },
       },
-    ]);
+    ];
 
-    // Apply availability filter after aggregation
-    let filteredServices = services;
-    if (filter === 'available') {
-      filteredServices = services.filter(service => !service.isFull);
+    // Apply availability filter in aggregation if needed
+    if (available === 'true') {
+      pipeline.push({ $match: { isFull: false } });
     }
 
-    res.json(filteredServices);
+    // Get total count before pagination
+    const totalCountPipeline = [...pipeline, { $count: "total" }];
+    const totalResult = await Queue.aggregate(totalCountPipeline);
+    const totalServices = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    // Add pagination to pipeline
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+
+    const services = await Queue.aggregate(pipeline);
+    const totalPages = Math.ceil(totalServices / limitNum);
+
+    res.json({
+      services,
+      totalPages,
+      currentPage: pageNum,
+      totalServices
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

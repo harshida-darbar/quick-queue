@@ -95,9 +95,7 @@ function UserDashboard() {
   }, [searchTerm, filterType]);
 
   useEffect(() => {
-    if (currentPage > 1) {
-      fetchServices();
-    }
+    fetchServices();
   }, [currentPage]);
 
   const fetchServices = async () => {
@@ -116,14 +114,11 @@ function UserDashboard() {
       
       const response = await api.get(`/queue/services?${params.toString()}`);
       
-      // Handle both old format (array) and new format (object with services array)
       let fetchedServices, pages;
       if (Array.isArray(response.data)) {
-        // Old format - just an array of services
         fetchedServices = response.data;
         pages = 1;
       } else {
-        // New format - object with services and totalPages
         fetchedServices = response.data.services || [];
         pages = response.data.totalPages || 1;
       }
@@ -415,7 +410,7 @@ function UserDashboard() {
               <option value="all">All Services</option>
               <option value="available">Available Only</option>
               {serviceTypes.map(type => (
-                <option key={type} value={type.toLowerCase()}>
+                <option key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </option>
               ))}
@@ -523,10 +518,7 @@ function UserDashboard() {
             {totalPages > 1 && (
               <div className="flex justify-center items-center mt-8 space-x-2">
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.max(prev - 1, 1));
-                    fetchServices();
-                  }}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   className="px-4 py-2 bg-white text-[#62109F] border border-[#62109F] rounded-lg hover:bg-[#62109F] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -536,10 +528,7 @@ function UserDashboard() {
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
-                    onClick={() => {
-                      setCurrentPage(page);
-                      fetchServices();
-                    }}
+                    onClick={() => setCurrentPage(page)}
                     className={`px-3 py-2 rounded-lg transition-colors ${
                       currentPage === page
                         ? 'bg-[#62109F] text-white'
@@ -551,10 +540,7 @@ function UserDashboard() {
                 ))}
                 
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-                    fetchServices();
-                  }}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 bg-white text-[#62109F] border border-[#62109F] rounded-lg hover:bg-[#62109F] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
