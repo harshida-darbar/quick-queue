@@ -22,6 +22,8 @@ function SignupPage() {
       name: "",
       email: "",
       password: "",
+      phone: "",
+      city: "",
     },
 
     validationSchema: Yup.object({
@@ -32,6 +34,10 @@ function SignupPage() {
         .min(6, "Password must be at least 6 characters")
         .matches(/[^a-zA-Z0-9]/, "Must include a special character")
         .required("Password is required"),
+      phone: Yup.string()
+        .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+        .required("Phone number is required"),
+      city: Yup.string().trim().required("City is required"),
     }),
 
     onSubmit: async (values, { resetForm }) => {
@@ -113,6 +119,41 @@ function SignupPage() {
             />
             {formik.touched.email && formik.errors.email && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.email}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm font-semibold text-[#725CAD]">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="1234567890"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+            />
+            {formik.touched.phone && formik.errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.phone}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm font-semibold text-[#725CAD]">
+              City
+            </label>
+            <input
+              type="text"
+              name="city"
+              value={formik.values.city}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+            />
+            {formik.touched.city && formik.errors.city && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.city}</p>
             )}
           </div>
 

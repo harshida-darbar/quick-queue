@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaTimes, FaSearch, FaFilter } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import FullCalendar from '@fullcalendar/react';
@@ -24,6 +24,12 @@ function UserDashboard() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [selectedCalendarSlot, setSelectedCalendarSlot] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [serviceTypes, setServiceTypes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const servicesPerPage = 6;
   const appointmentFormik = useFormik({
     initialValues: {
       groupSize: 1,
@@ -77,13 +83,53 @@ function UserDashboard() {
 
   useEffect(() => {
     fetchServices();
+    fetchServiceTypes();
   }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchServices();
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, filterType]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchServices();
+    }
+  }, [currentPage]);
 
   const fetchServices = async () => {
     try {
-      const response = await api.get("/queue/services");
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterType && filterType !== 'all') {
+        if (filterType === 'available') {
+          params.append('available', 'true');
+        } else {
+          params.append('serviceType', filterType);
+        }
+      }
+      params.append('page', currentPage.toString());
+      params.append('limit', servicesPerPage.toString());
+      
+      const response = await api.get(`/queue/services?${params.toString()}`);
+      
+      // Handle both old format (array) and new format (object with services array)
+      let fetchedServices, pages;
+      if (Array.isArray(response.data)) {
+        // Old format - just an array of services
+        fetchedServices = response.data;
+        pages = 1;
+      } else {
+        // New format - object with services and totalPages
+        fetchedServices = response.data.services || [];
+        pages = response.data.totalPages || 1;
+      }
+      
       const servicesWithStatus = await Promise.all(
-        response.data.map(async (service) => {
+        fetchedServices.map(async (service) => {
           try {
             const statusResponse = await api.get(`/queue/services/${service._id}/status`);
             return { ...service, userStatus: statusResponse.data.status ? statusResponse.data : null };
@@ -93,6 +139,7 @@ function UserDashboard() {
         })
       );
       setServices(servicesWithStatus);
+      setTotalPages(pages);
     } catch (error) {
       if (error.response?.status === 401) {
         router.push("/login");
@@ -102,6 +149,15 @@ function UserDashboard() {
       toast.error("Failed to fetch services");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchServiceTypes = async () => {
+    try {
+      const response = await api.get("/queue/service-types");
+      setServiceTypes(response.data);
+    } catch (error) {
+      console.error("Error fetching service types:", error);
     }
   };
 
@@ -251,7 +307,12 @@ function UserDashboard() {
     toast.success(`Selected: ${start.toTimeString().slice(0, 5)} - ${end.toTimeString().slice(0, 5)}`);
   };
 
-  const handleCardClick = (service) => {
+  const handleCardClick = (service, e) => {
+    // Only navigate if clicking on the card itself, not buttons
+    if (e.target.closest('button')) {
+      return;
+    }
+    console.log('Navigating to service:', service._id);
     router.push(`/user/service/${service._id}`);
   };
 
@@ -329,17 +390,53 @@ function UserDashboard() {
       <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-[#62109F] mb-8">Available Services</h1>
         
+        {/* Search and Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          {/* Search Bar */}
+          <div className="flex-1 relative">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white shadow-sm"
+            />
+          </div>
+          
+          {/* Filter Dropdown */}
+          <div className="relative">
+            <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white shadow-sm cursor-pointer min-w-[160px]"
+            >
+              <option value="all">All Services</option>
+              <option value="available">Available Only</option>
+              {serviceTypes.map(type => (
+                <option key={type} value={type.toLowerCase()}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
         {services.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#62109F] text-lg font-medium">No active services available</p>
+            <p className="text-[#62109F] text-lg font-medium">
+              {searchTerm || filterType !== 'all' ? 'No services found matching your criteria' : 'No active services available'}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => (
               <div
                 key={service._id}
                 className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer"
-                onClick={() => handleCardClick(service)}
+                onClick={(e) => handleCardClick(service, e)}
               >
                 <div className="p-6 flex-1 flex flex-col">
                   <div className="flex items-center mb-4">
@@ -366,7 +463,7 @@ function UserDashboard() {
                   
                   <div className="flex justify-between items-center mb-4 mt-auto">
                     <div className="text-sm text-[#85409D]">
-                      <span className="font-medium">Capacity:</span> {service.servingCapacity || 0}/{service.maxCapacity}
+                      <span className="font-medium">{service.isFull ? 'Capacity:' : 'Availability:'}</span> {service.servingCapacity || 0}/{service.maxCapacity}
                     </div>
                     <div className="text-sm text-[#85409D]">
                       <span className="font-medium">Waiting:</span> {service.waitingCount}
@@ -419,8 +516,53 @@ function UserDashboard() {
                   
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8 space-x-2">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1));
+                    fetchServices();
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-white text-[#62109F] border border-[#62109F] rounded-lg hover:bg-[#62109F] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => {
+                      setCurrentPage(page);
+                      fetchServices();
+                    }}
+                    className={`px-3 py-2 rounded-lg transition-colors ${
+                      currentPage === page
+                        ? 'bg-[#62109F] text-white'
+                        : 'bg-white text-[#62109F] border border-[#62109F] hover:bg-[#62109F] hover:text-white'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                    fetchServices();
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-white text-[#62109F] border border-[#62109F] rounded-lg hover:bg-[#62109F] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Join Queue Modal */}

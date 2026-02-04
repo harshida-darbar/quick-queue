@@ -2,7 +2,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { IoArrowBack, IoCamera, IoPerson, IoMail, IoShield } from "react-icons/io5";
+import { IoArrowBack, IoCamera, IoPerson, IoMail, IoShield, IoCall, IoLocation } from "react-icons/io5";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -13,7 +13,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", city: "" });
   const [tempImage, setTempImage] = useState(null); // Temporary image preview
   const [tempImageFile, setTempImageFile] = useState(null); // Temporary image file
   const { updateUser } = useContext(AuthContext);
@@ -27,7 +27,7 @@ function ProfilePage() {
     try {
       const response = await api.get("/profile");
       setProfile(response.data);
-      setFormData({ name: response.data.name, email: response.data.email });
+      setFormData({ name: response.data.name, email: response.data.email, phone: response.data.phone || "", city: response.data.city || "" });
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to fetch profile");
@@ -62,6 +62,8 @@ function ProfilePage() {
       const submitData = new FormData();
       submitData.append("name", formData.name);
       submitData.append("email", formData.email);
+      submitData.append("phone", formData.phone);
+      submitData.append("city", formData.city);
       
       // Add image file if selected
       if (tempImageFile) {
@@ -184,6 +186,34 @@ function ProfilePage() {
                 />
               </div>
 
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+                  <IoCall className="mr-2 text-[#85409D]" />
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+                  <IoLocation className="mr-2 text-[#85409D]" />
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+
               <div className="flex space-x-3 pt-2">
                 <button
                   type="submit"
@@ -195,7 +225,7 @@ function ProfilePage() {
                   type="button"
                   onClick={() => {
                     setEditing(false);
-                    setFormData({ name: profile.name, email: profile.email });
+                    setFormData({ name: profile.name, email: profile.email, phone: profile.phone || "", city: profile.city || "" });
                     setTempImage(null);
                     setTempImageFile(null);
                   }}
@@ -221,6 +251,22 @@ function ProfilePage() {
                   Email
                 </label>
                 <p className="text-lg text-gray-900 font-medium">{profile?.email}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
+                  <IoCall className="mr-2 text-[#85409D]" />
+                  Phone
+                </label>
+                <p className="text-lg text-gray-900 font-medium">{profile?.phone || "Not provided"}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
+                  <IoLocation className="mr-2 text-[#85409D]" />
+                  City
+                </label>
+                <p className="text-lg text-gray-900 font-medium">{profile?.city || "Not provided"}</p>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-3">

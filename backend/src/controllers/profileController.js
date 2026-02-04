@@ -43,7 +43,7 @@ exports.getProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, phone, city } = req.body;
     const userId = req.user.id;
 
     const user = await User.findById(userId);
@@ -54,6 +54,8 @@ exports.updateProfile = async (req, res) => {
     // Update basic info
     if (name) user.name = name;
     if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (city) user.city = city;
 
     // Handle profile image upload
     if (req.file) {

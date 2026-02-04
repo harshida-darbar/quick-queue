@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-toastify";
-import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUser } from "react-icons/fa";
+import { FaArrowLeft, FaCalendarAlt, FaUsers, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import ProtectedRoute from "../../../components/ProtectedRoute";
@@ -243,9 +243,9 @@ function AppointmentsPage() {
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3]">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-[#62109F]">User Details</h2>
+          <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-4 shadow-2xl border border-[#B7A3E3]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-[#62109F]">User Details</h2>
               <button
                 onClick={() => setShowUserModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl font-bold outline-none cursor-pointer"
@@ -254,8 +254,8 @@ function AppointmentsPage() {
               </button>
             </div>
             
-            <div className="flex flex-col items-center mb-6">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center mb-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center mb-3">
                 {selectedUser.profileImage ? (
                   <img
                     src={`http://localhost:5000/api/profile/image/${selectedUser.profileImage}`}
@@ -263,25 +263,39 @@ function AppointmentsPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl font-bold text-white">
+                  <span className="text-xl font-bold text-white">
                     {selectedUser.name?.charAt(0)}
                   </span>
                 )}
               </div>
               
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{selectedUser.name}</h3>
-                <p className="text-gray-600 text-sm mb-2">{selectedUser.email}</p>
-                <span className="px-3 py-1 bg-[#B7A3E3] text-[#62109F] rounded-full text-xs font-medium">
+                <h3 className="text-base font-semibold text-gray-900">{selectedUser.name}</h3>
+                <p className="text-gray-600 text-sm">{selectedUser.email}</p>
+                <span className="inline-block mt-1 px-2 py-1 bg-[#B7A3E3] text-[#62109F] rounded-full text-xs font-medium">
                   {selectedUser.role === 2 ? 'Organizer' : 'User'}
                 </span>
+              </div>
+            </div>
+            
+            {/* Contact Information */}
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center text-sm">
+                <FaPhoneAlt className="text-[#85409D] mr-2 w-3" />
+                <span className="text-gray-600 min-w-[45px]">Phone:</span>
+                <span className="text-gray-900 font-medium">{selectedUser.phone || "Not provided"}</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <FaMapMarkerAlt className="text-[#85409D] mr-2 w-3" />
+                <span className="text-gray-600 min-w-[45px]">City:</span>
+                <span className="text-gray-900 font-medium">{selectedUser.city || "Not provided"}</span>
               </div>
             </div>
             
             <div className="flex justify-end">
               <button
                 onClick={() => setShowUserModal(false)}
-                className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors outline-none cursor-pointer"
+                className="px-3 py-1.5 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors outline-none cursor-pointer text-sm"
               >
                 Close
               </button>

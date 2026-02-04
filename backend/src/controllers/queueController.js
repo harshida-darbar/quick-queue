@@ -43,8 +43,27 @@ exports.createService = async (req, res) => {
 // Get all active services for user dashboard
 exports.getAllServices = async (req, res) => {
   try {
+    const { search, filter } = req.query;
+    
+    // Build match conditions
+    let matchConditions = { status: "active" };
+    
+    // Add search functionality
+    if (search) {
+      matchConditions.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { serviceType: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Add filter functionality
+    if (filter && filter !== 'all' && filter !== 'available') {
+      matchConditions.serviceType = { $regex: `^${filter}$`, $options: 'i' };
+    }
+
     const services = await Queue.aggregate([
-      { $match: { status: "active" } },
+      { $match: matchConditions },
       {
         $lookup: {
           from: "queueentries",
@@ -107,7 +126,13 @@ exports.getAllServices = async (req, res) => {
       },
     ]);
 
-    res.json(services);
+    // Apply availability filter after aggregation
+    let filteredServices = services;
+    if (filter === 'available') {
+      filteredServices = services.filter(service => !service.isFull);
+    }
+
+    res.json(filteredServices);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -532,6 +557,17 @@ exports.getUserById = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get unique service types for filter dropdown
+exports.getServiceTypes = async (req, res) => {
+  try {
+    const serviceTypes = await Queue.distinct('serviceType', { status: 'active' });
+    res.json(serviceTypes.sort());
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

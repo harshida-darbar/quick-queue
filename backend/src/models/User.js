@@ -25,6 +25,15 @@ const userSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: null
+  },
+  phone: {
+    type: String,
+    default: null
+  },
+  city: {
+    type: String,
+    default: null,
+    trim: true
   }
 }, { timestamps: true });
 

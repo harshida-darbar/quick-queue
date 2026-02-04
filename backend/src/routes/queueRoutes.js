@@ -21,10 +21,12 @@ const {
   addAvailabilityWindow,
   getUserAppointments,
   getUserById,
+  getServiceTypes,
 } = require("../controllers/queueController");
 
 // Public routes (for users)
 router.get("/services", protect, getAllServices);
+router.get("/service-types", protect, getServiceTypes);
 router.get("/services/:id", protect, getServiceDetails);
 router.post("/services/:id/join", protect, joinService);
 router.get("/services/:id/status", protect, getUserQueueStatus);

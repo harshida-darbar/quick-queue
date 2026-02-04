@@ -7,10 +7,10 @@ const jwt = require("jsonwebtoken");
 exports.signup = async (req, res) => {
   try {
     console.log("SIGNUP BODY:", req.body);
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, city } = req.body;
 
     // 1️⃣ Validate
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password || !role || !phone || !city) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -34,6 +34,8 @@ exports.signup = async (req, res) => {
       email,
       password: hashedPassword,
       role: Number(role), // VERY IMPORTANT
+      phone,
+      city,
     });
 
     res.status(201).json({
