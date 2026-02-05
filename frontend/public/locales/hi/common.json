@@ -2,6 +2,7 @@
   "welcome": "क्विक क्यू में आपका स्वागत है",
   "login": "लॉगिन",
   "signup": "साइन अप",
+  
   "navbar": {
     "myProfile": "मेरी प्रोफ़ाइल",
     "myAppointments": "मेरी अपॉइंटमेंट्स",
@@ -10,6 +11,7 @@
     "logoutMessage": "क्या आप वाकई लॉगआउट करना चाहते हैं?",
     "cancel": "रद्द करें"
   },
+
   "dashboard": {
     "availableServices": "उपलब्ध सेवाएं",
     "myServices": "मेरी सेवाएं",
@@ -57,6 +59,7 @@
     "appointments": "अपॉइंटमेंट्स",
     "alreadyBooked": "पहले से बुक है"
   },
+
   "common": {
     "back": "वापस",
     "cancel": "रद्द करें",

@@ -226,9 +226,13 @@ function UserDashboard() {
           groupSize: values.groupSize,
           memberNames: values.memberNames.slice(0, values.groupSize),
         });
-        toast.success(
-          `Successfully joined queue for ${values.groupSize} people!`,
-        );
+        
+        const buttonText = getButtonText(selectedService);
+        const successMessage = buttonText === "Join Queue" 
+          ? `Successfully joined queue for ${values.groupSize} people!`
+          : `Successfully ${buttonText.toLowerCase()}ed for ${values.groupSize} people!`;
+        
+        toast.success(successMessage);
         setShowJoinForm(false);
         setSelectedService(null);
         joinFormik.resetForm();
@@ -409,7 +413,7 @@ function UserDashboard() {
   };
 
   const getButtonText = (service) => {
-    if (service.isFull) {
+    if ((service.servingCapacity || 0) >= service.maxCapacity) {
       return "Join Queue";
     }
 
@@ -576,7 +580,7 @@ function UserDashboard() {
                       <div className="flex justify-between items-center mb-4 mt-auto">
                         <div className="text-sm text-[#85409D]">
                           <span className="font-medium">
-                            {service.isFull ? "Capacity:" : "Availability:"}
+                            {(service.servingCapacity || 0) >= service.maxCapacity ? "Capacity:" : "Availability:"}
                           </span>{" "}
                           {service.servingCapacity || 0}/{service.maxCapacity}
                         </div>
@@ -591,12 +595,12 @@ function UserDashboard() {
                         <div className="flex justify-between items-center">
                           <div
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              service.isFull
+                              (service.servingCapacity || 0) >= service.maxCapacity
                                 ? "bg-red-100 text-red-800"
                                 : "bg-green-100 text-green-800"
                             }`}
                           >
-                            {service.isFull ? "Full" : "Available"}
+                            {(service.servingCapacity || 0) >= service.maxCapacity ? "Full" : "Available"}
                           </div>
 
                           {service.userStatus && (
@@ -1014,13 +1018,11 @@ function UserDashboard() {
                             const endTime = formatTime(endTimePart);
 
                             // Check if this window has any booked slots
-                            const bookedSlotsInWindow = calendarEvents.filter(
+                            const hasBookedSlots = calendarEvents.some(
                               (bookedEvent) =>
                                 bookedEvent.id.startsWith("booked-") &&
                                 bookedEvent.start.split("T")[0] === datePart,
                             );
-
-                            const isFullyBooked = bookedSlotsInWindow.length > 0;
 
                             return (
                               <div
@@ -1028,9 +1030,7 @@ function UserDashboard() {
                                 className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-blue-100"
                               >
                                 <div className="flex items-center space-x-3">
-                                  <div className={`w-2 h-2 rounded-full ${
-                                    isFullyBooked ? 'bg-red-400' : 'bg-blue-400'
-                                  }`}></div>
+                                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                                   <div>
                                     <p className="font-medium text-gray-800 text-sm">
                                       {formattedDate}
@@ -1040,13 +1040,9 @@ function UserDashboard() {
                                     </p>
                                   </div>
                                 </div>
-                                <div className={`text-xs font-medium ${
-                                  isFullyBooked 
-                                    ? 'text-red-600 bg-red-50 px-2 py-1 rounded' 
-                                    : 'text-blue-600'
-                                }`}>
-                                  {isFullyBooked
-                                    ? "Already Booked"
+                                <div className="text-xs text-blue-600 font-medium">
+                                  {hasBookedSlots
+                                    ? "Partially Booked"
                                     : "Available"}
                                 </div>
                               </div>

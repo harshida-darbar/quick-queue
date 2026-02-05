@@ -1,14 +1,13 @@
-
-// quick-queue/frontend/app/page.js
-
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function Home() {
   return (
     <ProtectedRoute>
-    <div className="">
-      <h1>home</h1>
-    </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-gray-800">Quick Queue</h1>
+        </div>
+      </div>
     </ProtectedRoute>
   );
 }
