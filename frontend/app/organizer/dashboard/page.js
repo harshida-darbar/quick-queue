@@ -209,26 +209,27 @@ function OrganizerDashboard() {
   const getButtonText = (service) => {
     const serviceType = service.serviceType.toLowerCase();
     const buttonMapping = {
-      hospital: "Manage Appointments",
-      clinic: "Manage Appointments",
-      doctor: "Manage Appointments",
-      restaurant: "Manage Tables",
-      cafe: "Manage Tables",
-      salon: "Manage Slots",
-      spa: "Manage Slots",
-      gym: "Manage Sessions",
-      bank: "Manage Tokens",
-      atm: "Manage Tokens",
-      library: "Manage Seats",
-      cinema: "Manage Tickets",
-      theater: "Manage Tickets",
-      carwash: "Manage Services",
-      mechanic: "Manage Services",
-      dentist: "Manage Appointments",
-      pharmacy: "Manage Queue"
+      hospital: "manageAppointments",
+      clinic: "manageAppointments",
+      doctor: "manageAppointments",
+      restaurant: "manageTables",
+      cafe: "manageTables",
+      salon: "manageSlots",
+      spa: "manageSlots",
+      gym: "manageSessions",
+      bank: "manageTokens",
+      atm: "manageTokens",
+      library: "manageSeats",
+      cinema: "manageTickets",
+      theater: "manageTickets",
+      carwash: "manageServices",
+      mechanic: "manageServices",
+      dentist: "manageAppointments",
+      pharmacy: "manageQueue"
     };
     
-    return buttonMapping[serviceType] || "Manage Queue";
+    const translationKey = buttonMapping[serviceType] || "manageQueue";
+    return t(`organizer.${translationKey}`);
   };
 
   const getStatusColor = (status) => {
@@ -246,12 +247,16 @@ function OrganizerDashboard() {
     }
   };
 
+  const getStatusText = (status) => {
+    return t(`organizer.${status}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD]">
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F]">Loading services...</div>
+          <div className="text-xl text-[#62109F]">{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -277,12 +282,12 @@ function OrganizerDashboard() {
           <div className="fixed inset-0 bg-[#B7A3E3] bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold mb-4 text-[#62109F]">
-                Create New Service
+                {t('organizer.createNewService')}
               </h2>
               <form onSubmit={formik.handleSubmit}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Title
+                    {t('organizer.serviceTitle')}
                   </label>
                   <input
                     name="title"
@@ -301,7 +306,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t('organizer.description')}
                   </label>
                   <textarea
                     name="description"
@@ -320,12 +325,12 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Type
+                    {t('organizer.serviceType')}
                   </label>
                   <input
                     name="serviceType"
                     type="text"
-                    placeholder="e.g., restaurant, hospital, salon, gym, etc."
+                    placeholder={t('organizer.serviceTypePlaceholder')}
                     value={formik.values.serviceType}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -340,7 +345,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Photo URL (optional)
+                    {t('organizer.photoUrl')}
                   </label>
                   <input
                     name="photo"
@@ -359,7 +364,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Capacity
+                    {t('organizer.maxCapacityLabel')}
                   </label>
                   <input
                     name="maxCapacity"
@@ -387,11 +392,11 @@ function OrganizerDashboard() {
                       className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2]"
                     />
                     <span className="text-sm font-medium text-gray-700">
-                      Enable Appointment Booking
+                      {t('organizer.enableAppointmentBooking')}
                     </span>
                   </label>
                   <p className="text-xs text-gray-500 mt-1">
-                    Allow users to book specific time slots in advance
+                    {t('organizer.appointmentBookingDesc')}
                   </p>
                 </div>
 
@@ -399,14 +404,14 @@ function OrganizerDashboard() {
                 {formik.values.appointmentEnabled && (
                   <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Availability Windows
+                      {t('organizer.availabilityWindows')}
                     </h4>
                     <p className="text-xs text-gray-500 mb-3">
-                      Set time windows when appointments are available (e.g., 4:00 PM - 7:00 PM). Users can book 30-minute slots within these windows.
+                      {t('organizer.availabilityDesc')}
                     </p>
                     
                     {availabilityWindows.length === 0 ? (
-                      <p className="text-xs text-gray-500 mb-3">No availability windows added yet</p>
+                      <p className="text-xs text-gray-500 mb-3">{t('organizer.noAvailabilityWindows')}</p>
                     ) : (
                       <div className="space-y-2 mb-3">
                         {availabilityWindows.map((window, index) => (
@@ -419,7 +424,7 @@ function OrganizerDashboard() {
                               onClick={() => setAvailabilityWindows(availabilityWindows.filter((_, i) => i !== index))}
                               className="text-red-500 hover:text-red-700 text-xs"
                             >
-                              Remove
+                              {t('organizer.remove')}
                             </button>
                           </div>
                         ))}
@@ -437,13 +442,13 @@ function OrganizerDashboard() {
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="time"
-                        placeholder="Start Time"
+                        placeholder={t('organizer.startTime')}
                         id="windowStartTime"
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                       <input
                         type="time"
-                        placeholder="End Time"
+                        placeholder={t('organizer.endTime')}
                         id="windowEndTime"
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                       />
@@ -480,7 +485,7 @@ function OrganizerDashboard() {
                       }}
                       className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4]"
                     >
-                      Add Availability Window
+                      {t('organizer.addAvailabilityWindow')}
                     </button>
                   </div>
                 )}
@@ -494,14 +499,14 @@ function OrganizerDashboard() {
                     }}
                     className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
                   >
-                    Cancel
+                    {t('organizer.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={formik.isSubmitting}
                     className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none"
                   >
-                    {formik.isSubmitting ? "Creating..." : "Create Service"}
+                    {formik.isSubmitting ? t('organizer.creating') : t('organizer.createService')}
                   </button>
                 </div>
               </form>
@@ -514,12 +519,12 @@ function OrganizerDashboard() {
           <div className="fixed inset-0 bg-[#B7A3E3] bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold mb-4 text-[#62109F]">
-                Edit Service
+                {t('organizer.editService')}
               </h2>
               <form onSubmit={editFormik.handleSubmit}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Title
+                    {t('organizer.serviceTitle')}
                   </label>
                   <input
                     name="title"
@@ -533,7 +538,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t('organizer.description')}
                   </label>
                   <textarea
                     name="description"
@@ -547,7 +552,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Type
+                    {t('organizer.serviceType')}
                   </label>
                   <input
                     name="serviceType"
@@ -561,7 +566,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Photo URL (optional)
+                    {t('organizer.photoUrl')}
                   </label>
                   <input
                     name="photo"
@@ -575,7 +580,7 @@ function OrganizerDashboard() {
 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Capacity
+                    {t('organizer.maxCapacityLabel')}
                   </label>
                   <input
                     name="maxCapacity"
@@ -597,14 +602,14 @@ function OrganizerDashboard() {
                     }}
                     className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
                   >
-                    Cancel
+                    {t('organizer.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={editFormik.isSubmitting}
                     className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none"
                   >
-                    {editFormik.isSubmitting ? "Updating..." : "Update Service"}
+                    {editFormik.isSubmitting ? t('organizer.updating') : t('organizer.updateService')}
                   </button>
                 </div>
               </form>
@@ -618,7 +623,7 @@ function OrganizerDashboard() {
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-red-600">
-                  Delete Service
+                  {t('organizer.deleteService')}
                 </h2>
                 <button
                   onClick={() => {
@@ -633,7 +638,7 @@ function OrganizerDashboard() {
               
               <div className="mb-6">
                 <p className="text-gray-700 mb-2">
-                  Are you sure you want to delete this service?
+                  {t('organizer.deleteConfirmMessage')}
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="font-semibold text-red-800">{serviceToDelete.title}</p>
@@ -649,13 +654,13 @@ function OrganizerDashboard() {
                   }}
                   className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
                 >
-                  Cancel
+                  {t('organizer.cancel')}
                 </button>
                 <button
                   onClick={handleDeleteService}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer outline-none"
                 >
-                  Delete Service
+                  {t('organizer.deleteService')}
                 </button>
               </div>
             </div>
@@ -666,10 +671,10 @@ function OrganizerDashboard() {
         {services.length === 0 && !loading ? (
           <div className="text-center py-12">
             <p className="text-[#62109F] text-lg font-medium">
-              No services created yet
+              {t('organizer.noServices')}
             </p>
             <p className="text-[#85409D]">
-              Create your first service to get started
+              {t('organizer.createFirstService')}
             </p>
           </div>
         ) : (
@@ -721,7 +726,7 @@ function OrganizerDashboard() {
                               e.stopPropagation();
                               openEditModal(service);
                             }}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors cursor-pointer"
                             title="Edit Service"
                           >
                             <FaEdit size={16} />
@@ -731,7 +736,7 @@ function OrganizerDashboard() {
                               e.stopPropagation();
                               openDeleteModal(service);
                             }}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
                             title="Delete Service"
                           >
                             <FaTrash size={16} />
@@ -759,13 +764,13 @@ function OrganizerDashboard() {
 
                       <div className="flex justify-between items-center mb-4 mt-auto">
                         <div className="text-sm text-gray-500">
-                          <span className="font-medium">Capacity:</span>{" "}
+                          <span className="font-medium">{t('organizer.capacity')}:</span>{" "}
                           {service.maxCapacity}
                         </div>
                         <div
                           className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
                         >
-                          {service.status}
+                          {getStatusText(service.status)}
                         </div>
                       </div>
 
@@ -775,7 +780,7 @@ function OrganizerDashboard() {
                             onClick={() => handleStartService(service._id)}
                             className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
                           >
-                            Start Service
+                            {t('organizer.startService')}
                           </button>
                         )}
 
@@ -795,7 +800,7 @@ function OrganizerDashboard() {
                             }
                             className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-4 py-2 rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
                           >
-                            Appointments
+                            {t('organizer.appointments')}
                           </button>
                         )}
                       </div>

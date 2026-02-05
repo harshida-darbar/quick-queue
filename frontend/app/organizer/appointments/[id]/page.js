@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { FaArrowLeft, FaCalendarAlt, FaUsers, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
@@ -13,6 +14,7 @@ function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
 
@@ -91,7 +93,7 @@ function AppointmentsPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD]">
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F]">Loading appointments...</div>
+          <div className="text-xl text-[#62109F]">{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -112,7 +114,7 @@ function AppointmentsPage() {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-[#62109F]">
-             Appointments - {service?.title}
+             {t('organizer.appointmentsTitle')} - {service?.title}
             </h1>
             <p className="text-[#85409D] capitalize">{service?.serviceType}</p>
           </div>
@@ -122,8 +124,8 @@ function AppointmentsPage() {
         {appointments.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-lg">
             <FaCalendarAlt size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Appointments Yet</h3>
-            <p className="text-gray-500">Users haven't booked any appointments for this service.</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('organizer.noAppointmentsYet')}</h3>
+            <p className="text-gray-500">{t('organizer.noAppointmentsDesc')}</p>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -131,11 +133,11 @@ function AppointmentsPage() {
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Date & Time</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Booked By</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Group</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Members</th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">{t('organizer.dateTime')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">{t('organizer.bookedBy')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">{t('organizer.group')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">{t('organizer.members')}</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold">{t('organizer.status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -181,7 +183,7 @@ function AppointmentsPage() {
                         <td className="px-4 py-4">
                           <div className="flex items-center">
                             <FaUsers className="text-[#85409D] mr-2 text-sm" />
-                            <span className="font-medium text-gray-900 text-sm">{appointment.groupSize} people</span>
+                            <span className="font-medium text-gray-900 text-sm">{appointment.groupSize} {t('organizer.people')}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -203,7 +205,7 @@ function AppointmentsPage() {
                         </td>
                         <td className="px-4 py-4 text-center">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(appointment.status)}`}>
-                            {appointment.status}
+                            {t(`organizer.${appointment.status}`)}
                           </span>
                         </td>
                       </tr>
@@ -217,23 +219,23 @@ function AppointmentsPage() {
         {/* Summary */}
         {appointments.length > 0 && (
           <div className="mt-8 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] rounded-lg p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">Appointments Summary</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('organizer.appointmentsSummary')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold">{appointments.length}</p>
-                <p className="text-sm opacity-90">Total Appointments</p>
+                <p className="text-sm opacity-90">{t('organizer.totalAppointments')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold">
                   {appointments.filter(apt => apt.status === 'booked').length}
                 </p>
-                <p className="text-sm opacity-90">Confirmed</p>
+                <p className="text-sm opacity-90">{t('organizer.confirmed')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold">
                   {appointments.reduce((sum, apt) => sum + apt.groupSize, 0)}
                 </p>
-                <p className="text-sm opacity-90">Total People</p>
+                <p className="text-sm opacity-90">{t('organizer.totalPeople')}</p>
               </div>
             </div>
           </div>
@@ -245,7 +247,7 @@ function AppointmentsPage() {
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-4 shadow-2xl border border-[#B7A3E3]">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[#62109F]">User Details</h2>
+              <h2 className="text-lg font-bold text-[#62109F]">{t('organizer.userDetails')}</h2>
               <button
                 onClick={() => setShowUserModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl font-bold outline-none cursor-pointer"
@@ -273,7 +275,7 @@ function AppointmentsPage() {
                 <h3 className="text-base font-semibold text-gray-900">{selectedUser.name}</h3>
                 <p className="text-gray-600 text-sm">{selectedUser.email}</p>
                 <span className="inline-block mt-1 px-2 py-1 bg-[#B7A3E3] text-[#62109F] rounded-full text-xs font-medium">
-                  {selectedUser.role === 2 ? 'Organizer' : 'User'}
+                  {selectedUser.role === 2 ? t('organizer.organizer') : t('organizer.user')}
                 </span>
               </div>
             </div>
@@ -282,13 +284,13 @@ function AppointmentsPage() {
             <div className="space-y-2 mb-4">
               <div className="flex items-center text-sm">
                 <FaPhoneAlt className="text-[#85409D] mr-2 w-3" />
-                <span className="text-gray-600 min-w-[45px]">Phone:</span>
-                <span className="text-gray-900 font-medium">{selectedUser.phone || "Not provided"}</span>
+                <span className="text-gray-600 min-w-[45px]">{t('organizer.phone')}:</span>
+                <span className="text-gray-900 font-medium">{selectedUser.phone || t('organizer.notProvided')}</span>
               </div>
               <div className="flex items-center text-sm">
                 <FaMapMarkerAlt className="text-[#85409D] mr-2 w-3" />
-                <span className="text-gray-600 min-w-[45px]">City:</span>
-                <span className="text-gray-900 font-medium">{selectedUser.city || "Not provided"}</span>
+                <span className="text-gray-600 min-w-[45px]">{t('organizer.city')}:</span>
+                <span className="text-gray-900 font-medium">{selectedUser.city || t('organizer.notProvided')}</span>
               </div>
             </div>
             
@@ -297,7 +299,7 @@ function AppointmentsPage() {
                 onClick={() => setShowUserModal(false)}
                 className="px-3 py-1.5 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors outline-none cursor-pointer text-sm"
               >
-                Close
+                {t('organizer.close')}
               </button>
             </div>
           </div>

@@ -32,6 +32,7 @@ import {
 } from "react-icons/io5";
 
 function UserDashboard() {
+  const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -47,7 +48,7 @@ function UserDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const servicesPerPage = 6;
-  const { t } = useTranslation();
+  
   const appointmentFormik = useFormik({
     initialValues: {
       groupSize: 1,
@@ -414,34 +415,31 @@ function UserDashboard() {
 
   const getButtonText = (service) => {
     if ((service.servingCapacity || 0) >= service.maxCapacity) {
-      return "Join Queue";
+      return t('dashboard.joinQueue');
     }
 
     const serviceType = service.serviceType.toLowerCase();
     const buttonMapping = {
-      hospital: "Book Appointment",
-      clinic: "Book Appointment",
-      doctor: "Book Appointment",
-      restaurant: "Book Table",
-      cafe: "Book Table",
-      salon: "Book Slot",
-      spa: "Book Slot",
-      gym: "Book Session",
-      bank: "Get Token",
-      atm: "Get Token",
-      library: "Reserve Seat",
-      cinema: "Book Ticket",
-      theater: "Book Ticket",
-      carwash: "Book Service",
-      mechanic: "Book Service",
-      dentist: "Book Appointment",
-      pharmacy: "Get Medicine",
+      hospital: t('dashboard.bookAppointment'),
+      clinic: t('dashboard.bookAppointment'),
+      doctor: t('dashboard.bookAppointment'),
+      restaurant: t('dashboard.bookTable'),
+      cafe: t('dashboard.bookTable'),
+      salon: t('dashboard.bookSlot'),
+      spa: t('dashboard.bookSlot'),
+      gym: t('dashboard.bookSession'),
+      bank: t('dashboard.getToken'),
+      atm: t('dashboard.getToken'),
+      library: t('dashboard.reserveSeat'),
+      cinema: t('dashboard.bookTicket'),
+      theater: t('dashboard.bookTicket'),
+      carwash: t('dashboard.bookService'),
+      mechanic: t('dashboard.bookService'),
+      dentist: t('dashboard.bookAppointment'),
+      pharmacy: t('dashboard.getMedicine'),
     };
 
-    return (
-      buttonMapping[serviceType] ||
-      `Book ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}`
-    );
+    return buttonMapping[serviceType] || t('dashboard.bookAppointment');
   };
 
   if (loading) {
@@ -449,7 +447,7 @@ function UserDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F]">Loading services...</div>
+          <div className="text-xl text-[#62109F]">{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -493,7 +491,6 @@ function UserDashboard() {
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white shadow-sm cursor-pointer min-w-[160px]"
             >
               <option value="all">{t('dashboard.allServices')}</option>
-              <option value="available">{t('dashboard.availableOnly')}</option>
               {serviceTypes.map((type) => (
                 <option key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -580,12 +577,12 @@ function UserDashboard() {
                       <div className="flex justify-between items-center mb-4 mt-auto">
                         <div className="text-sm text-[#85409D]">
                           <span className="font-medium">
-                            {(service.servingCapacity || 0) >= service.maxCapacity ? "Capacity:" : "Availability:"}
+                            {(service.servingCapacity || 0) >= service.maxCapacity ? t('dashboard.capacity') : t('dashboard.availability')}:
                           </span>{" "}
                           {service.servingCapacity || 0}/{service.maxCapacity}
                         </div>
                         <div className="text-sm text-[#85409D]">
-                          <span className="font-medium">Waiting:</span>{" "}
+                          <span className="font-medium">{t('dashboard.waiting')}:</span>{" "}
                           {service.waitingCount}
                         </div>
                       </div>
@@ -600,7 +597,7 @@ function UserDashboard() {
                                 : "bg-green-100 text-green-800"
                             }`}
                           >
-                            {(service.servingCapacity || 0) >= service.maxCapacity ? "Full" : "Available"}
+                            {(service.servingCapacity || 0) >= service.maxCapacity ? t('dashboard.full') : t('dashboard.available')}
                           </div>
 
                           {service.userStatus && (
@@ -614,10 +611,10 @@ function UserDashboard() {
                               }`}
                             >
                               {service.userStatus.status === "serving"
-                                ? `🟢 Serving #${service.userStatus.tokenNumber}`
+                                ? `🟢 ${t('dashboard.serving')} #${service.userStatus.tokenNumber}`
                                 : service.userStatus.status === "waiting"
-                                  ? `🟡 Waiting #${service.userStatus.tokenNumber}`
-                                  : `✅ Complete #${service.userStatus.tokenNumber}`}
+                                  ? `🟡 ${t('dashboard.waiting')} #${service.userStatus.tokenNumber}`
+                                  : `✅ ${t('dashboard.complete')} #${service.userStatus.tokenNumber}`}
                             </div>
                           )}
                         </div>
@@ -639,7 +636,7 @@ function UserDashboard() {
                               }
                               className="flex-1 bg-gradient-to-r from-[#85409D] to-[#C47BE4] text-white px-3 py-2 text-sm rounded-md hover:from-[#C47BE4] hover:to-[#B7A3E3] transition-all duration-300 cursor-pointer outline-none"
                             >
-                              Book Appointment
+                              {t('dashboard.bookAppointment')}
                             </button>
                           </div>
                         )}
@@ -675,7 +672,7 @@ function UserDashboard() {
               <form onSubmit={joinFormik.handleSubmit}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    How many people in your group?
+                    {t('forms.howManyPeople')}
                   </label>
                   <input
                     name="groupSize"
@@ -699,7 +696,7 @@ function UserDashboard() {
                 {joinFormik.values.groupSize > 0 && (
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Enter names for all members:
+                      {t('forms.enterNames')}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {Array.from(
@@ -743,14 +740,14 @@ function UserDashboard() {
 
                 <div className="bg-gray-50 p-3 rounded-md mb-4">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Service:</span>{" "}
+                    <span className="font-medium">{t('forms.service')}:</span>{" "}
                     {selectedService.title}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Current Queue:</span>{" "}
+                    <span className="font-medium">{t('forms.currentQueue')}:</span>{" "}
                     {selectedService.servingCapacity || 0}/
-                    {selectedService.maxCapacity} capacity used,{" "}
-                    {selectedService.waitingCount} waiting
+                    {selectedService.maxCapacity} {t('forms.capacityUsed')},{" "}
+                    {selectedService.waitingCount} {t('forms.waiting')}
                   </p>
                 </div>
 
@@ -764,7 +761,7 @@ function UserDashboard() {
                     }}
                     className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors outline-none cursor-pointer"
                   >
-                    Cancel
+                    {t('forms.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -772,7 +769,7 @@ function UserDashboard() {
                     className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
                   >
                     {joinFormik.isSubmitting
-                      ? "Joining..."
+                      ? t('forms.joining')
                       : getButtonText(selectedService)}
                   </button>
                 </div>
@@ -809,13 +806,13 @@ function UserDashboard() {
                 <div className="mb-6 bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-base font-semibold text-[#62109F] mb-3 flex items-center gap-2">
                     <IoPeopleOutline size={18} className="text-[#62109F]" />
-                    Booking Details
+                    {t('forms.bookingDetails')}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Group Size
+                        {t('forms.groupSize')}
                       </label>
                       <input
                         name="groupSize"
@@ -851,7 +848,7 @@ function UserDashboard() {
 
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Member Names
+                      {t('forms.memberNames')}
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-32 overflow-y-auto">
                       {Array.from(
@@ -891,13 +888,13 @@ function UserDashboard() {
                 <div className="mb-6">
                   <h3 className="text-base font-semibold text-[#62109F] mb-3 flex items-center gap-2">
                     <IoTimeOutline size={18} className="text-[#62109F]" />
-                    Select Your Appointment Time
+                    {t('forms.selectAppointmentTime')}
                   </h3>
 
                   {selectedCalendarSlot && (
                     <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-green-800 font-medium text-sm">
-                        ✅ Selected: {selectedCalendarSlot.startTime} -{" "}
+                        ✅ {t('forms.selected')}: {selectedCalendarSlot.startTime} -{" "}
                         {selectedCalendarSlot.endTime}
                       </p>
                     </div>
@@ -970,7 +967,7 @@ function UserDashboard() {
                         size={16}
                         className="text-[#0EA5E9]"
                       />
-                      Available Time Windows
+                      {t('forms.availableTimeWindows')}
                     </h4>
                     {calendarEvents.filter(
                       (event) => event.display === "background",
@@ -1042,8 +1039,8 @@ function UserDashboard() {
                                 </div>
                                 <div className="text-xs text-blue-600 font-medium">
                                   {hasBookedSlots
-                                    ? "Partially Booked"
-                                    : "Available"}
+                                    ? t('forms.booked')
+                                    : t('forms.available')}
                                 </div>
                               </div>
                             );
@@ -1065,15 +1062,15 @@ function UserDashboard() {
                     <div className="flex items-center justify-center space-x-6">
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
-                        <span>Available</span>
+                        <span>{t('forms.available')}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
-                        <span>Booked</span>
+                        <span>{t('forms.booked')}</span>
                       </div>
                     </div>
                     <p className="mt-2 text-center">
-                      Click and drag on the calendar to select a 30-minute slot.
+                      {t('forms.clickDrag')}
                     </p>
                   </div>
                 </div>
@@ -1082,12 +1079,12 @@ function UserDashboard() {
                   <div className="bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] p-3 rounded-lg flex-1">
                     <h4 className="font-semibold text-white mb-1 text-sm flex items-center gap-2">
                       <IoBulbOutline size={18} className="text-yellow-400" />
-                      Quick Tips
+                      {t('forms.quickTips')}
                     </h4>
                     <ul className="text-white text-xs space-y-1">
-                      <li>• Select time slot above</li>
-                      <li>• Arrive 5 minutes early</li>
-                      <li>• No waiting in line!</li>
+                      <li>• {t('forms.selectTimeSlot')}</li>
+                      <li>• {t('forms.arriveEarly')}</li>
+                      <li>• {t('forms.noWaiting')}</li>
                     </ul>
                   </div>
 
@@ -1100,7 +1097,7 @@ function UserDashboard() {
                       }}
                       className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none text-sm"
                     >
-                      Cancel
+                      {t('forms.cancel')}
                     </button>
                     <button
                       onClick={appointmentFormik.handleSubmit}
@@ -1110,8 +1107,8 @@ function UserDashboard() {
                       className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none text-sm"
                     >
                       {appointmentFormik.isSubmitting
-                        ? "Booking..."
-                        : "Book Appointment"}
+                        ? t('forms.booking')
+                        : t('dashboard.bookAppointment')}
                     </button>
                   </div>
                 </div>

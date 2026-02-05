@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { IoArrowBack, IoCamera, IoPerson, IoMail, IoShield, IoCall, IoLocation } from "react-icons/io5";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
@@ -9,6 +10,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import { AuthContext } from "../context/Authcontext";
 
 function ProfilePage() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -111,7 +113,7 @@ function ProfilePage() {
           >
             <IoArrowBack size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-[#62109F]">My Profile</h1>
+          <h1 className="text-2xl font-bold text-[#62109F]">{t('navbar.myProfile')}</h1>
         </div>
 
         <div className="bg-white rounded-xl shadow-xl p-6">
@@ -161,7 +163,7 @@ function ProfilePage() {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                   <IoPerson className="mr-2 text-[#85409D]" />
-                  Name
+                  {t('profile.name')}
                 </label>
                 <input
                   type="text"
@@ -175,7 +177,7 @@ function ProfilePage() {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                   <IoMail className="mr-2 text-[#85409D]" />
-                  Email
+                  {t('profile.email')}
                 </label>
                 <input
                   type="email"
@@ -189,7 +191,7 @@ function ProfilePage() {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                   <IoCall className="mr-2 text-[#85409D]" />
-                  Phone
+                  {t('profile.phone')}
                 </label>
                 <input
                   type="tel"
@@ -203,7 +205,7 @@ function ProfilePage() {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                   <IoLocation className="mr-2 text-[#85409D]" />
-                  City
+                  {t('profile.city')}
                 </label>
                 <input
                   type="text"
@@ -219,7 +221,7 @@ function ProfilePage() {
                   type="submit"
                   className="flex-1 py-2 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#4D2FB2] transition-all cursor-pointer outline-none font-medium"
                 >
-                  Save Changes
+                  {t('profile.saveChanges')}
                 </button>
                 <button
                   type="button"
@@ -231,7 +233,7 @@ function ProfilePage() {
                   }}
                   className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer outline-none font-medium"
                 >
-                  Cancel
+                  {t('profile.cancel')}
                 </button>
               </div>
             </form>
@@ -240,7 +242,7 @@ function ProfilePage() {
               <div className="bg-gray-50 rounded-lg p-3">
                 <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
                   <IoPerson className="mr-2 text-[#85409D]" />
-                  Name
+                  {t('profile.name')}
                 </label>
                 <p className="text-lg text-gray-900 font-medium">{profile?.name}</p>
               </div>
@@ -248,7 +250,7 @@ function ProfilePage() {
               <div className="bg-gray-50 rounded-lg p-3">
                 <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
                   <IoMail className="mr-2 text-[#85409D]" />
-                  Email
+                  {t('profile.email')}
                 </label>
                 <p className="text-lg text-gray-900 font-medium">{profile?.email}</p>
               </div>
@@ -256,26 +258,26 @@ function ProfilePage() {
               <div className="bg-gray-50 rounded-lg p-3">
                 <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
                   <IoCall className="mr-2 text-[#85409D]" />
-                  Phone
+                  {t('profile.phone')}
                 </label>
-                <p className="text-lg text-gray-900 font-medium">{profile?.phone || "Not provided"}</p>
+                <p className="text-lg text-gray-900 font-medium">{profile?.phone || t('profile.notProvided')}</p>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-3">
                 <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
                   <IoLocation className="mr-2 text-[#85409D]" />
-                  City
+                  {t('profile.city')}
                 </label>
-                <p className="text-lg text-gray-900 font-medium">{profile?.city || "Not provided"}</p>
+                <p className="text-lg text-gray-900 font-medium">{profile?.city || t('profile.notProvided')}</p>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-3">
                 <label className="flex items-center text-sm font-medium text-gray-600 mb-1">
                   <IoShield className="mr-2 text-[#85409D]" />
-                  Role
+                  {t('profile.role')}
                 </label>
                 <span className="inline-block px-3 py-1 bg-gradient-to-r from-[#4D2FB2] to-[#85409D] text-white rounded-full text-sm font-medium">
-                  {profile?.role === 2 ? "Organizer" : "User"}
+                  {profile?.role === 2 ? t('profile.organizer') : t('profile.user')}
                 </span>
               </div>
 
@@ -283,7 +285,7 @@ function ProfilePage() {
                 onClick={() => setEditing(true)}
                 className="w-full py-2 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#4D2FB2] transition-all cursor-pointer outline-none font-medium mt-4"
               >
-                Edit Profile
+                {t('profile.editProfile')}
               </button>
             </div>
           )}

@@ -2,6 +2,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
@@ -16,6 +17,7 @@ export default function ServiceManagement({ params }) {
   const [loading, setLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const { t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {
@@ -137,7 +139,7 @@ export default function ServiceManagement({ params }) {
           onClick={() => router.back()}
           className="mb-6 text-[#4D2FB2] hover:text-[#62109F] flex items-center font-medium outline-none"
         >
-          <IoArrowBack size={20} className="cursor-pointer"/> Back to Dashboard
+          <IoArrowBack size={20} className="cursor-pointer"/> {t('organizer.backToDashboard')}
         </button>
 
         {/* Service Header */}
@@ -161,7 +163,7 @@ export default function ServiceManagement({ params }) {
                   : "bg-gray-100 text-gray-800 capitalize"
               }`}
             >
-              {service.status}
+              {t(`organizer.${service.status}`)}
             </div>
           </div>
 
@@ -171,27 +173,27 @@ export default function ServiceManagement({ params }) {
                 {service.servingCapacity || 0}
               </div>
               <div className="text-sm text-white opacity-90">
-                People Serving
+                {t('organizer.peopleServing')}
               </div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#85409D] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">
                 {waitingUsers.length}
               </div>
-              <div className="text-sm text-white opacity-90">Groups Waiting</div>
+              <div className="text-sm text-white opacity-90">{t('organizer.groupsWaiting')}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#4D2FB2] to-[#62109F] rounded-lg">
               <div className="text-2xl font-bold text-white">
                 {service.maxCapacity}
               </div>
-              <div className="text-sm text-white opacity-90">Max Capacity</div>
+              <div className="text-sm text-white opacity-90">{t('organizer.maxCapacity')}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#6F00FF] to-[#8C00FF] rounded-lg">
               <div className="text-2xl font-bold text-white">
                 {service.maxCapacity - (service.servingCapacity || 0)}
               </div>
               <div className="text-sm text-white opacity-90">
-                Available Spots
+                {t('organizer.availableSpots')}
               </div>
             </div>
           </div>
@@ -202,12 +204,12 @@ export default function ServiceManagement({ params }) {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold text-[#62109F] mb-4 flex items-center">
               <span className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
-              Waiting List ({waitingUsers.length})
+              {t('organizer.waitingList')} ({waitingUsers.length})
             </h2>
 
             {waitingUsers.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                No one is waiting
+                {t('organizer.noOneWaiting')}
               </p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -218,18 +220,18 @@ export default function ServiceManagement({ params }) {
                   >
                     <div className="mb-3">
                       <div className="font-semibold text-[#62109F]">
-                        Token #{entry.tokenNumber}
+                        {t('organizer.token')} #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
                         {entry.user?.name || 'Unknown User'}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Position: {index + 1}
+                        {t('organizer.position')}: {index + 1}
                       </div>
                       {entry.memberNames && entry.memberNames.length > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
-                          Group: {entry.memberNames.join(", ")} (
-                          {entry.groupSize} people)
+                          {t('organizer.group')}: {entry.memberNames.join(", ")} (
+                          {entry.groupSize} {t('organizer.people')})
                         </div>
                       )}
                     </div>
@@ -243,7 +245,7 @@ export default function ServiceManagement({ params }) {
                             : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
                         }`}
                       >
-                        Start Serving ({entry.groupSize} people)
+                        {t('organizer.startServing')} ({entry.groupSize} {t('organizer.people')})
                       </button>
                     </div>
                   </div>
@@ -256,7 +258,7 @@ export default function ServiceManagement({ params }) {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold text-[#62109F] mb-4 flex items-center">
               <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-              Currently Serving ({service.servingCapacity || 0}/{service.maxCapacity} people)
+              {t('organizer.currentlyServing')} ({service.servingCapacity || 0}/{service.maxCapacity} {t('organizer.people')})
             </h2>
 
             {servingUsers.length === 0 ? (
@@ -272,7 +274,7 @@ export default function ServiceManagement({ params }) {
                   >
                     <div className="mb-3">
                       <div className="font-semibold text-[#62109F]">
-                        Token #{entry.tokenNumber}
+                        {t('organizer.token')} #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
                         {entry.user?.name || 'Unknown User'}
@@ -282,8 +284,8 @@ export default function ServiceManagement({ params }) {
                       </div>
                       {entry.memberNames && entry.memberNames.length > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
-                          Group: {entry.memberNames.join(", ")} (
-                          {entry.groupSize} people)
+                          {t('organizer.group')}: {entry.memberNames.join(", ")} (
+                          {entry.groupSize} {t('organizer.people')})
                         </div>
                       )}
                     </div>
@@ -293,7 +295,7 @@ export default function ServiceManagement({ params }) {
                         onClick={() => handleMarkComplete(entry._id)}
                         className="px-3 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-md hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 text-sm  cursor-pointer outline-none"
                       >
-                        Complete
+                        {t('organizer.complete')}
                       </button>
                     </div>
                   </div>
@@ -306,12 +308,12 @@ export default function ServiceManagement({ params }) {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold text-[#62109F] mb-4 flex items-center">
               <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-              Completed ({completedUsers.length})
+              {t('organizer.completed')} ({completedUsers.length})
             </h2>
 
             {completedUsers.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                No completed services yet
+                {t('organizer.noCompletedYet')}
               </p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -322,7 +324,7 @@ export default function ServiceManagement({ params }) {
                   >
                     <div>
                       <div className="font-semibold text-[#62109F]">
-                        Token #{entry.tokenNumber}
+                        {t('organizer.token')} #{entry.tokenNumber}
                       </div>
                       <div className="text-sm text-gray-600">
                         {entry.user?.name || 'Unknown User'}
@@ -332,12 +334,12 @@ export default function ServiceManagement({ params }) {
                       </div>
                       {entry.memberNames && entry.memberNames.length > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
-                          Group: {entry.memberNames.join(", ")} (
-                          {entry.groupSize} people)
+                          {t('organizer.complete')}: {entry.memberNames.join(", ")} (
+                          {entry.groupSize} {t('organizer.people')})
                         </div>
                       )}
                       <div className="text-xs text-green-600 mt-1">
-                        ✅ Completed at{" "}
+                        ✅ {t('organizer.completedAt')}{" "}
                         {new Date(entry.updatedAt).toLocaleString()}
                       </div>
                     </div>
@@ -351,19 +353,19 @@ export default function ServiceManagement({ params }) {
         {/* Quick Actions */}
         <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-[#62109F] mb-4">
-            Quick Actions
+            {t('organizer.quickActions')}
           </h3>
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="text-[#85409D]">
-              <span className="font-medium">Total People:</span>{" "}
-              {(service.servingCapacity || 0) + waitingUsers.reduce((sum, user) => sum + user.groupSize, 0)} people
+              <span className="font-medium">{t('organizer.totalPeople')}:</span>{" "}
+              {(service.servingCapacity || 0) + waitingUsers.reduce((sum, user) => sum + user.groupSize, 0)} {t('organizer.people')}
             </div>
             <div className="text-[#85409D]">
-              <span className="font-medium">Capacity Usage:</span>{" "}
+              <span className="font-medium">{t('organizer.capacityUsage')}:</span>{" "}
               {Math.round(((service.servingCapacity || 0) / service.maxCapacity) * 100)}%
             </div>
             <div className="text-[#85409D]">
-              <span className="font-medium">Status:</span>
+              <span className="font-medium">{t('organizer.status')}:</span>
               <span
                 className={`ml-1 font-semibold ${
                   (service.servingCapacity || 0) >= service.maxCapacity
@@ -372,8 +374,8 @@ export default function ServiceManagement({ params }) {
                 }`}
               >
                 {(service.servingCapacity || 0) >= service.maxCapacity
-                  ? "Full"
-                  : "Available"}
+                  ? t('organizer.full')
+                  : t('organizer.available')}
               </span>
             </div>
           </div>
@@ -385,10 +387,10 @@ export default function ServiceManagement({ params }) {
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-semibold text-[#62109F] mb-4">
-              Confirm Completion
+              {t('organizer.confirmCompletion')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to mark <strong>{selectedEntry.user?.name || 'Unknown User'}</strong> (Token #{selectedEntry.tokenNumber}) as complete?
+              {t('organizer.confirmCompletionMessage')} <strong>{selectedEntry.user?.name || 'Unknown User' }</strong> ({t('organizer.token')} #{selectedEntry.tokenNumber}) as complete?
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -398,13 +400,13 @@ export default function ServiceManagement({ params }) {
                 }}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none"
               >
-                No, Cancel
+               {t('organizer.noCancel')}
               </button>
               <button
                 onClick={confirmComplete}
                 className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#8C00FF] transition-colors cursor-pointer outline-none"
               >
-                Yes, Complete
+                {t('organizer.yesComplete')}
               </button>
             </div>
           </div>

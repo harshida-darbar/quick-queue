@@ -30,26 +30,26 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 {/* Logo */}
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#85409D] to-[#62109F] rounded-lg shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#85409D] to-[#62109F] rounded-lg shadow-lg">
+                  <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold text-white">Quick<span className="text-[#C47BE4]">Queue</span></h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white">Quick<span className="text-[#C47BE4]">Queue</span></h1>
               </div>
             </div>
               
-            <div className="flex items-center space-x-4">
-              {/* Language Dropdown */}
-              <div className="relative">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Language Dropdown - Hidden on small screens */}
+              <div className="relative hidden sm:block">
                 <button
                   onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                  className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-3 py-1 text-white hover:bg-opacity-20 transition-colors"
+                  className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-2 sm:px-3 py-1 text-white hover:bg-opacity-20 transition-colors cursor-pointer"
                 >
-                  <span className="text-sm text-gray-800">
-                    {i18n.language === 'hi' ? 'हिंदी' : 'English'}
+                  <span className="text-xs sm:text-sm text-gray-600">
+                    {i18n.language === 'hi' ? 'हिंदी' : 'EN'}
                   </span>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -63,7 +63,7 @@ export default function Navbar() {
                         i18n.changeLanguage('en');
                         setShowLanguageDropdown(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors ${
                         i18n.language === 'en' 
                           ? 'bg-[#62109F] text-white' 
                           : 'text-gray-800 hover:bg-[#B7A3E3] hover:text-white'
@@ -76,7 +76,7 @@ export default function Navbar() {
                         i18n.changeLanguage('hi');
                         setShowLanguageDropdown(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors ${
                         i18n.language === 'hi' 
                           ? 'bg-[#62109F] text-white' 
                           : 'text-gray-800 hover:bg-[#B7A3E3] hover:text-white'
@@ -93,11 +93,19 @@ export default function Navbar() {
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center space-x-2 text-white hover:text-[#C47BE4] transition-colors cursor-pointer outline-none"
                 >
-                  {/* Mobile Hamburger */}
+                  {/* Mobile - Show avatar only */}
                   <div className="md:hidden">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center">
+                      {user.profileImage ? (
+                        <img
+                          src={`http://localhost:5000/api/profile/image/${user.profileImage}`}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-white">{user.name?.charAt(0)}</span>
+                      )}
+                    </div>
                   </div>
                   
                   {/* Desktop User Info */}
@@ -122,6 +130,35 @@ export default function Navbar() {
                 
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    {/* Language options for mobile */}
+                    <div className="sm:hidden border-b border-gray-200 pb-2 mb-2">
+                      <button
+                        onClick={() => {
+                          i18n.changeLanguage('en');
+                          setShowDropdown(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                          i18n.language === 'en' 
+                            ? 'bg-[#62109F] text-white' 
+                            : 'text-gray-700 hover:bg-[#B7A3E3] hover:text-white'
+                        }`}
+                      >
+                        English
+                      </button>
+                      <button
+                        onClick={() => {
+                          i18n.changeLanguage('hi');
+                          setShowDropdown(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                          i18n.language === 'hi' 
+                            ? 'bg-[#62109F] text-white' 
+                            : 'text-gray-700 hover:bg-[#B7A3E3] hover:text-white'
+                        }`}
+                      >
+                        हिंदी
+                      </button>
+                    </div>
                     {(user.role === 2 || user.role === 3) && (
                       <button
                         onClick={() => {
