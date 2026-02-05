@@ -36,17 +36,45 @@ function AppointmentsPage() {
       const availabilityResponse = await api.get(`/queue/services/${serviceId}/availability`);
       const { bookedSlots } = availabilityResponse.data;
       
-      // Transform booked slots into appointments format
-      const appointmentsData = bookedSlots.map(slot => ({
-        ...slot,
-        id: slot._id,
-        user: {
-          id: slot.bookedBy,
-          name: slot.bookedUserName,
-          profileImage: slot.bookedUserProfileImage
-        }
-      }));
+      console.log('Raw booked slots:', bookedSlots);
+      
+      // Transform booked slots into appointments format with user data
+      const appointmentsData = await Promise.all(
+        bookedSlots.map(async (slot) => {
+          console.log('Processing slot:', slot);
+          
+          let userName = 'Unknown User';
+          let userProfileImage = slot.bookedUserProfileImage;
+          
+          // Always fetch user data from API since bookedUserName is just 'User'
+          if (slot.bookedBy) {
+            try {
+              console.log('Fetching user data for ID:', slot.bookedBy);
+              const userResponse = await api.get(`/queue/user/${slot.bookedBy}`);
+              console.log('User response:', userResponse.data);
+              userName = userResponse.data.name || 'Unknown User';
+              userProfileImage = userResponse.data.profileImage;
+            } catch (error) {
+              console.error('Error fetching user data:', error);
+            }
+          }
+          
+          const appointmentData = {
+            ...slot,
+            id: slot._id,
+            user: {
+              id: slot.bookedBy,
+              name: userName,
+              profileImage: userProfileImage
+            }
+          };
+          
+          console.log('Final appointment data:', appointmentData);
+          return appointmentData;
+        })
+      );
 
+      console.log('All appointments data:', appointmentsData);
       setAppointments(appointmentsData);
     } catch (error) {
       console.error("Error fetching appointments:", error);
