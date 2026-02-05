@@ -108,7 +108,7 @@ export default function ServiceDetails({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
+    <div className="min-h-screen bg-gradient-to-br bg-white from-[#A7AAE1] to-[#C5B0CD]">
       <Navbar />
       
       <div className="max-w-4xl mx-auto p-6">

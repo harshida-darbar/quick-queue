@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding, FaEdit, FaTrash, FaTimes } from "react-icons/fa";
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -35,6 +36,7 @@ function OrganizerDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const servicesPerPage = 6;
+  const { t } = useTranslation();
   const router = useRouter();
 
   const editFormik = useFormik({
@@ -261,12 +263,12 @@ function OrganizerDashboard() {
 
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#62109F]">My Services</h1>
+          <h1 className="text-3xl font-bold text-[#62109F]">{t('dashboard.myServices')}</h1>
           <button
             onClick={() => setShowCreateForm(true)}
             className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-6 py-2 rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 shadow-lg cursor-pointer outline-none"
           >
-            Create New Service
+            {t('dashboard.createNewService')}
           </button>
         </div>
 

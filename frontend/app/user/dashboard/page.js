@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import {
   FaHospital,
@@ -46,6 +47,7 @@ function UserDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const servicesPerPage = 6;
+  const { t } = useTranslation();
   const appointmentFormik = useFormik({
     initialValues: {
       groupSize: 1,
@@ -455,7 +457,7 @@ function UserDashboard() {
 
       <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-[#62109F] mb-8">
-          Available Services
+          {t('dashboard.availableServices')}
         </h1>
 
         {/* Search and Filter Bar */}
@@ -468,7 +470,7 @@ function UserDashboard() {
             />
             <input
               type="text"
-              placeholder="Search services..."
+              placeholder={t('dashboard.searchServices')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white shadow-sm"
@@ -486,8 +488,8 @@ function UserDashboard() {
               onChange={(e) => setFilterType(e.target.value)}
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white shadow-sm cursor-pointer min-w-[160px]"
             >
-              <option value="all">All Services</option>
-              <option value="available">Available Only</option>
+              <option value="all">{t('dashboard.allServices')}</option>
+              <option value="available">{t('dashboard.availableOnly')}</option>
               {serviceTypes.map((type) => (
                 <option key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
