@@ -315,7 +315,8 @@ function UserDashboard() {
           end: `${dateStr}T${slot.endTime}`,
           backgroundColor: "#FEE2E2",
           borderColor: "#EF4444",
-          textColor: "#DC2626",
+          textColor: "#991B1B",
+          classNames: ['dark:!bg-red-900/50', 'dark:!border-red-600', 'dark:!text-red-200']
         });
       });
 
@@ -454,7 +455,8 @@ function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+   
       <Navbar />
 
       <div className="max-w-6xl mx-auto p-6">
@@ -935,6 +937,11 @@ function UserDashboard() {
                       }
                       .dark .fc-timegrid-slot {
                         border-color: #4b5563;
+                      }
+                      .dark .fc-event {
+                        background-color: #7f1d1d !important;
+                        border-color: #dc2626 !important;
+                        color: #fecaca !important;
                       }
                     `}</style>
                     <FullCalendar

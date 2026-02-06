@@ -36,40 +36,39 @@ export default function Navbar() {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 {/* Logo */}
                 <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#85409D] to-[#62109F] rounded-lg shadow-lg">
-                  <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  <svg
+                    className="w-4 h-4 sm:w-6 sm:h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
                   </svg>
                 </div>
-                <h1 className="text-lg sm:text-2xl font-bold text-[#4D2FB2] dark:text-white">Quick<span className="text-[#8B5CF6] dark:text-[#C47BE4]">Queue</span></h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-[#4D2FB2] dark:text-white">
+                  Quick
+                  <span className="text-[#8B5CF6] dark:text-[#C47BE4]">
+                    Queue
+                  </span>
+                </h1>
               </div>
             </div>
-              
+
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Debug info */}
-              <div className="text-xs p-2 rounded" style={{
-                backgroundColor: isDark ? '#22c55e' : '#ef4444',
-                color: 'white'
-              }}>
-                {isDark ? 'DARK MODE' : 'LIGHT MODE'}
-              </div>
-              
               {/* Theme Toggle */}
               <DarkModeSwitch
                 checked={isDark}
-                onChange={() => {
-                  console.log('Before toggle - isDark:', isDark);
-                  console.log('HTML classes before:', document.documentElement.className);
-                  toggleTheme();
-                  setTimeout(() => {
-                    console.log('After toggle - isDark should be:', !isDark);
-                    console.log('HTML classes after:', document.documentElement.className);
-                  }, 100);
-                }}
+                onChange={toggleTheme}
                 size={20}
                 sunColor="#FCD34D"
                 moonColor="#E5E7EB"
               />
-              
+
               {/* Language Dropdown - Hidden on small screens */}
               <div className="relative hidden sm:block">
                 <button
@@ -77,37 +76,47 @@ export default function Navbar() {
                   className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-2 sm:px-3 py-1 text-white hover:bg-opacity-20 transition-colors cursor-pointer outline-none"
                 >
                   <span className="text-xs sm:text-sm text-gray-600">
-                    {i18n.language === 'hi' ? 'हिंदी' : 'EN'}
+                    {i18n.language === "hi" ? "हिंदी" : "EN"}
                   </span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
-                
+
                 {showLanguageDropdown && (
                   <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50 outline-none">
                     <button
                       onClick={() => {
-                        i18n.changeLanguage('en');
+                        i18n.changeLanguage("en");
                         setShowLanguageDropdown(false);
                       }}
                       className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none ${
-                        i18n.language === 'en' 
-                          ? 'bg-[#62109F] text-white outline-none' 
-                          : 'text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 outline-none'
+                        i18n.language === "en"
+                          ? "bg-[#62109F] text-white outline-none"
+                          : "text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-gray-500 dark:hover:bg-slate-700 outline-none"
                       }`}
                     >
                       English
                     </button>
                     <button
                       onClick={() => {
-                        i18n.changeLanguage('hi');
+                        i18n.changeLanguage("hi");
                         setShowLanguageDropdown(false);
                       }}
                       className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none${
-                        i18n.language === 'hi' 
-                          ? 'bg-[#62109F] text-white outline-none' 
-                          : 'text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 outline-none'
+                        i18n.language === "hi"
+                          ? "bg-[#62109F] text-white outline-none"
+                          : "text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-gray-500 dark:hover:bg-slate-700 outline-none"
                       }`}
                     >
                       हिंदी
@@ -115,7 +124,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              
+
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
@@ -131,11 +140,13 @@ export default function Navbar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-sm font-medium text-white">{user.name?.charAt(0)}</span>
+                        <span className="text-sm font-medium text-white">
+                          {user.name?.charAt(0)}
+                        </span>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Desktop User Info */}
                   <div className="hidden md:flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center">
@@ -146,42 +157,54 @@ export default function Navbar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-sm font-medium text-white">{user.name?.charAt(0)}</span>
+                        <span className="text-sm font-medium text-white">
+                          {user.name?.charAt(0)}
+                        </span>
                       )}
                     </div>
                     <span className="font-medium">{user.name}</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </div>
                 </button>
-                
+
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50">
                     {/* Language options for mobile */}
                     <div className="sm:hidden border-b border-gray-200 dark:border-gray-600 pb-2 mb-2">
                       <button
                         onClick={() => {
-                          i18n.changeLanguage('en');
+                          i18n.changeLanguage("en");
                           setShowDropdown(false);
                         }}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                          i18n.language === 'en' 
-                            ? 'bg-[#62109F] text-white' 
-                            : 'text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700'
+                          i18n.language === "en"
+                            ? "bg-[#62109F] text-white"
+                            : "text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700"
                         }`}
                       >
                         English
                       </button>
                       <button
                         onClick={() => {
-                          i18n.changeLanguage('hi');
+                          i18n.changeLanguage("hi");
                           setShowDropdown(false);
                         }}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                          i18n.language === 'hi' 
-                            ? 'bg-[#62109F] text-white' 
-                            : 'text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700'
+                          i18n.language === "hi"
+                            ? "bg-[#62109F] text-white"
+                            : "text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700"
                         }`}
                       >
                         हिंदी
@@ -191,22 +214,22 @@ export default function Navbar() {
                       <button
                         onClick={() => {
                           setShowDropdown(false);
-                          router.push('/profile');
+                          router.push("/profile");
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                       >
-                        {t('navbar.myProfile')}
+                        {t("navbar.myProfile")}
                       </button>
                     )}
                     {user.role === 3 && (
                       <button
                         onClick={() => {
                           setShowDropdown(false);
-                          router.push('/user/appointments');
+                          router.push("/user/appointments");
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                       >
-                        {t('navbar.myAppointments')}
+                        {t("navbar.myAppointments")}
                       </button>
                     )}
                     <button
@@ -216,7 +239,7 @@ export default function Navbar() {
                       }}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                     >
-                      {t('navbar.logout')}
+                      {t("navbar.logout")}
                     </button>
                   </div>
                 )}
@@ -230,21 +253,25 @@ export default function Navbar() {
       {showLogoutModal && (
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3] dark:border-gray-600">
-            <h2 className="text-xl font-bold text-[#62109F] dark:text-white mb-4">{t('navbar.confirmLogout')}</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{t('navbar.logoutMessage')}</p>
-            
+            <h2 className="text-xl font-bold text-[#62109F] dark:text-white mb-4">
+              {t("navbar.confirmLogout")}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {t("navbar.logoutMessage")}
+            </p>
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowLogoutModal(false)}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
               >
-                {t('navbar.cancel')}
+                {t("navbar.cancel")}
               </button>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors cursor-pointer outline-none"
               >
-                {t('navbar.logout')}
+                {t("navbar.logout")}
               </button>
             </div>
           </div>

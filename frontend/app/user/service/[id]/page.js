@@ -87,10 +87,10 @@ export default function ServiceDetails({ params }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F]">Loading service details...</div>
+          <div className="text-xl text-[#62109F] dark:text-purple-200">Loading service details...</div>
         </div>
       </div>
     );
@@ -98,34 +98,34 @@ export default function ServiceDetails({ params }) {
 
   if (!service) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-red-600">Service not found</div>
+          <div className="text-xl text-red-600 dark:text-red-400">Service not found</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-white from-[#A7AAE1] to-[#C5B0CD]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
       <Navbar />
       
       <div className="max-w-4xl mx-auto p-6">
         <button
           onClick={() => router.back()}
-          className="mb-6 text-[#4D2FB2] hover:text-[#62109F] flex items-center font-medium outline-none"
+          className="mb-6 text-[#4D2FB2] dark:text-purple-300 hover:text-[#62109F] dark:hover:text-purple-200 flex items-center font-medium outline-none"
         >
-          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white hover:bg-opacity-20 rounded-lg"/> Back to Services
+          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white dark:hover:bg-white hover:bg-opacity-20 rounded-lg"/> Back to Services
         </button>
 
         {/* Service Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center mb-4">
             {getServiceIcon(service.serviceType)}
             <div className="ml-4">
-              <h1 className="text-3xl font-bold text-[#62109F]">{service.title}</h1>
-              <p className="text-lg text-[#85409D] capitalize">{service.serviceType}</p>
+              <h1 className="text-3xl font-bold text-[#62109F] dark:text-white">{service.title}</h1>
+              <p className="text-lg text-[#85409D] dark:text-purple-300 capitalize">{service.serviceType}</p>
             </div>
           </div>
           
@@ -141,7 +141,7 @@ export default function ServiceDetails({ params }) {
             </div>
           )}
           
-          <p className="text-gray-700 mb-6">{service.description}</p>
+          <p className="text-gray-700 dark:text-gray-300 mb-6">{service.description}</p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-3 bg-gradient-to-br from-[#B7A3E3] to-[#C47BE4] rounded-lg">
@@ -196,19 +196,19 @@ export default function ServiceDetails({ params }) {
         </div>
 
         {/* Currently Serving */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#62109F] mb-4">Currently Serving Group</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold text-[#62109F] dark:text-white mb-4">Currently Serving Group</h2>
           {servingUsers.length === 0 ? (
-            <p className="text-gray-500">No one is currently being served</p>
+            <p className="text-gray-500 dark:text-gray-400">No one is currently being served</p>
           ) : (
             <div className="space-y-2">
               {servingUsers.map((entry, index) => (
-                <div key={entry._id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <div key={entry._id} className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
                   <div>
-                    <span className="font-medium text-[#62109F]">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 ml-2">{entry.user?.name || 'Unknown User'}</span>
+                    <span className="font-medium text-[#62109F] dark:text-white">Token #{entry.tokenNumber}</span>
+                    <span className="text-gray-600 dark:text-gray-300 ml-2">{entry.user?.name || 'Unknown User'}</span>
                   </div>
-                  <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs">
+                  <span className="px-2 py-1 bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 rounded-full text-xs">
                     Serving
                   </span>
                 </div>
@@ -218,21 +218,21 @@ export default function ServiceDetails({ params }) {
         </div>
 
         {/* Waiting List */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-[#62109F] mb-4">Waiting List</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-[#62109F] dark:text-white mb-4">Waiting List</h2>
           {waitingUsers.length === 0 ? (
-            <p className="text-gray-500">No one is waiting</p>
+            <p className="text-gray-500 dark:text-gray-400">No one is waiting</p>
           ) : (
             <div className="space-y-2">
               {waitingUsers.map((entry, index) => (
-                <div key={entry._id} className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div key={entry._id} className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-700">
                   <div>
-                    <span className="font-medium text-[#62109F]">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 ml-2">{entry.user?.name || 'Unknown User'}</span>
+                    <span className="font-medium text-[#62109F] dark:text-white">Token #{entry.tokenNumber}</span>
+                    <span className="text-gray-600 dark:text-gray-300 ml-2">{entry.user?.name || 'Unknown User'}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-sm text-gray-500 mr-2">Position: {index + 1}</span>
-                    <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full text-xs">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Position: {index + 1}</span>
+                    <span className="px-2 py-1 bg-yellow-200 dark:bg-yellow-700 text-yellow-800 dark:text-yellow-200 rounded-full text-xs">
                       Waiting
                     </span>
                   </div>

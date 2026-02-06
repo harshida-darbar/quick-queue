@@ -18,38 +18,33 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('theme');
-    let shouldBeDark = false;
-    
-    if (savedTheme) {
-      shouldBeDark = savedTheme === 'dark';
-    } else {
-      // Only check system preference if no saved theme
-      shouldBeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    
+    const shouldBeDark = savedTheme === 'dark';
+    console.log('Initial theme:', savedTheme, 'shouldBeDark:', shouldBeDark);
     setIsDark(shouldBeDark);
   }, []);
 
   useEffect(() => {
     if (mounted) {
-      console.log('ThemeContext useEffect - isDark:', isDark, 'mounted:', mounted);
-      document.documentElement.classList.toggle('dark', isDark);
+      console.log('Applying theme - isDark:', isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        console.log('Added dark class');
+      } else {
+        document.documentElement.classList.remove('dark');
+        console.log('Removed dark class');
+      }
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      console.log('Applied classes:', document.documentElement.className);
+      console.log('HTML classes:', document.documentElement.className);
     }
   }, [isDark, mounted]);
 
   const toggleTheme = () => {
-    console.log('toggleTheme called - current isDark:', isDark, 'mounted:', mounted);
-    if (mounted) {
-      setIsDark(prev => {
-        console.log('setIsDark - prev:', prev, 'new:', !prev);
-        return !prev;
-      });
-    }
+    console.log('Toggle called - current isDark:', isDark);
+    setIsDark(prev => {
+      console.log('Setting isDark from', prev, 'to', !prev);
+      return !prev;
+    });
   };
 
   return (
