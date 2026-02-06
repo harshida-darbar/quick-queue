@@ -63,23 +63,23 @@ function SignupPage() {
   });
   return (
     <PublicRoute>
-      <div className="min-h-screen flex items-center justify-center bg-[#c4b0dc]  p-4">
+      <div className="min-h-screen flex items-center justify-center bg-[#c4b0dc] dark:bg-gradient-to-br dark:from-[#2D1B69] dark:to-[#4C1D95] p-4">
         <form
           onSubmit={formik.handleSubmit}
-          className="w-full max-w-lg bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8"
+          className="w-full max-w-lg bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8"
         >
-          <h1 className="text-3xl font-bold text-center text-[#7132CA] mb-6">
+          <h1 className="text-3xl font-bold text-center text-[#7132CA] dark:text-purple-200 mb-6">
             Create Account
           </h1>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD]">Role</label>
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">Role</label>
             <select
               name="role"
               value={formik.values.role}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             >
               <option value="">Select Role</option>
               <option value="3">User</option>
@@ -91,14 +91,14 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD]">Name</label>
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">Name</label>
             <input
               type="text"
               name="name"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             />
             {formik.touched.name && formik.errors.name && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.name}</p>
@@ -106,7 +106,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD]">
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
               Email
             </label>
             <input
@@ -115,7 +115,7 @@ function SignupPage() {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             />
             {formik.touched.email && formik.errors.email && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.email}</p>
@@ -123,7 +123,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD]">
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
               Phone Number
             </label>
             <input
@@ -133,7 +133,7 @@ function SignupPage() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="1234567890"
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             />
             {formik.touched.phone && formik.errors.phone && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.phone}</p>
@@ -141,7 +141,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD]">
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
               City
             </label>
             <input
@@ -150,7 +150,7 @@ function SignupPage() {
               value={formik.values.city}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             />
             {formik.touched.city && formik.errors.city && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.city}</p>
@@ -158,7 +158,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-6 relative">
-            <label className="text-sm font-semibold text-[#725CAD]">
+            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
               Password
             </label>
             <input
@@ -167,11 +167,11 @@ function SignupPage() {
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] px-3 pr-10 focus:ring-2 focus:ring-[#8C00FF] outline-none"
+              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 pr-10 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
             />
             <span
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-10 cursor-pointer text-[#7132CA]"
+              className="absolute right-3 top-10 cursor-pointer text-[#7132CA] dark:text-purple-300"
             >
               {showPassword ? <IoEye size={20} /> : <IoEyeOff size={20} />}
             </span>
@@ -185,13 +185,13 @@ function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full h-11 rounded-xl bg-gradient-to-r from-[#7132CA] to-[#8C00FF]  cursor-pointer
+            className={`w-full h-11 rounded-xl bg-gradient-to-r from-[#7132CA] to-[#8C00FF]  cursor-pointer outline-none
             text-white font-semibold flex items-center justify-center gap-2
             ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
           >
             {loading ? (
               <>
-                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin outline-none"></span>
                 Creating...
               </>
             ) : (
@@ -199,11 +199,11 @@ function SignupPage() {
             )}
           </button>
 
-          <p className="text-center text-sm text-[#725CAD] mt-5">
+          <p className="text-center text-sm text-[#725CAD] dark:text-purple-300 mt-5">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-[#8C00FF] font-semibold hover:underline outline-none"
+              className="text-[#8C00FF] dark:text-purple-400 font-semibold hover:underline outline-none"
             >
               Login
             </Link>

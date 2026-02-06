@@ -7,7 +7,7 @@ const resources = {
       "welcome": "Welcome to Quick Queue",
       "login": "Login",
       "signup": "Sign Up",
-      
+
       "navbar": {
         "myProfile": "My Profile",
         "myAppointments": "My Appointments",
@@ -170,6 +170,7 @@ const resources = {
         "availabilityWindows": "Availability Windows",
         "availabilityDesc": "Set time windows when appointments are available (e.g., 4:00 PM - 7:00 PM). Users can book 30-minute slots within these windows.",
         "noAvailabilityWindows": "No availability windows added yet",
+        "pleaseContact" : "Please contact the service provider.", 
         "remove": "Remove",
         "startTime": "Start Time",
         "endTime": "End Time",
@@ -360,6 +361,7 @@ const resources = {
         "availabilityWindows": "उपलब्धता खिड़कियां",
         "availabilityDesc": "समय खिड़कियां सेट करें जब अपॉइंटमेंट उपलब्ध हों (जैसे, 4:00 PM - 7:00 PM)। उपयोगकर्ता इन खिड़कियों के भीतर 30-मिनट के स्लॉट बुक कर सकते हैं।",
         "noAvailabilityWindows": "अभी तक कोई उपलब्धता खिड़कियां नहीं जोड़ी गई हैं",
+        "pleaseContact" : "कृपया सेवा प्रदाता से संपर्क करें।",
         "remove": "हटाएं",
         "startTime": "प्रारंभ समय",
         "endTime": "समाप्ति समय",

@@ -3,6 +3,8 @@ import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { AuthContext } from "../context/Authcontext";
+import { useTheme } from "../context/ThemeContext";
+import { DarkModeSwitch } from "react-toggle-dark-mode";
 
 export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -11,6 +13,7 @@ export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     logout();
@@ -42,11 +45,23 @@ export default function Navbar() {
             </div>
               
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Theme Toggle */}
+              <DarkModeSwitch
+                checked={isDark}
+                onChange={() => {
+                  console.log('DarkModeSwitch clicked, current isDark:', isDark);
+                  toggleTheme();
+                }}
+                size={20}
+                sunColor="#FCD34D"
+                moonColor="#E5E7EB"
+              />
+              
               {/* Language Dropdown - Hidden on small screens */}
               <div className="relative hidden sm:block">
                 <button
                   onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                  className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-2 sm:px-3 py-1 text-white hover:bg-opacity-20 transition-colors cursor-pointer"
+                  className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-2 sm:px-3 py-1 text-white hover:bg-opacity-20 transition-colors cursor-pointer outline-none"
                 >
                   <span className="text-xs sm:text-sm text-gray-600">
                     {i18n.language === 'hi' ? 'हिंदी' : 'EN'}
@@ -57,16 +72,16 @@ export default function Navbar() {
                 </button>
                 
                 {showLanguageDropdown && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50 outline-none">
                     <button
                       onClick={() => {
                         i18n.changeLanguage('en');
                         setShowLanguageDropdown(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors ${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none ${
                         i18n.language === 'en' 
-                          ? 'bg-[#62109F] text-white' 
-                          : 'text-gray-800 hover:bg-[#B7A3E3] hover:text-white'
+                          ? 'bg-[#62109F] text-white outline-none' 
+                          : 'text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 outline-none'
                       }`}
                     >
                       English
@@ -76,10 +91,10 @@ export default function Navbar() {
                         i18n.changeLanguage('hi');
                         setShowLanguageDropdown(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors ${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none${
                         i18n.language === 'hi' 
-                          ? 'bg-[#62109F] text-white' 
-                          : 'text-gray-800 hover:bg-[#B7A3E3] hover:text-white'
+                          ? 'bg-[#62109F] text-white outline-none' 
+                          : 'text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 outline-none'
                       }`}
                     >
                       हिंदी
@@ -129,9 +144,9 @@ export default function Navbar() {
                 </button>
                 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50">
                     {/* Language options for mobile */}
-                    <div className="sm:hidden border-b border-gray-200 pb-2 mb-2">
+                    <div className="sm:hidden border-b border-gray-200 dark:border-gray-600 pb-2 mb-2">
                       <button
                         onClick={() => {
                           i18n.changeLanguage('en');
@@ -140,7 +155,7 @@ export default function Navbar() {
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                           i18n.language === 'en' 
                             ? 'bg-[#62109F] text-white' 
-                            : 'text-gray-700 hover:bg-[#B7A3E3] hover:text-white'
+                            : 'text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700'
                         }`}
                       >
                         English
@@ -153,7 +168,7 @@ export default function Navbar() {
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                           i18n.language === 'hi' 
                             ? 'bg-[#62109F] text-white' 
-                            : 'text-gray-700 hover:bg-[#B7A3E3] hover:text-white'
+                            : 'text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700'
                         }`}
                       >
                         हिंदी
@@ -165,7 +180,7 @@ export default function Navbar() {
                           setShowDropdown(false);
                           router.push('/profile');
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                       >
                         {t('navbar.myProfile')}
                       </button>
@@ -176,7 +191,7 @@ export default function Navbar() {
                           setShowDropdown(false);
                           router.push('/user/appointments');
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                       >
                         {t('navbar.myAppointments')}
                       </button>
@@ -186,7 +201,7 @@ export default function Navbar() {
                         setShowDropdown(false);
                         setShowLogoutModal(true);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#B7A3E3] hover:text-white transition-colors  cursor-pointer outline-none"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
                     >
                       {t('navbar.logout')}
                     </button>
@@ -201,20 +216,20 @@ export default function Navbar() {
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3]">
-            <h2 className="text-xl font-bold text-[#62109F] mb-4">{t('navbar.confirmLogout')}</h2>
-            <p className="text-gray-600 mb-6">{t('navbar.logoutMessage')}</p>
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3] dark:border-gray-600">
+            <h2 className="text-xl font-bold text-[#62109F] dark:text-white mb-4">{t('navbar.confirmLogout')}</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">{t('navbar.logoutMessage')}</p>
             
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors  cursor-pointer outline-none"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
               >
                 {t('navbar.cancel')}
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors  cursor-pointer outline-none"
+                className="px-4 py-2 bg-[#62109F] text-white rounded-md hover:bg-[#4D2FB2] transition-colors cursor-pointer outline-none"
               >
                 {t('navbar.logout')}
               </button>
