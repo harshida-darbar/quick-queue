@@ -10,9 +10,13 @@ import { toast } from "react-toastify";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import Link from "next/link";
 import PublicRoute from "../components/PublicRoute";
+import { useTheme } from "../context/ThemeContext";
+import { getThemeClass } from "../config/colors";
 
 function SignupPage() {
   const router = useRouter();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -63,23 +67,23 @@ function SignupPage() {
   });
   return (
     <PublicRoute>
-      <div className="min-h-screen flex items-center justify-center bg-[#c4b0dc] dark:bg-gradient-to-br dark:from-[#2D1B69] dark:to-[#4C1D95] p-4">
+      <div className={`min-h-screen flex items-center justify-center ${theme.pageBg} p-4`}>
         <form
           onSubmit={formik.handleSubmit}
-          className="w-full max-w-lg bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8"
+          className={`w-full max-w-lg ${theme.cardBg} backdrop-blur-xl shadow-2xl rounded-2xl p-8`}
         >
-          <h1 className="text-3xl font-bold text-center text-[#7132CA] dark:text-purple-200 mb-6">
+          <h1 className={`text-3xl font-bold text-center ${theme.textAccent} mb-6`}>
             Create Account
           </h1>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">Role</label>
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>Role</label>
             <select
               name="role"
               value={formik.values.role}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             >
               <option value="">Select Role</option>
               <option value="3">User</option>
@@ -91,14 +95,14 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">Name</label>
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>Name</label>
             <input
               type="text"
               name="name"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             {formik.touched.name && formik.errors.name && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.name}</p>
@@ -106,7 +110,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>
               Email
             </label>
             <input
@@ -115,7 +119,7 @@ function SignupPage() {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             {formik.touched.email && formik.errors.email && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.email}</p>
@@ -123,7 +127,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>
               Phone Number
             </label>
             <input
@@ -133,7 +137,7 @@ function SignupPage() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="1234567890"
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             {formik.touched.phone && formik.errors.phone && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.phone}</p>
@@ -141,7 +145,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>
               City
             </label>
             <input
@@ -150,7 +154,7 @@ function SignupPage() {
               value={formik.values.city}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             {formik.touched.city && formik.errors.city && (
               <p className="text-red-500 text-sm mt-1">{formik.errors.city}</p>
@@ -158,7 +162,7 @@ function SignupPage() {
           </div>
 
           <div className="mb-6 relative">
-            <label className="text-sm font-semibold text-[#725CAD] dark:text-purple-300">
+            <label className={`text-sm font-semibold ${theme.textAccent}`}>
               Password
             </label>
             <input
@@ -167,11 +171,11 @@ function SignupPage() {
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full h-11 mt-1 rounded-lg border border-[#BB8ED0] dark:border-gray-600 px-3 pr-10 focus:ring-2 focus:ring-[#8C00FF] outline-none bg-white dark:bg-slate-700 dark:text-white"
+              className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 pr-10 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             <span
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-10 cursor-pointer text-[#7132CA] dark:text-purple-300"
+              className={`absolute right-3 top-10 cursor-pointer ${theme.textAccent}`}
             >
               {showPassword ? <IoEye size={20} /> : <IoEyeOff size={20} />}
             </span>
@@ -199,11 +203,11 @@ function SignupPage() {
             )}
           </button>
 
-          <p className="text-center text-sm text-[#725CAD] dark:text-purple-300 mt-5">
+          <p className={`text-center text-sm ${theme.textAccent} mt-5`}>
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-[#8C00FF] dark:text-purple-400 font-semibold hover:underline outline-none"
+              className={`${theme.textAccent} font-semibold hover:underline outline-none`}
             >
               Login
             </Link>

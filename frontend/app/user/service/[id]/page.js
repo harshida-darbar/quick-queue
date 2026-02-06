@@ -2,14 +2,20 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import { IoArrowBack } from "react-icons/io5";
+import { useTheme } from "../../../context/ThemeContext";
+import { getThemeClass } from "../../../config/colors";
 
 export default function ServiceDetails({ params }) {
   const resolvedParams = use(params);
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
+  const { t } = useTranslation();
   const [service, setService] = useState(null);
   const [servingUsers, setServingUsers] = useState([]);
   const [waitingUsers, setWaitingUsers] = useState([]);
@@ -87,10 +93,10 @@ export default function ServiceDetails({ params }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">Loading service details...</div>
+          <div className={`text-xl ${theme.textAccent}`}>{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -98,34 +104,34 @@ export default function ServiceDetails({ params }) {
 
   if (!service) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-red-600 dark:text-red-400">Service not found</div>
+          <div className="text-xl text-red-600">{t('organizer.noServices')}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={`min-h-screen ${theme.pageBg}`}>
       <Navbar />
       
       <div className="max-w-4xl mx-auto p-6">
         <button
           onClick={() => router.back()}
-          className="mb-6 text-[#4D2FB2] dark:text-purple-300 hover:text-[#62109F] dark:hover:text-purple-200 flex items-center font-medium outline-none"
+          className={`mb-6 ${theme.textAccent} flex items-center font-medium outline-none`}
         >
-          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white dark:hover:bg-white hover:bg-opacity-20 rounded-lg"/> Back to Services
+          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white hover:bg-opacity-20 rounded-lg"/> {t('organizer.backToDashboard')}
         </button>
 
         {/* Service Header */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-6">
+        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 mb-6`}>
           <div className="flex items-center mb-4">
             {getServiceIcon(service.serviceType)}
             <div className="ml-4">
-              <h1 className="text-3xl font-bold text-[#62109F] dark:text-white">{service.title}</h1>
-              <p className="text-lg text-[#85409D] dark:text-purple-300 capitalize">{service.serviceType}</p>
+              <h1 className={`text-3xl font-bold ${theme.textPrimary}`}>{service.title}</h1>
+              <p className={`text-lg ${theme.textSecondary} capitalize`}>{service.serviceType}</p>
             </div>
           </div>
           
@@ -141,39 +147,39 @@ export default function ServiceDetails({ params }) {
             </div>
           )}
           
-          <p className="text-gray-700 dark:text-gray-300 mb-6">{service.description}</p>
+          <p className={`${theme.textSecondary} mb-6`}>{service.description}</p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-3 bg-gradient-to-br from-[#B7A3E3] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">{servingUsers.length}</div>
-              <div className="text-sm text-white opacity-90">Group Serving</div>
+              <div className="text-sm text-white opacity-90">{t('dashboard.serving')}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#85409D] to-[#C47BE4] rounded-lg">
               <div className="text-2xl font-bold text-white">{waitingUsers.length}</div>
-              <div className="text-sm text-white opacity-90">Waiting</div>
+              <div className="text-sm text-white opacity-90">{t('dashboard.waiting')}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#4D2FB2] to-[#62109F] rounded-lg">
               <div className="text-2xl font-bold text-white">{service.maxCapacity}</div>
-              <div className="text-sm text-white opacity-90">Max Capacity</div>
+              <div className="text-sm text-white opacity-90">{t('organizer.maxCapacity')}</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-[#6F00FF] to-[#8C00FF] rounded-lg">
-              <div className={`text-2xl font-bold text-white`}>
-                {servingUsers.length >= service.maxCapacity ? 'FULL' : 'OPEN'}
+              <div className="text-2xl font-bold text-white">
+                {servingUsers.length >= service.maxCapacity ? t('dashboard.full') : t('dashboard.available')}
               </div>
-              <div className="text-sm text-white opacity-90">Status</div>
+              <div className="text-sm text-white opacity-90">{t('organizer.status')}</div>
             </div>
           </div>
 
           {/* User Status */}
           {userStatus ? (
             <div className={`p-4 rounded-lg mb-6 border-2 ${getStatusColor(userStatus.status)}`}>
-              <h3 className="font-semibold mb-2">Your Status</h3>
+              <h3 className="font-semibold mb-2">{t('organizer.status')}</h3>
               <div className="flex justify-between items-center">
                 <div>
-                  <p>Token Number: <span className="font-bold">#{userStatus.tokenNumber}</span></p>
-                  <p>Status: <span className="font-bold capitalize">{userStatus.status}</span></p>
+                  <p>{t('organizer.token')}: <span className="font-bold">#{userStatus.tokenNumber}</span></p>
+                  <p>{t('organizer.status')}: <span className="font-bold capitalize">{userStatus.status}</span></p>
                   {userStatus.status === 'waiting' && (
-                    <p>People ahead: <span className="font-bold">{userStatus.waitingAhead}</span></p>
+                    <p>{t('organizer.peopleServing')}: <span className="font-bold">{userStatus.waitingAhead}</span></p>
                   )}
                 </div>
               </div>
@@ -189,27 +195,27 @@ export default function ServiceDetails({ params }) {
                     : 'bg-gradient-to-r from-[#4D2FB2] to-[#62109F] hover:from-[#62109F] hover:to-[#8C00FF] text-white shadow-lg'
                 }`}
               >
-                {joining ? 'Joining...' : 'Join Queue'}
+                {joining ? t('forms.joining') : t('dashboard.joinQueue')}
               </button>
             </div>
           )}
         </div>
 
         {/* Currently Serving */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#62109F] dark:text-white mb-4">Currently Serving Group</h2>
+        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 mb-6`}>
+          <h2 className={`text-xl font-semibold ${theme.textPrimary} mb-4`}>{t('organizer.currentlyServing')}</h2>
           {servingUsers.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No one is currently being served</p>
+            <p className={theme.textMuted}>{t('organizer.noOneServing')}</p>
           ) : (
             <div className="space-y-2">
               {servingUsers.map((entry, index) => (
-                <div key={entry._id} className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
+                <div key={entry._id} className={`flex justify-between items-center p-3 ${theme.statusSuccess} rounded-lg border`}>
                   <div>
-                    <span className="font-medium text-[#62109F] dark:text-white">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 dark:text-gray-300 ml-2">{entry.user?.name || 'Unknown User'}</span>
+                    <span className={`font-medium ${theme.textPrimary}`}>{t('organizer.token')} #{entry.tokenNumber}</span>
+                    <span className={`${theme.textSecondary} ml-2`}>{entry.user?.name || t('organizer.unknownUser')}</span>
                   </div>
-                  <span className="px-2 py-1 bg-green-200 dark:bg-green-700 text-green-800 dark:text-green-200 rounded-full text-xs">
-                    Serving
+                  <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs">
+                    {t('dashboard.serving')}
                   </span>
                 </div>
               ))}
@@ -218,22 +224,22 @@ export default function ServiceDetails({ params }) {
         </div>
 
         {/* Waiting List */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-[#62109F] dark:text-white mb-4">Waiting List</h2>
+        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6`}>
+          <h2 className={`text-xl font-semibold ${theme.textPrimary} mb-4`}>{t('organizer.waitingList')}</h2>
           {waitingUsers.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No one is waiting</p>
+            <p className={theme.textMuted}>{t('organizer.noOneWaiting')}</p>
           ) : (
             <div className="space-y-2">
               {waitingUsers.map((entry, index) => (
-                <div key={entry._id} className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                <div key={entry._id} className={`flex justify-between items-center p-3 ${theme.statusWarning} rounded-lg border`}>
                   <div>
-                    <span className="font-medium text-[#62109F] dark:text-white">Token #{entry.tokenNumber}</span>
-                    <span className="text-gray-600 dark:text-gray-300 ml-2">{entry.user?.name || 'Unknown User'}</span>
+                    <span className={`font-medium ${theme.textPrimary}`}>{t('organizer.token')} #{entry.tokenNumber}</span>
+                    <span className={`${theme.textSecondary} ml-2`}>{entry.user?.name || t('organizer.unknownUser')}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Position: {index + 1}</span>
-                    <span className="px-2 py-1 bg-yellow-200 dark:bg-yellow-700 text-yellow-800 dark:text-yellow-200 rounded-full text-xs">
-                      Waiting
+                    <span className={`text-sm ${theme.textMuted} mr-2`}>{t('organizer.position')}: {index + 1}</span>
+                    <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded-full text-xs">
+                      {t('dashboard.waiting')}
                     </span>
                   </div>
                 </div>

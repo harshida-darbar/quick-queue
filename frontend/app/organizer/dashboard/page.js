@@ -11,6 +11,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import { useTheme } from "../../context/ThemeContext";
+import { getThemeClass } from "../../config/colors";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
@@ -37,6 +39,8 @@ function OrganizerDashboard() {
   const [hasMore, setHasMore] = useState(true);
   const servicesPerPage = 6;
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
   const router = useRouter();
 
   const editFormik = useFormik({
@@ -193,7 +197,7 @@ function OrganizerDashboard() {
   };
 
   const getServiceIcon = (type) => {
-    const iconProps = { size: 32, className: "text-[#62109F] dark:text-white" };
+    const iconProps = { size: 32, className: theme.textAccent };
     switch (type) {
       case "hospital":
         return <FaHospital {...iconProps} />;
@@ -253,22 +257,22 @@ function OrganizerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">{t('common.loading')}</div>
+          <div className={`text-xl ${theme.textAccent}`}>{t('common.loading')}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={`min-h-screen ${theme.pageBg}`}>
       <Navbar />
 
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#62109F] dark:text-purple-200">{t('dashboard.myServices')}</h1>
+          <h1 className={`text-3xl font-bold ${theme.textAccent}`}>{t('dashboard.myServices')}</h1>
           <button
             onClick={() => setShowCreateForm(true)}
             className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white px-6 py-2 rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 shadow-lg cursor-pointer outline-none"
@@ -280,13 +284,13 @@ function OrganizerDashboard() {
         {/* Create Service Modal */}
         {showCreateForm && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4 text-[#62109F] dark:text-white">
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+              <h2 className={`text-xl font-bold mb-4 ${theme.textAccent}`}>
                 {t('organizer.createNewService')}
               </h2>
               <form onSubmit={formik.handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.serviceTitle')}
                   </label>
                   <input
@@ -295,7 +299,7 @@ function OrganizerDashboard() {
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {formik.touched.title && formik.errors.title && (
                     <div className="text-red-500 text-sm mt-1">
@@ -305,7 +309,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.description')}
                   </label>
                   <textarea
@@ -314,7 +318,7 @@ function OrganizerDashboard() {
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {formik.touched.description && formik.errors.description && (
                     <div className="text-red-500 text-sm mt-1">
@@ -324,7 +328,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.serviceType')}
                   </label>
                   <input
@@ -334,7 +338,7 @@ function OrganizerDashboard() {
                     value={formik.values.serviceType}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {formik.touched.serviceType && formik.errors.serviceType && (
                     <div className="text-red-500 text-sm mt-1">
@@ -344,7 +348,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.photoUrl')}
                   </label>
                   <input
@@ -353,7 +357,7 @@ function OrganizerDashboard() {
                     value={formik.values.photo}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {formik.touched.photo && formik.errors.photo && (
                     <div className="text-red-500 text-sm mt-1">
@@ -363,7 +367,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.maxCapacityLabel')}
                   </label>
                   <input
@@ -373,7 +377,7 @@ function OrganizerDashboard() {
                     value={formik.values.maxCapacity}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {formik.touched.maxCapacity && formik.errors.maxCapacity && (
                     <div className="text-red-500 text-sm mt-1">
@@ -391,38 +395,38 @@ function OrganizerDashboard() {
                       onChange={formik.handleChange}
                       className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2]"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    <span className={`text-sm font-medium ${theme.textPrimary}`}>
                       {t('organizer.enableAppointmentBooking')}
                     </span>
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className={`text-xs ${theme.textMuted} mt-1`}>
                     {t('organizer.appointmentBookingDesc')}
                   </p>
                 </div>
 
                 {/* Availability Windows Section */}
                 {formik.values.appointmentEnabled && (
-                  <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                  <div className={`mb-6 p-4 border ${theme.border} rounded-lg`}>
+                    <h4 className={`text-sm font-medium ${theme.textPrimary} mb-3`}>
                       {t('organizer.availabilityWindows')}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <p className={`text-xs ${theme.textMuted} mb-3`}>
                       {t('organizer.availabilityDesc')}
                     </p>
                     
                     {availabilityWindows.length === 0 ? (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('organizer.noAvailabilityWindows')}</p>
+                      <p className={`text-xs ${theme.textMuted} mb-3`}>{t('organizer.noAvailabilityWindows')}</p>
                     ) : (
                       <div className="space-y-2 mb-3">
                         {availabilityWindows.map((window, index) => (
-                          <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700 p-2 rounded">
-                            <span className="text-sm text-gray-700 dark:text-gray-200">
+                          <div key={index} className={`flex items-center justify-between p-2 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                            <span className={`text-sm ${theme.textPrimary}`}>
                               {window.date} | {window.startTime} - {window.endTime}
                             </span>
                             <button
                               type="button"
                               onClick={() => setAvailabilityWindows(availabilityWindows.filter((_, i) => i !== index))}
-                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs"
+                              className="text-red-500 hover:text-red-700 text-xs"
                             >
                               {t('organizer.remove')}
                             </button>
@@ -436,7 +440,7 @@ function OrganizerDashboard() {
                         type="date"
                         id="windowDate"
                         min={new Date().toISOString().split('T')[0]}
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -444,13 +448,13 @@ function OrganizerDashboard() {
                         type="time"
                         placeholder={t('organizer.startTime')}
                         id="windowStartTime"
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                       <input
                         type="time"
                         placeholder={t('organizer.endTime')}
                         id="windowEndTime"
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
                     
@@ -497,7 +501,7 @@ function OrganizerDashboard() {
                       setShowCreateForm(false);
                       formik.resetForm();
                     }}
-                    className="px-4 py-2 text-gray-600 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer outline-none"
+                    className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors cursor-pointer outline-none`}
                   >
                     {t('organizer.cancel')}
                   </button>
@@ -517,13 +521,13 @@ function OrganizerDashboard() {
         {/* Edit Service Modal */}
         {showEditForm && editingService && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4 text-[#62109F] dark:text-white">
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+              <h2 className={`text-xl font-bold mb-4 ${theme.textAccent}`}>
                 {t('organizer.editService')}
               </h2>
               <form onSubmit={editFormik.handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.serviceTitle')}
                   </label>
                   <input
@@ -532,7 +536,7 @@ function OrganizerDashboard() {
                     value={editFormik.values.title}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {editFormik.touched.title && editFormik.errors.title && (
                     <div className="text-red-500 text-sm mt-1">
@@ -542,7 +546,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.description')}
                   </label>
                   <textarea
@@ -551,7 +555,7 @@ function OrganizerDashboard() {
                     value={editFormik.values.description}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {editFormik.touched.description && editFormik.errors.description && (
                     <div className="text-red-500 text-sm mt-1">
@@ -561,7 +565,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.serviceType')}
                   </label>
                   <input
@@ -571,7 +575,7 @@ function OrganizerDashboard() {
                     value={editFormik.values.serviceType}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {editFormik.touched.serviceType && editFormik.errors.serviceType && (
                     <div className="text-red-500 text-sm mt-1">
@@ -581,7 +585,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.photoUrl')}
                   </label>
                   <input
@@ -590,7 +594,7 @@ function OrganizerDashboard() {
                     value={editFormik.values.photo}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {editFormik.touched.photo && editFormik.errors.photo && (
                     <div className="text-red-500 text-sm mt-1">
@@ -600,7 +604,7 @@ function OrganizerDashboard() {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('organizer.maxCapacityLabel')}
                   </label>
                   <input
@@ -610,7 +614,7 @@ function OrganizerDashboard() {
                     value={editFormik.values.maxCapacity}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {editFormik.touched.maxCapacity && editFormik.errors.maxCapacity && (
                     <div className="text-red-500 text-sm mt-1">
@@ -628,38 +632,38 @@ function OrganizerDashboard() {
                       onChange={editFormik.handleChange}
                       className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2]"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    <span className={`text-sm font-medium ${theme.textPrimary}`}>
                       {t('organizer.enableAppointmentBooking')}
                     </span>
                   </label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className={`text-xs ${theme.textMuted} mt-1`}>
                     {t('organizer.appointmentBookingDesc')}
                   </p>
                 </div>
 
                 {/* Availability Windows Section */}
                 {editFormik.values.appointmentEnabled && (
-                  <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                  <div className={`mb-6 p-4 border ${theme.border} rounded-lg`}>
+                    <h4 className={`text-sm font-medium ${theme.textPrimary} mb-3`}>
                       {t('organizer.availabilityWindows')}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <p className={`text-xs ${theme.textMuted} mb-3`}>
                       {t('organizer.availabilityDesc')}
                     </p>
                     
                     {availabilityWindows.length === 0 ? (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('organizer.noAvailabilityWindows')}</p>
+                      <p className={`text-xs ${theme.textMuted} mb-3`}>{t('organizer.noAvailabilityWindows')}</p>
                     ) : (
                       <div className="space-y-2 mb-3">
                         {availabilityWindows.map((window, index) => (
-                          <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700 p-2 rounded">
-                            <span className="text-sm text-gray-700 dark:text-gray-200">
+                          <div key={index} className={`flex items-center justify-between p-2 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                            <span className={`text-sm ${theme.textPrimary}`}>
                               {window.date} | {window.startTime} - {window.endTime}
                             </span>
                             <button
                               type="button"
                               onClick={() => setAvailabilityWindows(availabilityWindows.filter((_, i) => i !== index))}
-                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs"
+                              className="text-red-500 hover:text-red-700 text-xs"
                             >
                               {t('organizer.remove')}
                             </button>
@@ -673,7 +677,7 @@ function OrganizerDashboard() {
                         type="date"
                         id="editWindowDate"
                         min={new Date().toISOString().split('T')[0]}
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -681,13 +685,13 @@ function OrganizerDashboard() {
                         type="time"
                         placeholder={t('organizer.startTime')}
                         id="editWindowStartTime"
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                       <input
                         type="time"
                         placeholder={t('organizer.endTime')}
                         id="editWindowEndTime"
-                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-slate-700 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
                     
@@ -734,7 +738,7 @@ function OrganizerDashboard() {
                       setShowEditForm(false);
                       setEditingService(null);
                     }}
-                    className="px-4 py-2 text-gray-600 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer outline-none"
+                    className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors cursor-pointer outline-none`}
                   >
                     {t('organizer.cancel')}
                   </button>
@@ -754,7 +758,7 @@ function OrganizerDashboard() {
         {/* Delete Confirmation Modal */}
         {showDeleteModal && serviceToDelete && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md">
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md`}>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-red-600 dark:text-red-400">
                   {t('organizer.deleteService')}
@@ -764,19 +768,19 @@ function OrganizerDashboard() {
                     setShowDeleteModal(false);
                     setServiceToDelete(null);
                   }}
-                  className="text-gray-500 dark:text-gray-200 hover:text-gray-700 dark:hover:text-gray-300 outline-none cursor-pointer"
+                  className={`${theme.textMuted} hover:${theme.textPrimary} outline-none cursor-pointer`}
                 >
                   <FaTimes size={20} />
                 </button>
               </div>
               
               <div className="mb-6">
-                <p className="text-gray-700 dark:text-gray-300 mb-2">
+                <p className={`${theme.textSecondary} mb-2`}>
                   {t('organizer.deleteConfirmMessage')}
                 </p>
-                <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
-                  <p className="font-semibold text-red-800 dark:text-red-300">{serviceToDelete.title}</p>
-                  <p className="text-sm text-red-600 dark:text-red-400 capitalize">{serviceToDelete.serviceType}</p>
+                <div className={`border rounded-lg p-3 ${isDark ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'}`}>
+                  <p className={`font-semibold ${isDark ? 'text-red-300' : 'text-red-800'}`}>{serviceToDelete.title}</p>
+                  <p className={`text-sm ${isDark ? 'text-red-400' : 'text-red-600'} capitalize`}>{serviceToDelete.serviceType}</p>
                 </div>
               </div>
               
@@ -786,7 +790,7 @@ function OrganizerDashboard() {
                     setShowDeleteModal(false);
                     setServiceToDelete(null);
                   }}
-                  className="px-4 py-2 text-gray-600 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer outline-none"
+                  className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors cursor-pointer outline-none`}
                 >
                   {t('organizer.cancel')}
                 </button>
@@ -804,10 +808,10 @@ function OrganizerDashboard() {
         {/* Services Grid */}
         {services.length === 0 && !loading ? (
           <div className="text-center py-12">
-            <p className="text-[#62109F] dark:text-purple-200 text-lg font-medium">
+            <p className={`${theme.textAccent} text-lg font-medium`}>
               {t('organizer.noServices')}
             </p>
-            <p className="text-[#85409D] dark:text-purple-300">
+            <p className={`${theme.textSecondary}`}>
               {t('organizer.createFirstService')}
             </p>
           </div>
@@ -837,7 +841,7 @@ function OrganizerDashboard() {
                 return (
                   <div
                     key={service._id}
-                    className="bg-white dark:bg-slate-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full transform hover:scale-105"
+                    className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full transform hover:scale-105`}
                   >
                     <div className="p-6 flex-1 flex flex-col">
                       <div className="flex items-center justify-between mb-4">
@@ -846,10 +850,10 @@ function OrganizerDashboard() {
                             {getServiceIcon(service.serviceType)}
                           </span>
                           <div>
-                            <h3 className="text-xl font-semibold text-[#62109F] dark:text-white">
+                            <h3 className={`text-xl font-semibold ${theme.textAccent}`}>
                               {service.title}
                             </h3>
-                            <p className="text-sm text-[#85409D] dark:text-purple-300 capitalize">
+                            <p className={`text-sm ${theme.textSecondary} capitalize`}>
                               {service.serviceType}
                             </p>
                           </div>
@@ -892,12 +896,12 @@ function OrganizerDashboard() {
                         </div>
                       )}
 
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1 min-h-[3rem] line-clamp-3">
+                      <p className={`${theme.textSecondary} mb-4 flex-1 min-h-[3rem] line-clamp-3`}>
                         {service.description}
                       </p>
 
                       <div className="flex justify-between items-center mb-4 mt-auto">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className={`text-sm ${theme.textMuted}`}>
                           <span className="font-medium">{t('organizer.capacity')}:</span>{" "}
                           {service.maxCapacity}
                         </div>
@@ -958,3 +962,5 @@ export default function ProtectedOrganizerDashboard() {
     </ProtectedRoute>
   );
 }
+
+

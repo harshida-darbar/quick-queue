@@ -23,6 +23,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import { useTheme } from "../../context/ThemeContext";
+import { getThemeClass } from "../../config/colors";
 import {
   IoBulbOutline,
   IoCalendarOutline,
@@ -33,6 +35,8 @@ import {
 
 function UserDashboard() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -401,7 +405,7 @@ function UserDashboard() {
   };
 
   const getServiceIcon = (type) => {
-    const iconProps = { size: 32, className: "text-[#62109F] dark:text-purple-400" };
+    const iconProps = { size: 32, className: theme.textAccent };
     switch (type) {
       case "hospital":
         return <FaHospital {...iconProps} />;
@@ -445,22 +449,22 @@ function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">{t('common.loading')}</div>
+          <div className={`text-xl ${theme.textAccent}`}>{t('common.loading')}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={`min-h-screen ${theme.pageBg}`}>
    
       <Navbar />
 
       <div className="max-w-6xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-[#62109F] dark:text-purple-200 mb-8">
+        <h1 className={`text-3xl font-bold ${theme.textAccent} mb-8`}>
           {t('dashboard.availableServices')}
         </h1>
 
@@ -477,7 +481,7 @@ function UserDashboard() {
               placeholder={t('dashboard.searchServices')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-purple-500 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-purple-800/30 dark:text-white shadow-sm"
+              className={`w-full pl-10 pr-4 py-3 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input} shadow-sm`}
             />
           </div>
 
@@ -490,11 +494,11 @@ function UserDashboard() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="pl-10 pr-8 py-3 border border-gray-300 dark:border-purple-500 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-purple-800/30 dark:text-white shadow-sm cursor-pointer min-w-[160px]"
+              className={`pl-10 pr-8 py-3 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input} shadow-sm cursor-pointer min-w-[160px]`}
             >
-              <option value="all" className="dark:bg-slate-800 dark:text-white">{t('dashboard.allServices')}</option>
+              <option value="all" className={theme.cardBg}>{t('dashboard.allServices')}</option>
               {serviceTypes.map((type) => (
-                <option key={type} value={type} className="dark:bg-slate-800 dark:text-white">
+                <option key={type} value={type} className={theme.cardBg}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </option>
               ))}
@@ -504,7 +508,7 @@ function UserDashboard() {
 
         {services.length === 0 && !loading ? (
           <div className="text-center py-12">
-            <p className="text-[#62109F] dark:text-purple-200 text-lg font-medium">
+            <p className={`${theme.textAccent} text-lg font-medium`}>
               {searchTerm || filterType !== "all"
                 ? "No services found matching your criteria"
                 : "No active services available"}
@@ -542,17 +546,17 @@ function UserDashboard() {
                 return (
                   <div
                     key={service._id}
-                    className="bg-white dark:bg-slate-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:scale-105"
+                    className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:scale-105`}
                     onClick={(e) => handleCardClick(service, e)}
                   >
                     <div className="p-6 flex-1 flex flex-col">
                       <div className="flex items-center mb-4">
                         {getServiceIcon(service.serviceType)}
                         <div className="ml-3">
-                          <h3 className="text-xl font-semibold text-[#62109F] dark:text-white">
+                          <h3 className={`text-xl font-semibold ${theme.textAccent}`}>
                             {service.title}
                           </h3>
-                          <p className="text-sm text-[#85409D] dark:text-purple-300 capitalize">
+                          <p className={`text-sm ${theme.textSecondary} capitalize`}>
                             {service.serviceType}
                           </p>
                         </div>
@@ -572,18 +576,18 @@ function UserDashboard() {
                         </div>
                       )}
 
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1 min-h-[3rem]">
+                      <p className={`${theme.textSecondary} mb-4 flex-1 min-h-[3rem]`}>
                         {service.description}
                       </p>
 
                       <div className="flex justify-between items-center mb-4 mt-auto">
-                        <div className="text-sm text-[#85409D] dark:text-purple-300">
+                        <div className={`text-sm ${theme.textSecondary}`}>
                           <span className="font-medium">
                             {(service.servingCapacity || 0) >= service.maxCapacity ? t('dashboard.capacity') : t('dashboard.availability')}:
                           </span>{" "}
                           {service.servingCapacity || 0}/{service.maxCapacity}
                         </div>
-                        <div className="text-sm text-[#85409D] dark:text-purple-300">
+                        <div className={`text-sm ${theme.textSecondary}`}>
                           <span className="font-medium">{t('dashboard.waiting')}:</span>{" "}
                           {service.waitingCount}
                         </div>
@@ -654,18 +658,18 @@ function UserDashboard() {
         {/* Join Queue Modal */}
         {showJoinForm && selectedService && (
           <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto`}>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-[#62109F] dark:text-white">
+                <h2 className={`text-xl font-bold ${theme.textAccent}`}>
                   Join {selectedService.title}
                 </h2>
                 <button
                   onClick={() => {
                     setShowJoinForm(false);
                     setSelectedService(null);
-                    joinFormik.resetForm();
+                    joinFormik.resetForm(); 
                   }}
-                  className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white outline-none cursor-pointer"
+                  className={`${theme.textMuted} hover:${theme.textPrimary} outline-none cursor-pointer`}
                 >
                   <FaTimes size={20} />
                 </button>
@@ -673,7 +677,7 @@ function UserDashboard() {
 
               <form onSubmit={joinFormik.handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                     {t('forms.howManyPeople')}
                   </label>
                   <input
@@ -684,7 +688,7 @@ function UserDashboard() {
                     value={joinFormik.values.groupSize}
                     onChange={handleGroupSizeChange}
                     onBlur={joinFormik.handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
                   {joinFormik.touched.groupSize &&
                     joinFormik.errors.groupSize && (
@@ -697,7 +701,7 @@ function UserDashboard() {
                 {/* Member Names */}
                 {joinFormik.values.groupSize > 0 && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('forms.enterNames')}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -725,7 +729,7 @@ function UserDashboard() {
                                   true,
                                 )
                               }
-                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] bg-white dark:bg-slate-700 dark:text-white"
+                              className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                             />
                             {joinFormik.touched.memberNames?.[index] &&
                               joinFormik.errors.memberNames?.[index] && (
@@ -740,12 +744,12 @@ function UserDashboard() {
                   </div>
                 )}
 
-                <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded-md mb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={`${isDark ? 'bg-slate-700' : 'bg-gray-50'} p-3 rounded-md mb-4`}>
+                  <p className={`text-sm ${theme.textSecondary}`}>
                     <span className="font-medium">{t('forms.service')}:</span>{" "}
                     {selectedService.title}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <p className={`text-sm ${theme.textSecondary}`}>
                     <span className="font-medium">{t('forms.currentQueue')}:</span>{" "}
                     {selectedService.servingCapacity || 0}/
                     {selectedService.maxCapacity} {t('forms.capacityUsed')},{" "}
@@ -761,7 +765,7 @@ function UserDashboard() {
                       setSelectedService(null);
                       joinFormik.resetForm();
                     }}
-                    className="px-4 py-2 text-gray-600 dark:text-white dark:hover:bg-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors outline-none cursor-pointer"
+                    className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md transition-colors outline-none cursor-pointer ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}
                   >
                     {t('forms.cancel')}
                   </button>
@@ -783,12 +787,12 @@ function UserDashboard() {
         {/* Appointment Booking Modal */}
         {showAppointmentForm && selectedService && (
           <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
-              <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-600 px-6 py-4 rounded-t-lg z-10">
+            <div className={`${theme.cardBg} rounded-lg w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl`}>
+              <div className={`sticky top-0 ${theme.cardBg} border-b ${theme.border} px-6 py-4 rounded-t-lg z-10`}>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-[#62109F] dark:text-white flex items-center gap-2">
-                    <IoCalendarOutline size={20} className="text-[#62109F] dark:text-purple-400" />
-                    Book Appointment - {selectedService.title}
+                  <h2 className={`text-xl font-bold ${theme.textAccent} flex items-center gap-2`}>
+                    <IoCalendarOutline size={20} className={theme.textAccent} />
+                   {t('dashboard.bookAppointment')} - {selectedService.title}
                   </h2>
                   <button
                     onClick={() => {
@@ -796,7 +800,7 @@ function UserDashboard() {
                       setSelectedService(null);
                       setAvailableSlots([]);
                     }}
-                    className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white outline-none cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                    className={`${theme.textMuted} hover:${theme.textPrimary} outline-none cursor-pointer p-2 rounded-full transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}
                   >
                     <FaTimes size={18} />
                   </button>
@@ -805,15 +809,15 @@ function UserDashboard() {
 
               <div className="p-6">
                 {/* Group Size and Names Form */}
-                <div className="mb-6 bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
-                  <h3 className="text-base font-semibold text-[#62109F] dark:text-white mb-3 flex items-center gap-2">
-                    <IoPeopleOutline size={18} className="text-[#62109F] dark:text-purple-400" />
+                <div className={`mb-6 ${isDark ? 'bg-slate-700' : 'bg-gray-50'} p-4 rounded-lg`}>
+                  <h3 className={`text-base font-semibold ${theme.textAccent} mb-3 flex items-center gap-2`}>
+                    <IoPeopleOutline size={18} className={theme.textAccent} />
                     {t('forms.bookingDetails')}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                         {t('forms.groupSize')}
                       </label>
                       <input
@@ -837,7 +841,7 @@ function UserDashboard() {
                           );
                         }}
                         onBlur={appointmentFormik.handleBlur}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm bg-white dark:bg-slate-600 dark:text-white"
+                        className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm ${theme.input}`}
                       />
                       {appointmentFormik.touched.groupSize &&
                         appointmentFormik.errors.groupSize && (
@@ -849,7 +853,7 @@ function UserDashboard() {
                   </div>
 
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('forms.memberNames')}
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-32 overflow-y-auto">
@@ -879,7 +883,7 @@ function UserDashboard() {
                                 true,
                               )
                             }
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm bg-white dark:bg-slate-600 dark:text-white"
+                            className={`px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm ${theme.input}`}
                           />
                         ),
                       )}
@@ -888,21 +892,21 @@ function UserDashboard() {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-base font-semibold text-[#62109F] dark:text-white mb-3 flex items-center gap-2">
-                    <IoTimeOutline size={18} className="text-[#62109F] dark:text-purple-400" />
+                  <h3 className={`text-base font-semibold ${theme.textAccent} mb-3 flex items-center gap-2`}>
+                    <IoTimeOutline size={18} className={theme.textAccent} />
                     {t('forms.selectAppointmentTime')}
                   </h3>
 
                   {selectedCalendarSlot && (
-                    <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-                      <p className="text-green-800 font-medium text-sm dark:text-white">
+                    <div className={`mb-4 p-3 border rounded-lg ${isDark ? 'bg-green-900/30 border-green-700 text-white' : 'bg-green-50 border-green-200 text-green-800'}`}>
+                      <p className="font-medium text-sm">
                         ✅ {t('forms.selected')}: {selectedCalendarSlot.startTime} -{" "}
                         {selectedCalendarSlot.endTime}
                       </p>
                     </div>
                   )}
 
-                  <div className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <div className={`border ${theme.border} rounded-lg overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-white'}`}>
                     <style jsx global>{`
                       .dark .fc-theme-standard .fc-scrollgrid {
                         border-color: #4b5563;
@@ -1004,11 +1008,11 @@ function UserDashboard() {
                   </div>
 
                   {/* Available Time Windows Display */}
-                  <div className="mt-4 p-4 bg-gradient-to-r from-[#E0F2FE] to-[#F0F9FF] dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <h4 className="text-sm font-semibold text-[#0EA5E9] dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <div className={`mt-4 p-4 bg-gradient-to-r rounded-lg border ${isDark ? 'from-blue-900/30 to-blue-800/30 border-blue-700' : 'from-[#E0F2FE] to-[#F0F9FF] border-blue-200'}`}>
+                    <h4 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-blue-300' : 'text-[#0EA5E9]'}`}>
                       <IoClipboardOutline
                         size={16}
-                        className="text-[#0EA5E9] dark:text-blue-300"
+                        className={isDark ? 'text-blue-300' : 'text-[#0EA5E9]'}
                       />
                       {t('forms.availableTimeWindows')}
                     </h4>
@@ -1067,20 +1071,20 @@ function UserDashboard() {
                             return (
                               <div
                                 key={index}
-                                className="flex items-center justify-between bg-white dark:bg-slate-600 p-3 rounded-lg shadow-sm border border-blue-100 dark:border-blue-700"
+                                className={`flex items-center justify-between p-3 rounded-lg shadow-sm border ${isDark ? 'bg-slate-600 border-blue-700' : 'bg-white border-blue-100'}`}
                               >
                                 <div className="flex items-center space-x-3">
                                   <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                                   <div>
-                                    <p className="font-medium text-gray-800 dark:text-white text-sm">
+                                    <p className={`font-medium text-sm ${theme.textPrimary}`}>
                                       {formattedDate}
                                     </p>
-                                    <p className="text-xs text-gray-600 dark:text-white">
+                                    <p className={`text-xs ${theme.textPrimary}`}>
                                       {startTime} - {endTime}
                                     </p>
                                   </div>
                                 </div>
-                                <div className="text-xs text-blue-600 dark:text-blue-300 font-medium">
+                                <div className={`text-xs font-medium ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
                                   {hasBookedSlots
                                     ? t('forms.booked')
                                     : t('forms.available')}
@@ -1091,17 +1095,17 @@ function UserDashboard() {
                       </div>
                     ) : (
                       <div className="text-center py-3">
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">
+                        <p className={`${theme.textSecondary} text-sm`}>
                           {t('organizer.noAvailabilityWindows')}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className={`text-xs ${theme.textMuted} mt-1`}>
                           {t('organizer.pleaseContact')}
                         </p>
                       </div>
                     )}
                   </div>
 
-                  <div className="mt-3 text-xs text-gray-600 dark:text-gray-300">
+                  <div className={`mt-3 text-xs ${theme.textSecondary}`}>
                     <div className="flex items-center justify-center space-x-6">
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
@@ -1118,13 +1122,13 @@ function UserDashboard() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <div className="bg-gradient-to-r from-[#B7A3E3] to-[#C47BE4] dark:from-slate-700 dark:to-slate-600 p-3 rounded-lg flex-1">
-                    <h4 className="font-semibold text-white dark:text-white mb-1 text-sm flex items-center gap-2">
-                      <IoBulbOutline size={18} className="text-yellow-400 dark:text-yellow-300" />
+                <div className={`flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t ${theme.border}`}>
+                  <div className={`bg-gradient-to-r p-3 rounded-lg flex-1 ${isDark ? 'from-slate-700 to-slate-600' : 'from-[#B7A3E3] to-[#C47BE4]'}`}>
+                    <h4 className="font-semibold text-white mb-1 text-sm flex items-center gap-2">
+                      <IoBulbOutline size={18} className={isDark ? 'text-yellow-300' : 'text-yellow-400'} />
                       {t('forms.quickTips')}
                     </h4>
-                    <ul className="text-white dark:text-gray-200 text-xs space-y-1">
+                    <ul className={`text-xs space-y-1 ${isDark ? 'text-gray-200' : 'text-white'}`}>
                       <li>• {t('forms.selectTimeSlot')}</li>
                       <li>• {t('forms.arriveEarly')}</li>
                       <li>• {t('forms.noWaiting')}</li>
@@ -1138,7 +1142,7 @@ function UserDashboard() {
                         setSelectedService(null);
                         setAvailableSlots([]);
                       }}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none text-sm"
+                      className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md transition-colors cursor-pointer outline-none text-sm ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-50'}`}
                     >
                       {t('forms.cancel')}
                     </button>

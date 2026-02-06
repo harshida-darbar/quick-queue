@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { AuthContext } from "../context/Authcontext";
 import { useTheme } from "../context/ThemeContext";
+import { getThemeClass } from "../config/colors";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 
 export default function Navbar() {
@@ -14,6 +15,7 @@ export default function Navbar() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { isDark, toggleTheme } = useTheme();
+  const theme = getThemeClass(isDark);
 
   const handleLogout = () => {
     logout();
@@ -29,7 +31,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white dark:bg-gradient-to-r dark:from-[#574964] dark:to-[#4D2FB2] shadow-lg border-b border-gray-200 dark:border-transparent">
+      <nav className={`${theme.navbar} shadow-lg border-b ${theme.border}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -50,9 +52,9 @@ export default function Navbar() {
                     />
                   </svg>
                 </div>
-                <h1 className="text-lg sm:text-2xl font-bold text-[#4D2FB2] dark:text-white">
+                <h1 className={`text-lg sm:text-2xl font-bold ${theme.textAccent}`}>
                   Quick
-                  <span className="text-[#8B5CF6] dark:text-[#C47BE4]">
+                  <span className={theme.textAccent}>
                     Queue
                   </span>
                 </h1>
@@ -73,13 +75,17 @@ export default function Navbar() {
               <div className="relative hidden sm:block">
                 <button
                   onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                  className="flex items-center space-x-1 bg-white bg-opacity-10 rounded-lg px-2 sm:px-3 py-1 text-white hover:bg-opacity-20 transition-colors cursor-pointer outline-none"
+                  className={`flex items-center space-x-1 rounded-lg px-2 sm:px-3 py-1 transition-colors cursor-pointer outline-none ${
+                    isDark 
+                      ? 'bg-white/10 hover:bg-white/20' 
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
                 >
-                  <span className="text-xs sm:text-sm text-gray-600">
+                  <span className={`text-xs sm:text-sm ${theme.textPrimary}`}>
                     {i18n.language === "hi" ? "हिंदी" : "EN"}
                   </span>
                   <svg
-                    className="w-3 h-3"
+                    className={`w-3 h-3 ${theme.textPrimary}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -94,7 +100,7 @@ export default function Navbar() {
                 </button>
 
                 {showLanguageDropdown && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50 outline-none">
+                  <div className={`absolute right-0 mt-2 w-32 ${theme.cardBg} rounded-md shadow-lg border ${theme.border} py-1 z-50 outline-none`}>
                     <button
                       onClick={() => {
                         i18n.changeLanguage("en");
@@ -103,7 +109,7 @@ export default function Navbar() {
                       className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none ${
                         i18n.language === "en"
                           ? "bg-[#62109F] text-white outline-none"
-                          : "text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-gray-500 dark:hover:bg-slate-700 outline-none"
+                          : `${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white outline-none`
                       }`}
                     >
                       English
@@ -113,10 +119,10 @@ export default function Navbar() {
                         i18n.changeLanguage("hi");
                         setShowLanguageDropdown(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none${
+                      className={`block w-full text-left px-4 py-2 text-sm cursor-pointer transition-colors outline-none ${
                         i18n.language === "hi"
                           ? "bg-[#62109F] text-white outline-none"
-                          : "text-gray-800 dark:text-white hover:bg-[#B7A3E3] hover:text-gray-500 dark:hover:bg-slate-700 outline-none"
+                          : `${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white outline-none`
                       }`}
                     >
                       हिंदी
@@ -128,7 +134,7 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center space-x-2 text-gray-700 dark:text-white hover:text-[#8B5CF6] dark:hover:text-[#C47BE4] transition-colors cursor-pointer outline-none"
+                  className={`flex items-center space-x-2 ${theme.textPrimary} hover:text-[#8B5CF6] transition-colors cursor-pointer outline-none`}
                 >
                   {/* Mobile - Show avatar only */}
                   <div className="md:hidden">
@@ -180,9 +186,9 @@ export default function Navbar() {
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50">
+                  <div className={`absolute right-0 mt-2 w-48 ${theme.cardBg} rounded-md shadow-lg border ${theme.border} py-1 z-50`}>
                     {/* Language options for mobile */}
-                    <div className="sm:hidden border-b border-gray-200 dark:border-gray-600 pb-2 mb-2">
+                    <div className={`sm:hidden border-b ${theme.border} pb-2 mb-2`}>
                       <button
                         onClick={() => {
                           i18n.changeLanguage("en");
@@ -191,7 +197,7 @@ export default function Navbar() {
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                           i18n.language === "en"
                             ? "bg-[#62109F] text-white"
-                            : "text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700"
+                            : `${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white`
                         }`}
                       >
                         English
@@ -204,7 +210,7 @@ export default function Navbar() {
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                           i18n.language === "hi"
                             ? "bg-[#62109F] text-white"
-                            : "text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700"
+                            : `${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white`
                         }`}
                       >
                         हिंदी
@@ -216,7 +222,7 @@ export default function Navbar() {
                           setShowDropdown(false);
                           router.push("/profile");
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
+                        className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
                       >
                         {t("navbar.myProfile")}
                       </button>
@@ -227,7 +233,7 @@ export default function Navbar() {
                           setShowDropdown(false);
                           router.push("/user/appointments");
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
+                        className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
                       >
                         {t("navbar.myAppointments")}
                       </button>
@@ -237,7 +243,7 @@ export default function Navbar() {
                         setShowDropdown(false);
                         setShowLogoutModal(true);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-[#B7A3E3] hover:text-white dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
+                      className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
                     >
                       {t("navbar.logout")}
                     </button>
@@ -252,18 +258,18 @@ export default function Navbar() {
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3] dark:border-gray-600">
-            <h2 className="text-xl font-bold text-[#62109F] dark:text-white mb-4">
+          <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl border border-[#B7A3E3]`}>
+            <h2 className={`text-xl font-bold ${theme.textAccent} mb-4`}>
               {t("navbar.confirmLogout")}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className={`${theme.textSecondary} mb-6`}>
               {t("navbar.logoutMessage")}
             </p>
 
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none"
+                className={`px-4 py-2 ${theme.textSecondary} border ${theme.border} rounded-md hover:bg-gray-50 transition-colors cursor-pointer outline-none`}
               >
                 {t("navbar.cancel")}
               </button>

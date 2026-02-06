@@ -7,6 +7,8 @@ import { FaArrowLeft, FaCalendarAlt, FaUsers, FaPhoneAlt, FaMapMarkerAlt } from 
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import { useTheme } from "../../../context/ThemeContext";
+import { getThemeClass } from "../../../config/colors";
 
 function AppointmentsPage() {
   const [service, setService] = useState(null);
@@ -17,6 +19,8 @@ function AppointmentsPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
 
   const serviceId = params.id;
 
@@ -106,29 +110,29 @@ function AppointmentsPage() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'booked':
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+        return `bg-blue-100 ${isDark ? 'bg-blue-900/30' : ''} text-blue-800 ${isDark ? 'text-blue-300' : ''}`;
       case 'completed':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+        return `bg-green-100 ${isDark ? 'bg-green-900/30' : ''} text-green-800 ${isDark ? 'text-green-300' : ''}`;
       case 'cancelled':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+        return `bg-red-100 ${isDark ? 'bg-red-900/30' : ''} text-red-800 ${isDark ? 'text-red-300' : ''}`;
       default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
+        return `bg-gray-100 ${isDark ? 'bg-gray-700' : ''} text-gray-800 ${isDark ? 'text-gray-300' : ''}`;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={theme.pageBg}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">{t('common.loading')}</div>
+          <div className={`text-xl ${theme.textPrimary}`}>{t('common.loading')}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={theme.pageBg}>
       <Navbar />
 
       <div className="max-w-6xl mx-auto p-6">
@@ -136,27 +140,27 @@ function AppointmentsPage() {
         <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
-            className="mr-4 p-2 text-[#62109F] dark:text-purple-300 hover:bg-white hover:bg-opacity-20 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer outline-none"
+            className={`mr-4 p-2 ${theme.textAccent} hover:opacity-80 rounded-lg transition-colors cursor-pointer outline-none`}
           >
             <FaArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-[#62109F] dark:text-purple-200">
+            <h1 className={`text-3xl font-bold ${theme.textPrimary}`}>
              {t('organizer.appointmentsTitle')} - {service?.title}
             </h1>
-            <p className="text-[#85409D] dark:text-purple-300 capitalize">{service?.serviceType}</p>
+            <p className={`${theme.textSecondary} capitalize`}>{service?.serviceType}</p>
           </div>
         </div>
 
         {/* Appointments Table */}
         {appointments.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
-            <FaCalendarAlt size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('organizer.noAppointmentsYet')}</h3>
-            <p className="text-gray-500 dark:text-gray-400">{t('organizer.noAppointmentsDesc')}</p>
+          <div className={`text-center py-12 ${theme.cardBg} rounded-lg shadow-lg`}>
+            <FaCalendarAlt size={48} className={`mx-auto ${theme.textMuted} mb-4`} />
+            <h3 className={`text-xl font-semibold ${theme.textSecondary} mb-2`}>{t('organizer.noAppointmentsYet')}</h3>
+            <p className={theme.textMuted}>{t('organizer.noAppointmentsDesc')}</p>
           </div>
         ) : (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+          <div className={`${theme.cardBg} rounded-lg shadow-lg overflow-hidden`}>
             <div className="">
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white">
@@ -172,24 +176,24 @@ function AppointmentsPage() {
                   {appointments
                     .sort((a, b) => new Date(`${a.date}T${a.startTime}`) - new Date(`${b.date}T${b.startTime}`))
                     .map((appointment, index) => (
-                      <tr key={appointment.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-gray-25 dark:bg-slate-700'}`}>
+                      <tr key={appointment.id} className={`hover:bg-gray-50 ${isDark ? 'hover:bg-gray-700' : ''} ${index % 2 === 0 ? `${theme.cardBg}` : `bg-gray-25 ${isDark ? 'bg-slate-700' : ''}`}`}>
                         <td className="px-4 py-4">
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            <p className={`font-medium ${theme.textPrimary} text-sm`}>
                               {new Date(appointment.date).toLocaleDateString('en-US', { 
                                 month: 'short', 
                                 day: 'numeric',
                                 year: 'numeric'
                               })}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                            <p className={`text-sm ${theme.textSecondary}`}>
                               {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                             </p>
                           </div>
                         </td>
                         <td className="px-4 py-4">
                           <div 
-                            className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded-lg transition-colors"
+                            className={`flex items-center cursor-pointer hover:bg-gray-100 ${isDark ? 'hover:bg-gray-600' : ''} p-2 rounded-lg transition-colors`}
                             onClick={() => handleUserClick(appointment.user.id)}
                           >
                             <div className="w-8 h-8 rounded-full overflow-hidden bg-[#85409D] flex items-center justify-center mr-3">
@@ -205,13 +209,13 @@ function AppointmentsPage() {
                                 </span>
                               )}
                             </div>
-                            <span className="font-medium text-gray-900 dark:text-white text-sm">{appointment.user.name}</span>
+                            <span className={`font-medium ${theme.textPrimary} text-sm`}>{appointment.user.name}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center">
                             <FaUsers className="text-[#85409D] dark:text-purple-400 mr-2 text-sm" />
-                            <span className="font-medium text-gray-900 dark:text-white text-sm">{appointment.groupSize} {t('organizer.people')}</span>
+                            <span className={`font-medium ${theme.textPrimary} text-sm`}>{appointment.groupSize} {t('organizer.people')}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -219,13 +223,13 @@ function AppointmentsPage() {
                             {appointment.memberNames.slice(0, 3).map((name, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-1 bg-[#F0F9FF] dark:bg-blue-900/30 text-[#0EA5E9] dark:text-blue-300 rounded text-xs font-medium"
+                                className={`px-2 py-1 bg-[#F0F9FF] ${isDark ? 'bg-blue-900/30' : ''} text-[#0EA5E9] ${isDark ? 'text-blue-300' : ''} rounded text-xs font-medium`}
                               >
                                 {name}
                               </span>
                             ))}
                             {appointment.memberNames.length > 3 && (
-                              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs font-medium">
+                              <span className={`px-2 py-1 bg-gray-100 ${isDark ? 'bg-gray-700' : ''} ${theme.textSecondary} rounded text-xs font-medium`}>
                                 +{appointment.memberNames.length - 3}
                               </span>
                             )}
@@ -273,12 +277,12 @@ function AppointmentsPage() {
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
         <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 w-full max-w-sm mx-4 shadow-2xl border border-[#B7A3E3] dark:border-gray-600">
+          <div className={`${theme.cardBg} rounded-lg p-4 w-full max-w-sm mx-4 shadow-2xl ${theme.border}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[#62109F] dark:text-white">{t('organizer.userDetails')}</h2>
+              <h2 className={`text-lg font-bold ${theme.textPrimary}`}>{t('organizer.userDetails')}</h2>
               <button
                 onClick={() => setShowUserModal(false)}
-                className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 text-xl font-bold outline-none cursor-pointer"
+                className={`${theme.textMuted} hover:opacity-80 text-xl font-bold outline-none cursor-pointer`}
               >
                 ×
               </button>
@@ -300,9 +304,9 @@ function AppointmentsPage() {
               </div>
               
               <div className="text-center">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">{selectedUser.name}</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">{selectedUser.email}</p>
-                <span className="inline-block mt-1 px-2 py-1 bg-[#B7A3E3] dark:bg-purple-900/30 text-[#62109F] dark:text-purple-300 rounded-full text-xs font-medium">
+                <h3 className={`text-base font-semibold ${theme.textPrimary}`}>{selectedUser.name}</h3>
+                <p className={`${theme.textSecondary} text-sm`}>{selectedUser.email}</p>
+                <span className={`inline-block mt-1 px-2 py-1 bg-[#B7A3E3] ${isDark ? 'bg-purple-900/30' : ''} text-[#62109F] ${isDark ? 'text-purple-300' : ''} rounded-full text-xs font-medium`}>
                   {selectedUser.role === 2 ? t('organizer.organizer') : t('organizer.user')}
                 </span>
               </div>
@@ -312,13 +316,13 @@ function AppointmentsPage() {
             <div className="space-y-2 mb-4">
               <div className="flex items-center text-sm">
                 <FaPhoneAlt className="text-[#85409D] dark:text-purple-400 mr-2 w-3" />
-                <span className="text-gray-600 dark:text-gray-300 min-w-[45px]">{t('organizer.phone')}:</span>
-                <span className="text-gray-900 dark:text-white font-medium">{selectedUser.phone || t('organizer.notProvided')}</span>
+                <span className={`${theme.textSecondary} min-w-[45px]`}>{t('organizer.phone')}:</span>
+                <span className={`${theme.textPrimary} font-medium`}>{selectedUser.phone || t('organizer.notProvided')}</span>
               </div>
               <div className="flex items-center text-sm">
                 <FaMapMarkerAlt className="text-[#85409D] dark:text-purple-400 mr-2 w-3" />
-                <span className="text-gray-600 dark:text-gray-300 min-w-[45px]">{t('organizer.city')}:</span>
-                <span className="text-gray-900 dark:text-white font-medium">{selectedUser.city || t('organizer.notProvided')}</span>
+                <span className={`${theme.textSecondary} min-w-[45px]`}>{t('organizer.city')}:</span>
+                <span className={`${theme.textPrimary} font-medium`}>{selectedUser.city || t('organizer.notProvided')}</span>
               </div>
             </div>
             

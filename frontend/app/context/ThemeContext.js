@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import themeConfig from '../config/colors';
 
 const ThemeContext = createContext();
 
@@ -20,31 +21,28 @@ export const ThemeProvider = ({ children }) => {
     setMounted(true);
     const savedTheme = localStorage.getItem('theme');
     const shouldBeDark = savedTheme === 'dark';
-    console.log('Initial theme:', savedTheme, 'shouldBeDark:', shouldBeDark);
     setIsDark(shouldBeDark);
   }, []);
 
   useEffect(() => {
     if (mounted) {
-      console.log('Applying theme - isDark:', isDark);
       if (isDark) {
         document.documentElement.classList.add('dark');
-        console.log('Added dark class');
       } else {
         document.documentElement.classList.remove('dark');
-        console.log('Removed dark class');
       }
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      console.log('HTML classes:', document.documentElement.className);
+      
+      // Apply CSS variables from config
+      const colors = isDark ? themeConfig.dark : themeConfig.light;
+      Object.entries(colors).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
     }
   }, [isDark, mounted]);
 
   const toggleTheme = () => {
-    console.log('Toggle called - current isDark:', isDark);
-    setIsDark(prev => {
-      console.log('Setting isDark from', prev, 'to', !prev);
-      return !prev;
-    });
+    setIsDark(prev => !prev);
   };
 
   return (

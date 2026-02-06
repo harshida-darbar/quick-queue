@@ -8,9 +8,13 @@ import api from "../utils/api";
 import Navbar from "../components/Navbar";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { AuthContext } from "../context/Authcontext";
+import { useTheme } from "../context/ThemeContext";
+import { getThemeClass } from "../config/colors";
 
 function ProfilePage() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -92,31 +96,31 @@ function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">Loading profile...</div>
+          <div className={`text-xl ${theme.textAccent}`}>Loading profile...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={`min-h-screen ${theme.pageBg}`}>
       <Navbar />
       
       <div className="max-w-xl mx-auto p-4">
         <div className="flex items-center mb-6">
           <button
             onClick={() => router.back()}
-            className="mr-3 p-2 text-[#62109F] dark:text-purple-300 hover:bg-white hover:bg-opacity-20 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer outline-none"
+            className={`mr-3 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
           >
             <IoArrowBack size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-[#62109F] dark:text-purple-200">{t('navbar.myProfile')}</h1>
+          <h1 className={`text-2xl font-bold ${theme.textAccent}`}>{t('navbar.myProfile')}</h1>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6">
+        <div className={`${theme.cardBg} rounded-xl shadow-xl p-6`}>
           {/* Profile Image Section */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative">
@@ -161,57 +165,57 @@ function ProfilePage() {
           {editing ? (
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  <IoPerson className="mr-2 text-[#85409D] dark:text-purple-400" />
+                <label className={`flex items-center text-sm font-medium ${theme.textPrimary} mb-1`}>
+                  <IoPerson className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.name')}
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className={`w-full px-3 py-2 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input}`}
                   required
                 />
               </div>
 
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  <IoMail className="mr-2 text-[#85409D] dark:text-purple-400" />
+                <label className={`flex items-center text-sm font-medium ${theme.textPrimary} mb-1`}>
+                  <IoMail className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.email')}
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className={`w-full px-3 py-2 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input}`}
                   required
                 />
               </div>
 
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  <IoCall className="mr-2 text-[#85409D] dark:text-purple-400" />
+                <label className={`flex items-center text-sm font-medium ${theme.textPrimary} mb-1`}>
+                  <IoCall className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.phone')}
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className={`w-full px-3 py-2 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input}`}
                   required
                 />
               </div>
 
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  <IoLocation className="mr-2 text-[#85409D] dark:text-purple-400" />
+                <label className={`flex items-center text-sm font-medium ${theme.textPrimary} mb-1`}>
+                  <IoLocation className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.city')}
                 </label>
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none bg-white dark:bg-slate-700 dark:text-white"
+                  className={`w-full px-3 py-2 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input}`}
                   required
                 />
               </div>
@@ -231,7 +235,7 @@ function ProfilePage() {
                     setTempImage(null);
                     setTempImageFile(null);
                   }}
-                  className="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer outline-none font-medium"
+                  className={`flex-1 py-2 border ${theme.border} ${theme.textPrimary} rounded-lg transition-colors cursor-pointer outline-none font-medium ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-50'}`}
                 >
                   {t('profile.cancel')}
                 </button>
@@ -239,41 +243,41 @@ function ProfilePage() {
             </form>
           ) : (
             <div className="space-y-4">
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
-                <label className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <IoPerson className="mr-2 text-[#85409D] dark:text-purple-400" />
+              <div className={`rounded-lg p-3 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                <label className={`flex items-center text-sm font-medium ${theme.textSecondary} mb-1`}>
+                  <IoPerson className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.name')}
                 </label>
-                <p className="text-lg text-gray-900 dark:text-white font-medium">{profile?.name}</p>
+                <p className={`text-lg ${theme.textPrimary} font-medium`}>{profile?.name}</p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
-                <label className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <IoMail className="mr-2 text-[#85409D] dark:text-purple-400" />
+              <div className={`rounded-lg p-3 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                <label className={`flex items-center text-sm font-medium ${theme.textSecondary} mb-1`}>
+                  <IoMail className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.email')}
                 </label>
-                <p className="text-lg text-gray-900 dark:text-white font-medium">{profile?.email}</p>
+                <p className={`text-lg ${theme.textPrimary} font-medium`}>{profile?.email}</p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
-                <label className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <IoCall className="mr-2 text-[#85409D] dark:text-purple-400" />
+              <div className={`rounded-lg p-3 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                <label className={`flex items-center text-sm font-medium ${theme.textSecondary} mb-1`}>
+                  <IoCall className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.phone')}
                 </label>
-                <p className="text-lg text-gray-900 dark:text-white font-medium">{profile?.phone || t('profile.notProvided')}</p>
+                <p className={`text-lg ${theme.textPrimary} font-medium`}>{profile?.phone || t('profile.notProvided')}</p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
-                <label className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <IoLocation className="mr-2 text-[#85409D] dark:text-purple-400" />
+              <div className={`rounded-lg p-3 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                <label className={`flex items-center text-sm font-medium ${theme.textSecondary} mb-1`}>
+                  <IoLocation className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.city')}
                 </label>
-                <p className="text-lg text-gray-900 dark:text-white font-medium">{profile?.city || t('profile.notProvided')}</p>
+                <p className={`text-lg ${theme.textPrimary} font-medium`}>{profile?.city || t('profile.notProvided')}</p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
-                <label className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  <IoShield className="mr-2 text-[#85409D] dark:text-purple-400" />
+              <div className={`rounded-lg p-3 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                <label className={`flex items-center text-sm font-medium ${theme.textSecondary} mb-1`}>
+                  <IoShield className={`mr-2 ${theme.textSecondary}`} />
                   {t('profile.role')}
                 </label>
                 <span className="inline-block px-3 py-1 bg-gradient-to-r from-[#4D2FB2] to-[#85409D] text-white rounded-full text-sm font-medium">

@@ -7,9 +7,13 @@ import { IoCalendarOutline, IoTimeOutline, IoPeopleOutline, IoArrowBack } from "
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import { useTheme } from "../../context/ThemeContext";
+import { getThemeClass } from "../../config/colors";
 
 function MyAppointments() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -50,38 +54,38 @@ function MyAppointments() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+      <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-[#62109F] dark:text-purple-200">{t('common.loading')}</div>
+          <div className={`text-xl ${theme.textAccent}`}>{t('common.loading')}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <div className={`min-h-screen ${theme.pageBg}`}>
       <Navbar />
       
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
-            className="mr-4 p-2 text-[#62109F] dark:text-purple-300 hover:bg-white hover:bg-opacity-20 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer outline-none"
+            className={`mr-4 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
           >
             <IoArrowBack size={20} />
           </button>
-          <h1 className="text-3xl font-bold text-[#62109F] dark:text-purple-200 flex items-center gap-3">
+          <h1 className={`text-3xl font-bold ${theme.textAccent} flex items-center gap-3`}>
             <IoCalendarOutline size={32} />
             {t('navbar.myAppointments')}
           </h1>
         </div>
 
         {appointments.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
-            <IoCalendarOutline size={64} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('appointments.noAppointments')}</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">{t('appointments.noAppointmentsDesc')}</p>
+          <div className={`text-center py-12 ${theme.cardBg} rounded-lg shadow-lg`}>
+            <IoCalendarOutline size={64} className={`mx-auto ${theme.textMuted} mb-4`} />
+            <h3 className={`text-xl font-semibold ${theme.textSecondary} mb-2`}>{t('appointments.noAppointments')}</h3>
+            <p className={`${theme.textMuted} mb-4`}>{t('appointments.noAppointmentsDesc')}</p>
             <button
               onClick={() => router.push('/user/dashboard')}
               className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors"
@@ -94,54 +98,54 @@ function MyAppointments() {
             {appointments.map((appointment) => (
               <div
                 key={appointment._id}
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6"
+                className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-[#62109F] dark:text-white">
+                  <h3 className={`text-lg font-semibold ${theme.textAccent}`}>
                     {appointment.service.title}
                   </h3>
-                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-xs font-medium">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
                     {t('appointments.booked')}
                   </span>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <IoCalendarOutline size={16} className="text-[#85409D] dark:text-purple-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <IoCalendarOutline size={16} className={theme.textSecondary} />
+                    <span className={`text-sm ${theme.textSecondary}`}>
                       {formatDate(appointment.date)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <IoTimeOutline size={16} className="text-[#85409D] dark:text-purple-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <IoTimeOutline size={16} className={theme.textSecondary} />
+                    <span className={`text-sm ${theme.textSecondary}`}>
                       {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <IoPeopleOutline size={16} className="text-[#85409D] dark:text-purple-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <IoPeopleOutline size={16} className={theme.textSecondary} />
+                    <span className={`text-sm ${theme.textSecondary}`}>
                       {appointment.groupSize} {t('appointments.people')}
                     </span>
                   </div>
 
-                  <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('appointments.organizer')}:</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white">
+                  <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                    <p className={`text-xs ${theme.textMuted} mb-1`}>{t('appointments.organizer')}:</p>
+                    <p className={`text-sm font-medium ${theme.textPrimary}`}>
                       {appointment.service.organizer.name}
                     </p>
                   </div>
 
                   {appointment.memberNames && appointment.memberNames.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('appointments.groupMembers')}:</p>
+                      <p className={`text-xs ${theme.textMuted} mb-2`}>{t('appointments.groupMembers')}:</p>
                       <div className="flex flex-wrap gap-1">
                         {appointment.memberNames.map((name, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-[#F0F9FF] dark:bg-blue-900/30 text-[#0EA5E9] dark:text-blue-300 rounded text-xs"
+                            className={`px-2 py-1 rounded text-xs ${isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-[#F0F9FF] text-[#0EA5E9]'}`}
                           >
                             {name}
                           </span>
