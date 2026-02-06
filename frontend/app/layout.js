@@ -11,15 +11,17 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="bg-gradient-to-br from-[#B7A3E3] to-[#C5B0CD] dark:from-[#2D1B69] dark:to-[#4C1D95]">
+    <html lang="en" className="">
+      <body>
         <ThemeProvider>
-          <AuthProvider>
-            <LanguageProvider>
-              {children}
-              <ToastContainer position="top-center" autoClose={1000} />
-            </LanguageProvider>
-          </AuthProvider>
+          <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-[#2D1B69] dark:to-[#4C1D95] text-gray-900 dark:text-white">
+            <AuthProvider>
+              <LanguageProvider>
+                {children}
+                <ToastContainer position="top-center" autoClose={1000} />
+              </LanguageProvider>
+            </AuthProvider>
+          </div>
         </ThemeProvider>
       </body>
     </html>

@@ -29,7 +29,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-gradient-to-r from-[#574964] to-[#4D2FB2] shadow-lg">
+      <nav className="bg-white dark:bg-gradient-to-r dark:from-[#574964] dark:to-[#4D2FB2] shadow-lg border-b border-gray-200 dark:border-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -40,17 +40,30 @@ export default function Navbar() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
                 </div>
-                <h1 className="text-lg sm:text-2xl font-bold text-white">Quick<span className="text-[#C47BE4]">Queue</span></h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-[#4D2FB2] dark:text-white">Quick<span className="text-[#8B5CF6] dark:text-[#C47BE4]">Queue</span></h1>
               </div>
             </div>
               
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Debug info */}
+              <div className="text-xs p-2 rounded" style={{
+                backgroundColor: isDark ? '#22c55e' : '#ef4444',
+                color: 'white'
+              }}>
+                {isDark ? 'DARK MODE' : 'LIGHT MODE'}
+              </div>
+              
               {/* Theme Toggle */}
               <DarkModeSwitch
                 checked={isDark}
                 onChange={() => {
-                  console.log('DarkModeSwitch clicked, current isDark:', isDark);
+                  console.log('Before toggle - isDark:', isDark);
+                  console.log('HTML classes before:', document.documentElement.className);
                   toggleTheme();
+                  setTimeout(() => {
+                    console.log('After toggle - isDark should be:', !isDark);
+                    console.log('HTML classes after:', document.documentElement.className);
+                  }, 100);
                 }}
                 size={20}
                 sunColor="#FCD34D"
@@ -106,7 +119,7 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center space-x-2 text-white hover:text-[#C47BE4] transition-colors cursor-pointer outline-none"
+                  className="flex items-center space-x-2 text-gray-700 dark:text-white hover:text-[#8B5CF6] dark:hover:text-[#C47BE4] transition-colors cursor-pointer outline-none"
                 >
                   {/* Mobile - Show avatar only */}
                   <div className="md:hidden">
