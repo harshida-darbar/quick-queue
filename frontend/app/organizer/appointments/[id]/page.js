@@ -143,7 +143,7 @@ function AppointmentsPage() {
             className={`mr-4 p-2 ${theme.textAccent} hover:opacity-80 rounded-lg transition-colors cursor-pointer outline-none`}
           >
             <FaArrowLeft size={20} />
-          </button>
+          </button> 
           <div>
             <h1 className={`text-3xl font-bold ${theme.textPrimary}`}>
              {t('organizer.appointmentsTitle')} - {service?.title}

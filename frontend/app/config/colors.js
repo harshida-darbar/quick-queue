@@ -31,7 +31,7 @@ export const getThemeClass = (isDark) => ({
   // Page backgrounds
   pageBg: isDark 
     ? 'bg-gradient-to-br from-[#2D1B69] to-[#4C1D95]' 
-    : 'bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD]',
+    : 'bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] min-h-screen',
     // : 'bg-gradient-to-br from-blue-50 to-indigo-100',
   
   // Card/Surface backgrounds
