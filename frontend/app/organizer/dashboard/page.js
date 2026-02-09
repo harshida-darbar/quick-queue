@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { FaHospital, FaUtensils, FaCut, FaBuilding, FaEdit, FaTrash, FaTimes } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaEdit, FaTrash, FaTimes, FaMapMarkerAlt } from "react-icons/fa";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
@@ -19,6 +19,7 @@ const validationSchema = Yup.object({
   description: Yup.string().required("Description is required"),
   serviceType: Yup.string().required("Service type is required"),
   photo: Yup.string().url("Must be a valid URL"),
+  address: Yup.string(),
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
     .required("Max capacity is required"),
@@ -49,6 +50,7 @@ function OrganizerDashboard() {
       description: "",
       serviceType: "",
       photo: "",
+      address: "",
       maxCapacity: 1,
       appointmentEnabled: false,
     },
@@ -74,7 +76,8 @@ function OrganizerDashboard() {
       description: "",
       serviceType: "",
       photo: "",
-      maxCapacity: 10,
+      address: "",
+      maxCapacity: 1,
       appointmentEnabled: false,
     },
     validationSchema: validationSchema,
@@ -184,6 +187,7 @@ function OrganizerDashboard() {
       description: service.description,
       serviceType: service.serviceType,
       photo: service.photo || "",
+      address: service.address || "",
       maxCapacity: service.maxCapacity,
       appointmentEnabled: service.appointmentEnabled || false,
     });
@@ -284,28 +288,50 @@ function OrganizerDashboard() {
         {/* Create Service Modal */}
         {showCreateForm && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
               <h2 className={`text-xl font-bold mb-4 ${theme.textAccent}`}>
                 {t('organizer.createNewService')}
               </h2>
               <form onSubmit={formik.handleSubmit}>
-                <div className="mb-4">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.serviceTitle')}
-                  </label>
-                  <input
-                    name="title"
-                    type="text"
-                    value={formik.values.title}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {formik.touched.title && formik.errors.title && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {formik.errors.title}
-                    </div>
-                  )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.serviceTitle')}
+                    </label>
+                    <input
+                      name="title"
+                      type="text"
+                      value={formik.values.title}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {formik.touched.title && formik.errors.title && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.title}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.serviceType')}
+                    </label>
+                    <input
+                      name="serviceType"
+                      type="text"
+                      placeholder={t('organizer.serviceTypePlaceholder')}
+                      value={formik.values.serviceType}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {formik.touched.serviceType && formik.errors.serviceType && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.serviceType}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-4">
@@ -314,7 +340,7 @@ function OrganizerDashboard() {
                   </label>
                   <textarea
                     name="description"
-                    rows="3"
+                    rows="2"
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -329,61 +355,62 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.serviceType')}
+                    Address
                   </label>
-                  <input
-                    name="serviceType"
-                    type="text"
-                    placeholder={t('organizer.serviceTypePlaceholder')}
-                    value={formik.values.serviceType}
+                  <textarea
+                    name="address"
+                    rows="2"
+                    value={formik.values.address}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
-                  {formik.touched.serviceType && formik.errors.serviceType && (
+                  {formik.touched.address && formik.errors.address && (
                     <div className="text-red-500 text-sm mt-1">
-                      {formik.errors.serviceType}
+                      {formik.errors.address}
                     </div>
                   )}
                 </div>
 
-                <div className="mb-4">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.photoUrl')}
-                  </label>
-                  <input
-                    name="photo"
-                    type="url"
-                    value={formik.values.photo}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {formik.touched.photo && formik.errors.photo && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {formik.errors.photo}
-                    </div>
-                  )}
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.photoUrl')}
+                    </label>
+                    <input
+                      name="photo"
+                      type="url"
+                      value={formik.values.photo}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {formik.touched.photo && formik.errors.photo && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.photo}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="mb-6">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.maxCapacityLabel')}
-                  </label>
-                  <input
-                    name="maxCapacity"
-                    type="number"
-                    min="1"
-                    value={formik.values.maxCapacity}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {formik.touched.maxCapacity && formik.errors.maxCapacity && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {formik.errors.maxCapacity}
-                    </div>
-                  )}
+                  <div className="mb-6">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.maxCapacityLabel')}
+                    </label>
+                    <input
+                      name="maxCapacity"
+                      type="number"
+                      min="1"
+                      value={formik.values.maxCapacity}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {formik.touched.maxCapacity && formik.errors.maxCapacity && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.maxCapacity}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-6">
@@ -521,28 +548,50 @@ function OrganizerDashboard() {
         {/* Edit Service Modal */}
         {showEditForm && editingService && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+            <div className={`${theme.cardBg} rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
               <h2 className={`text-xl font-bold mb-4 ${theme.textAccent}`}>
                 {t('organizer.editService')}
               </h2>
               <form onSubmit={editFormik.handleSubmit}>
-                <div className="mb-4">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.serviceTitle')}
-                  </label>
-                  <input
-                    name="title"
-                    type="text"
-                    value={editFormik.values.title}
-                    onChange={editFormik.handleChange}
-                    onBlur={editFormik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {editFormik.touched.title && editFormik.errors.title && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {editFormik.errors.title}
-                    </div>
-                  )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.serviceTitle')}
+                    </label>
+                    <input
+                      name="title"
+                      type="text"
+                      value={editFormik.values.title}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {editFormik.touched.title && editFormik.errors.title && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {editFormik.errors.title}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.serviceType')}
+                    </label>
+                    <input
+                      name="serviceType"
+                      type="text"
+                      placeholder={t('organizer.serviceTypePlaceholder')}
+                      value={editFormik.values.serviceType}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {editFormik.touched.serviceType && editFormik.errors.serviceType && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {editFormik.errors.serviceType}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-4">
@@ -551,7 +600,7 @@ function OrganizerDashboard() {
                   </label>
                   <textarea
                     name="description"
-                    rows="3"
+                    rows="2"
                     value={editFormik.values.description}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
@@ -566,61 +615,62 @@ function OrganizerDashboard() {
 
                 <div className="mb-4">
                   <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.serviceType')}
+                    Address
                   </label>
-                  <input
-                    name="serviceType"
-                    type="text"
-                    placeholder={t('organizer.serviceTypePlaceholder')}
-                    value={editFormik.values.serviceType}
+                  <textarea
+                    name="address"
+                    rows="2"
+                    value={editFormik.values.address}
                     onChange={editFormik.handleChange}
                     onBlur={editFormik.handleBlur}
                     className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                   />
-                  {editFormik.touched.serviceType && editFormik.errors.serviceType && (
+                  {editFormik.touched.address && editFormik.errors.address && (
                     <div className="text-red-500 text-sm mt-1">
-                      {editFormik.errors.serviceType}
+                      {editFormik.errors.address}
                     </div>
                   )}
                 </div>
 
-                <div className="mb-4">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.photoUrl')}
-                  </label>
-                  <input
-                    name="photo"
-                    type="url"
-                    value={editFormik.values.photo}
-                    onChange={editFormik.handleChange}
-                    onBlur={editFormik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {editFormik.touched.photo && editFormik.errors.photo && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {editFormik.errors.photo}
-                    </div>
-                  )}
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.photoUrl')}
+                    </label>
+                    <input
+                      name="photo"
+                      type="url"
+                      value={editFormik.values.photo}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {editFormik.touched.photo && editFormik.errors.photo && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {editFormik.errors.photo}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="mb-6">
-                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    {t('organizer.maxCapacityLabel')}
-                  </label>
-                  <input
-                    name="maxCapacity"
-                    type="number"
-                    min="1"
-                    value={editFormik.values.maxCapacity}
-                    onChange={editFormik.handleChange}
-                    onBlur={editFormik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {editFormik.touched.maxCapacity && editFormik.errors.maxCapacity && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {editFormik.errors.maxCapacity}
-                    </div>
-                  )}
+                  <div className="mb-6">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      {t('organizer.maxCapacityLabel')}
+                    </label>
+                    <input
+                      name="maxCapacity"
+                      type="number"
+                      min="1"
+                      value={editFormik.values.maxCapacity}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                    />
+                    {editFormik.touched.maxCapacity && editFormik.errors.maxCapacity && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {editFormik.errors.maxCapacity}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-6">
@@ -630,7 +680,7 @@ function OrganizerDashboard() {
                       type="checkbox"
                       checked={editFormik.values.appointmentEnabled}
                       onChange={editFormik.handleChange}
-                      className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2]"
+                      className="w-4 h-4 text-[#4D2FB2] border-gray-300 rounded focus:ring-[#4D2FB2] outline-none"
                     />
                     <span className={`text-sm font-medium ${theme.textPrimary}`}>
                       {t('organizer.enableAppointmentBooking')}
@@ -896,9 +946,16 @@ function OrganizerDashboard() {
                         </div>
                       )}
 
-                      <p className={`${theme.textSecondary} mb-4 flex-1 min-h-[3rem] line-clamp-3`}>
+                      <p className={`${theme.textSecondary} mb-2 flex-1 min-h-[3rem] line-clamp-3`}>
                         {service.description}
                       </p>
+
+                      {service.address && (
+                        <p className={`text-xs ${theme.textMuted} mb-4 line-clamp-2 flex items-start gap-1`}>
+                          <FaMapMarkerAlt className="mt-0.5 flex-shrink-0" size={12} />
+                          <span>{service.address}</span>
+                        </p>
+                      )}
 
                       <div className="flex justify-between items-center mb-4 mt-auto">
                         <div className={`text-sm ${theme.textMuted}`}>

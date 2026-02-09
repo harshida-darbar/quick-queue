@@ -56,14 +56,14 @@ function LoginPage() {
 
   return (
     <PublicRoute>
-      <div className={`min-h-screen flex items-center justify-center ${theme.pageBg} p-4`}>
+      <div className={`min-h-screen flex items-center justify-center   ${theme.pageBg} p-4`}>
         <form
           onSubmit={formik.handleSubmit}
           className={`w-full max-w-md ${theme.cardBg} backdrop-blur-xl shadow-2xl rounded-2xl p-8`}
         >
           <h1 className={`text-3xl font-bold text-center ${theme.textAccent} mb-6`}>
-            Welcome Back
-          </h1>
+            Welcome Back 
+          </h1> 
 
           <div className="mb-4">
             <label className={`text-sm font-semibold ${theme.textAccent}`}>

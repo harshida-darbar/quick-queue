@@ -26,7 +26,7 @@ export const themeConfig = {
   }
 };
 
-// Theme class helper - Use this instead of hardcoded dark: classes
+// Theme 
 export const getThemeClass = (isDark) => ({
   // Page backgrounds
   pageBg: isDark 
@@ -34,7 +34,7 @@ export const getThemeClass = (isDark) => ({
     : 'bg-gradient-to-br from-[#A7AAE1] to-[#C5B0CD] min-h-screen',
     // : 'bg-gradient-to-br from-blue-50 to-indigo-100',
   
-  // Card/Surface backgrounds
+  // Card backgrounds
   cardBg: isDark ? 'bg-slate-800' : 'bg-white',
   
   // Text colors
@@ -60,7 +60,7 @@ export const getThemeClass = (isDark) => ({
     ? 'bg-gradient-to-r from-[#574964] to-[#4D2FB2]' 
     : 'bg-white',
   
-  // Status badges
+  // Status
   statusSuccess: isDark 
     ? 'bg-green-900/30 text-green-200 border-green-700' 
     : 'bg-green-100 text-green-800 border-green-200',

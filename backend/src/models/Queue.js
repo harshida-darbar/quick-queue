@@ -75,6 +75,10 @@ const queueSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    address: {
+      type: String,
+      default: "",
+    },
     maxCapacity: {
       type: Number,
       required: true,

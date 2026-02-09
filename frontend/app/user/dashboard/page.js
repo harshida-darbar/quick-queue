@@ -12,6 +12,7 @@ import {
   FaTimes,
   FaSearch,
   FaFilter,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -576,9 +577,16 @@ function UserDashboard() {
                         </div>
                       )}
 
-                      <p className={`${theme.textSecondary} mb-4 flex-1 min-h-[3rem]`}>
+                      <p className={`${theme.textSecondary} mb-2 flex-1 min-h-[3rem]`}>
                         {service.description}
                       </p>
+
+                      {service.address && (
+                        <p className={`text-xs ${theme.textMuted} mb-4 line-clamp-2 flex items-start gap-1`}>
+                          <FaMapMarkerAlt className="mt-0.5 flex-shrink-0" size={12} />
+                          <span>{service.address}</span>
+                        </p>
+                      )}
 
                       <div className="flex justify-between items-center mb-4 mt-auto">
                         <div className={`text-sm ${theme.textSecondary}`}>
