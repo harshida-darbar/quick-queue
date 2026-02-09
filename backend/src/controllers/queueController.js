@@ -3,6 +3,7 @@ const Queue = require("../models/Queue");
 const QueueEntry = require("../models/QueueEntry");
 const Appointment = require("../models/Appointment");
 const User = require("../models/User");
+const notificationService = require("../services/notificationService");
 
 // Create a new service
 exports.createService = async (req, res) => {
@@ -491,7 +492,7 @@ exports.bookAppointment = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    service.bookedSlots.push({
+    const bookedSlot = {
       date: new Date(date),
       startTime,
       endTime,
@@ -500,9 +501,23 @@ exports.bookAppointment = async (req, res) => {
       groupSize: Number(groupSize),
       memberNames: memberNames || [],
       status: 'booked'
-    });
+    };
 
+    service.bookedSlots.push(bookedSlot);
     await service.save();
+
+    // Get the ID of the newly added slot
+    const newSlot = service.bookedSlots[service.bookedSlots.length - 1];
+
+    // Create notifications for this appointment
+    await notificationService.createAppointmentNotifications(
+      userId,
+      queueId,
+      newSlot._id,
+      new Date(date),
+      startTime,
+      service.title
+    );
 
     res.status(201).json({
       message: "Appointment booked successfully"

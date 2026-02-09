@@ -6,6 +6,7 @@ import { AuthContext } from "../context/Authcontext";
 import { useTheme } from "../context/ThemeContext";
 import { getThemeClass } from "../config/colors";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -70,6 +71,9 @@ export default function Navbar() {
                 sunColor="#FCD34D"
                 moonColor="#E5E7EB"
               />
+
+              {/* Notification Bell - Only for users (role 3) */}
+              {user.role === 3 && <NotificationBell />}
 
               {/* Language Dropdown - Hidden on small screens */}
               <div className="relative hidden sm:block">
