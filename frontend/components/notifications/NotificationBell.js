@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { FaBell } from 'react-icons/fa';
-import { getSocket } from '@/lib/socket';
 import { useAuth } from '@/app/context/Authcontext';
 import { toast } from 'react-toastify';
+import { useTheme } from '@/app/context/ThemeContext';
+import { getThemeClass } from '@/app/config/colors';
 
 export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -11,6 +12,9 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const { user } = useAuth();
   const [token, setToken] = useState(null);
+  const { isDark } = useTheme();
+  const theme = getThemeClass(isDark);
+  
 
   // Get token from localStorage
   useEffect(() => {
@@ -160,7 +164,7 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => token && setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors"
+        className={`relative p-2 ${theme.textPrimary} hover:opacity-80 transition-colors outline-none cursor-pointer`}
       >
         <FaBell size={20} />
         {unreadCount > 0 && (
@@ -171,9 +175,9 @@ export default function NotificationBell() {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto">
-          <div className="p-3 border-b flex justify-between items-center">
-            <h3 className="font-semibold">Notifications</h3>
+        <div className={`absolute right-0 mt-2 w-80 ${theme.cardBg} rounded-lg shadow-xl border ${theme.border} z-50 max-h-96 overflow-y-auto`}>
+          <div className={`p-3 border-b ${theme.border} flex justify-between items-center`}>
+            <h3 className={`font-semibold ${theme.textPrimary}`}>Notifications</h3>
             {unreadCount > 0 && (
               <button onClick={markAllAsRead} className="text-xs text-blue-600 hover:underline">
                 Mark all read
@@ -181,16 +185,20 @@ export default function NotificationBell() {
             )}
           </div>
           {notifications.length === 0 ? (
-            <p className="p-4 text-center text-gray-500">No notifications</p>
+            <p className={`p-4 text-center ${theme.textSecondary}`}>No notifications</p>
           ) : (
             notifications.map((notif) => (
               <div
                 key={notif._id || notif.id}
                 onClick={() => !notif.isRead && markAsRead(notif._id || notif.id)}
-                className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
+                className={`p-3 border-b ${theme.border} hover:bg-opacity-50 cursor-pointer ${
+                  !notif.isRead 
+                    ? isDark ? 'bg-purple-900/30' : 'bg-blue-50' 
+                    : ''
+                }`}
               >
-                <p className="text-sm">{notif.message}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className={`text-sm ${theme.textPrimary}`}>{notif.message}</p>
+                <p className={`text-xs ${theme.textSecondary} mt-1`}>
                   {new Date(notif.scheduledFor || notif.createdAt).toLocaleString()}
                 </p>
               </div>
