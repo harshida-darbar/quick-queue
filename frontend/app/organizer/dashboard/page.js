@@ -44,6 +44,11 @@ function OrganizerDashboard() {
   const theme = getThemeClass(isDark);
   const router = useRouter();
 
+  const todayLocal = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
   const editFormik = useFormik({
     initialValues: {
       title: "",
@@ -466,7 +471,7 @@ function OrganizerDashboard() {
                       <input
                         type="date"
                         id="windowDate"
-                        min={new Date().toISOString().split('T')[0]}
+                        min={todayLocal}
                         className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
@@ -491,17 +496,13 @@ function OrganizerDashboard() {
                         const date = document.getElementById('windowDate').value;
                         const startTime = document.getElementById('windowStartTime').value;
                         const endTime = document.getElementById('windowEndTime').value;
-                        
+
                         if (date && startTime && endTime) {
-                          const selectedDate = new Date(date);
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          
-                          if (selectedDate < today) {
+                          if (date < todayLocal) {
                             toast.error('Cannot select past dates. Please choose today or a future date.');
                             return;
                           }
-                          
+
                           if (startTime >= endTime) {
                             toast.error('End time must be after start time');
                             return;
@@ -726,7 +727,7 @@ function OrganizerDashboard() {
                       <input
                         type="date"
                         id="editWindowDate"
-                        min={new Date().toISOString().split('T')[0]}
+                        min={todayLocal}
                         className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
                       />
                     </div>
@@ -751,17 +752,13 @@ function OrganizerDashboard() {
                         const date = document.getElementById('editWindowDate').value;
                         const startTime = document.getElementById('editWindowStartTime').value;
                         const endTime = document.getElementById('editWindowEndTime').value;
-                        
+
                         if (date && startTime && endTime) {
-                          const selectedDate = new Date(date);
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          
-                          if (selectedDate < today) {
+                          if (date < todayLocal) {
                             toast.error('Cannot select past dates. Please choose today or a future date.');
                             return;
                           }
-                          
+
                           if (startTime >= endTime) {
                             toast.error('End time must be after start time');
                             return;

@@ -73,11 +73,11 @@ export default function Navbar() {
               />
 
               {/* Notification Bell - Only for users (role 3) */}
-              {user.role === 3 && <NotificationBell />}
+         
 
               {/* Language Dropdown - Hidden on small screens */}
               <div className="relative hidden sm:block">
-                <button
+                <button 
                   onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
                   className={`flex items-center space-x-1 rounded-lg px-2 sm:px-3 py-1 transition-colors cursor-pointer outline-none ${
                     isDark 
