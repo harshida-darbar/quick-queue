@@ -970,7 +970,7 @@ function OrganizerDashboard() {
                         {service.status === "inactive" && (
                           <button
                             onClick={() => handleStartService(service._id)}
-                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-300 cursor-pointer outline-none"
                           >
                             {t('organizer.startService')}
                           </button>

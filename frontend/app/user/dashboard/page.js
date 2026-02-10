@@ -287,17 +287,21 @@ function UserDashboard() {
           dateStr = new Date(window.date).toISOString().split("T")[0];
         }
 
+        // Ensure time is in HH:mm format (24-hour)
+        const startTime = window.startTime.length === 5 ? window.startTime : window.startTime.padStart(5, '0');
+        const endTime = window.endTime.length === 5 ? window.endTime : window.endTime.padStart(5, '0');
+
         console.log("Processing window:", {
           date: dateStr,
-          startTime: window.startTime,
-          endTime: window.endTime,
+          startTime: startTime,
+          endTime: endTime,
         }); // Debug log
 
         events.push({
           id: `availability-${window._id}`,
           title: "Available",
-          start: `${dateStr}T${window.startTime}`,
-          end: `${dateStr}T${window.endTime}`,
+          start: `${dateStr}T${startTime}:00`,
+          end: `${dateStr}T${endTime}:00`,
           display: "background",
           backgroundColor: "#E0F2FE",
           borderColor: "#0EA5E9",
@@ -313,15 +317,20 @@ function UserDashboard() {
           dateStr = new Date(slot.date).toISOString().split("T")[0];
         }
 
+        // Ensure time is in HH:mm format (24-hour)
+        const startTime = slot.startTime.length === 5 ? slot.startTime : slot.startTime.padStart(5, '0');
+        const endTime = slot.endTime.length === 5 ? slot.endTime : slot.endTime.padStart(5, '0');
+
         events.push({
           id: `booked-${slot._id}`,
           title: `Booked (${slot.groupSize} people)`,
-          start: `${dateStr}T${slot.startTime}`,
-          end: `${dateStr}T${slot.endTime}`,
-          backgroundColor: "#FEE2E2",
-          borderColor: "#EF4444",
-          textColor: "#991B1B",
-          classNames: ['dark:!bg-red-900/50', 'dark:!border-red-600', 'dark:!text-red-200']
+          start: `${dateStr}T${startTime}:00`,
+          end: `${dateStr}T${endTime}:00`,
+          backgroundColor: "#EF4444",
+          borderColor: "#DC2626",
+          textColor: "#FFFFFF",
+          display: "block",
+          classNames: ['!bg-red-500', '!border-red-600', '!text-white', 'dark:!bg-red-600', 'dark:!border-red-700']
         });
       });
 
@@ -481,7 +490,7 @@ function UserDashboard() {
               type="text"
               placeholder={t('dashboard.searchServices')}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value.trim())}
               className={`w-full pl-10 pr-4 py-3 border ${theme.border} rounded-lg focus:ring-2 focus:ring-[#4D2FB2] focus:border-transparent outline-none ${theme.input} shadow-sm`}
             />
           </div>
@@ -916,6 +925,19 @@ function UserDashboard() {
 
                   <div className={`border ${theme.border} rounded-lg overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-white'}`}>
                     <style jsx global>{`
+                      /* Booked slots styling - red background */
+                      .fc-event[class*="booked-"] {
+                        background-color: #EF4444 !important;
+                        border-color: #DC2626 !important;
+                        color: white !important;
+                      }
+                      
+                      .dark .fc-event[class*="booked-"] {
+                        background-color: #DC2626 !important;
+                        border-color: #B91C1C !important;
+                        color: white !important;
+                      }
+
                       .dark .fc-theme-standard .fc-scrollgrid {
                         border-color: #4b5563;
                       }
