@@ -73,7 +73,7 @@ export default function Navbar() {
               />
 
               {/* Notification Bell - Only for users (role 3) */}
-         
+              {user.role === 3 && <NotificationBell  className="backdrop-blur-sm"/>}
 
               {/* Language Dropdown - Hidden on small screens */}
               <div className="relative hidden sm:block">

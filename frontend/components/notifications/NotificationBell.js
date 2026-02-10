@@ -3,30 +3,77 @@ import { useState, useEffect } from 'react';
 import { FaBell } from 'react-icons/fa';
 import { getSocket } from '@/lib/socket';
 import { useAuth } from '@/app/context/Authcontext';
+import { toast } from 'react-toastify';
 
 export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const [token, setToken] = useState(null);
+
+  // Get token from localStorage
+  useEffect(() => {
+    const storage = localStorage.getItem('quick-queue');
+    if (storage) {
+      const parsed = JSON.parse(storage);
+      setToken(parsed.token);
+    }
+  }, []);
 
   useEffect(() => {
+    console.log(' NotificationBell mounted, user:', user?.id, 'token:', !!token);
+    
     if (user && token) {
       fetchUnreadCount();
       fetchNotifications();
 
-      const socket = getSocket();
-      if (socket) {
-        socket.on('notification', (notification) => {
-          setNotifications(prev => [notification, ...prev]);
-          setUnreadCount(prev => prev + 1);
+      // Listen for custom window event dispatched by socket.js
+      const handleNewNotification = (event) => {
+        const notification = event.detail;
+        console.log(' NotificationBell received:', notification);
+        
+        // Check if notification already exists to prevent duplicates
+        let isNewNotification = false;
+        setNotifications(prev => {
+          const exists = prev.some(n => 
+            (n._id && n._id === notification.id) || 
+            (n.id && n.id === notification.id)
+          );
+          
+          if (exists) {
+            console.log(' Notification already exists, skipping duplicate');
+            return prev;
+          }
+          
+          isNewNotification = true;
+          // Add new notification at the beginning with isRead: false
+          return [{ ...notification, isRead: false, _id: notification.id }, ...prev];
         });
-      }
+        
+        // Only increment count if it's actually a new notification
+        if (isNewNotification) {
+          console.log(' Incrementing unread count');
+          setUnreadCount(prev => prev + 1);
+        }
+        
+        // Show toast notification using react-toastify
+        toast.success(notification.message, {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      };
+
+      console.log(' NotificationBell: Event listener added');
+      window.addEventListener('new-notification', handleNewNotification);
 
       return () => {
-        if (socket) {
-          socket.off('notification');
-        }
+        console.log(' NotificationBell: Event listener removed');
+        window.removeEventListener('new-notification', handleNewNotification);
       };
     }
   }, [user, token]);
@@ -54,7 +101,15 @@ export default function NotificationBell() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.success) setNotifications(data.notifications);
+        if (data.success) {
+          // Only show notifications that were sent (isSent: true)
+          // And only from the last 2 hours to show only current appointment notifications
+          const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+          const recentSentNotifications = data.notifications.filter(n => 
+            n.isSent && new Date(n.createdAt) > twoHoursAgo
+          );
+          setNotifications(recentSentNotifications);
+        }
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -69,7 +124,10 @@ export default function NotificationBell() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+        // Handle both _id and id properties
+        setNotifications(prev => prev.map(n => 
+          (n._id === id || n.id === id) ? { ...n, isRead: true } : n
+        ));
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
@@ -127,13 +185,13 @@ export default function NotificationBell() {
           ) : (
             notifications.map((notif) => (
               <div
-                key={notif._id}
-                onClick={() => !notif.isRead && markAsRead(notif._id)}
+                key={notif._id || notif.id}
+                onClick={() => !notif.isRead && markAsRead(notif._id || notif.id)}
                 className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
               >
                 <p className="text-sm">{notif.message}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {new Date(notif.scheduledFor).toLocaleString()}
+                  {new Date(notif.scheduledFor || notif.createdAt).toLocaleString()}
                 </p>
               </div>
             ))

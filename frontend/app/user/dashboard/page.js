@@ -1015,7 +1015,6 @@ function UserDashboard() {
                       dayHeaderClassNames="bg-[#F8F6FF] text-[#62109F] font-medium text-sm"
                       eventBackgroundColor="#62109F"
                       eventBorderColor="#4D2FB2"
-                      selectColor="#C47BE4"
                       titleFormat={{
                         year: "numeric",
                         month: "short",

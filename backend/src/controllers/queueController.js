@@ -487,6 +487,8 @@ exports.bookAppointment = async (req, res) => {
     const { queueId, groupSize, memberNames, date, startTime, endTime } = req.body;
     const userId = req.user.id;
 
+    console.log('Booking appointment:', { queueId, date, startTime, endTime, userId });
+
     const service = await Queue.findById(queueId);
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
@@ -509,8 +511,10 @@ exports.bookAppointment = async (req, res) => {
     // Get the ID of the newly added slot
     const newSlot = service.bookedSlots[service.bookedSlots.length - 1];
 
+    console.log('Appointment booked, creating notifications...');
+
     // Create notifications for this appointment
-    await notificationService.createAppointmentNotifications(
+    const notifications = await notificationService.createAppointmentNotifications(
       userId,
       queueId,
       newSlot._id,
@@ -519,8 +523,11 @@ exports.bookAppointment = async (req, res) => {
       service.title
     );
 
+    console.log(`Created ${notifications?.length || 0} notifications`);
+
     res.status(201).json({
-      message: "Appointment booked successfully"
+      message: "Appointment booked successfully",
+      notificationsCreated: notifications?.length || 0
     });
   } catch (error) {
     console.error('bookAppointment error:', error);

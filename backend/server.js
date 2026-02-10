@@ -55,7 +55,11 @@ app.set("io", io);
 // Cron job to check and send notifications every minute
 cron.schedule("* * * * *", async () => {
   try {
-    await notificationService.checkAndSendNotifications(io);
+    console.log(`[${new Date().toLocaleTimeString()}] Checking for due notifications...`);
+    const sentCount = await notificationService.checkAndSendNotifications(io);
+    if (sentCount > 0) {
+      console.log(`Sent ${sentCount} notifications`);
+    }
   } catch (error) {
     console.error("Error in notification cron job:", error);
   }

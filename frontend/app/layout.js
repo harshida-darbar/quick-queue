@@ -13,8 +13,11 @@ import { useAuth } from "./context/Authcontext";
 function LayoutContent({ children }) {
   const { user } = useAuth();
   
+  console.log('👤 LayoutContent user:', user);
+  console.log('👤 User ID being passed:', user?.id);
+  
   return (
-    <NotificationProvider userId={user?._id}>
+    <NotificationProvider userId={user?.id}>
       <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-[#2D1B69] dark:to-[#4C1D95] text-gray-900 dark:text-white">
         {children}
       </div>

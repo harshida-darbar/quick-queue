@@ -17,7 +17,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['1_hour_before', '15_min_before', 'appointment_time'],
+    enum: ['1_hour_before', '30_min_before', '15_min_before', 'appointment_time'],
     required: true,
   },
   message: {
