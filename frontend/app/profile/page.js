@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/profile/page.js
+
 "use client";
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";

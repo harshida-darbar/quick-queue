@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/components/InfiniteScroll.js
+
 "use client";
 import { useEffect, useRef, useCallback } from 'react';
 

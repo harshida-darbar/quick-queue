@@ -1,3 +1,6 @@
+
+// quick-queue/backend/src/controllers/notificationController.js
+
 const notificationService = require('../services/notificationService');
 const Notification = require('../models/Notification');
 

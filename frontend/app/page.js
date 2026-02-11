@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/page.js
+
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function Home() {

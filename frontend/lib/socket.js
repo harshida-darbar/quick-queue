@@ -1,10 +1,12 @@
+// quick-queue/frontend/lib/socket.js
+
 import { io } from 'socket.io-client';
 
 let socket = null;
 
 export const initSocket = (userId) => {
   if (!socket) {
-    console.log('🔌 Initializing Socket.IO connection...');
+    console.log('Initializing Socket.IO connection...');
     socket = io('http://localhost:5000', {
       withCredentials: true,
       transports: ['websocket', 'polling'], // Try both transports
@@ -47,7 +49,7 @@ export const getSocket = () => socket;
 
 export const disconnectSocket = () => {
   if (socket) {
-    console.log('🔌 Disconnecting socket...');
+    console.log(' Disconnecting socket...');
     socket.disconnect();
     socket = null;
   }

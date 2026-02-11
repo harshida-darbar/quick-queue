@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/providers/I18nProvider.jsx
+
 "use client";
 
 import "../../i18n";

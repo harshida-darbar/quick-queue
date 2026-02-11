@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/organizer/service/[id]
+
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";

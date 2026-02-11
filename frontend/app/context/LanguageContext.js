@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/context/LanguageContext.js
+
 "use client";
 import { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

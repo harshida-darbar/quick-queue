@@ -1,4 +1,5 @@
 // quick-queue/backend/src/models/Queue.js
+
 const mongoose = require("mongoose");
 
 // Availability window schema - organizer sets these

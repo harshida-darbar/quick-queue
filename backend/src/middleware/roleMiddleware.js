@@ -1,4 +1,5 @@
 // backend/src/middleware/roleMiddleware.js
+
 exports.authorize = (roles) => {
   return (req, res, next) => {
     const role = Number(req.user.role ?? req.user.roleId);

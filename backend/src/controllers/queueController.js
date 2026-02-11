@@ -1,4 +1,5 @@
 // quick-queue/backend/src/controllers/queueController.js
+
 const Queue = require("../models/Queue");
 const QueueEntry = require("../models/QueueEntry");
 const Appointment = require("../models/Appointment");

@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/organizer/dashboard/page.js
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";

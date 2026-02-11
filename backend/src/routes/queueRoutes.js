@@ -1,3 +1,5 @@
+// quick-queue/backend/src/routes/queueRoutes.js
+
 const express = require("express");
 const router = express.Router();
 

@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/organizer/appointments/[id]
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";

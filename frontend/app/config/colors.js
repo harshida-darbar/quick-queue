@@ -1,3 +1,5 @@
+// quick-queue/frontend/app/config/colors.js
+
 // Theme Configuration - Change colors here to update entire app
 export const themeConfig = {
   light: {
