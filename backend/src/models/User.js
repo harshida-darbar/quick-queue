@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
     trim: true
+  },
+  fcmToken: {
+    type: String,
+    default: null
   }
 }, { timestamps: true });
 

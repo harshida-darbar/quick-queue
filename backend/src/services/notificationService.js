@@ -1,5 +1,30 @@
+// notificationService.js
+
 const Queue = require('../models/Queue');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const admin = require('../config/firebaseAdmin');
+
+// Send FCM push notification
+const sendFCMNotification = async (fcmToken, message) => {
+  try {
+    await admin.messaging().send({
+      token: fcmToken,
+      notification: {
+        title: 'Quick Queue',
+        body: message,
+      },
+      webpush: {
+        fcmOptions: {
+          link: 'http://localhost:3000/user/appointments'
+        }
+      }
+    });
+    console.log('✅ FCM notification sent');
+  } catch (error) {
+    console.error('❌ Error sending FCM notification:', error);
+  }
+};
 
 // Create notifications when appointment is booked - ONLY 30 minutes before
 exports.createAppointmentNotifications = async (userId, queueId, bookedSlotId, appointmentDate, startTime, serviceTitle) => {
@@ -61,20 +86,32 @@ exports.checkAndSendNotifications = async (io) => {
     const dueNotifications = await Notification.find({
       scheduledFor: { $lte: now },
       isSent: false,
-    }).populate('user', 'name email').populate('queue', 'title serviceType');
+    }).populate('user', 'name email fcmToken').populate('queue', 'title serviceType');
 
     for (const notification of dueNotifications) {
-      if (io && notification.user) {
+      if (notification.user) {
         const userId = notification.user._id.toString();
         const roomName = userId;
         
-        io.to(roomName).emit('notification', {
-          id: notification._id,
-          message: notification.message,
-          type: notification.type,
-          queue: notification.queue,
-          createdAt: notification.createdAt,
-        });
+        // Check if user is online (has active socket connection)
+        const socketsInRoom = io ? await io.in(roomName).fetchSockets() : [];
+        const isUserOnline = socketsInRoom.length > 0;
+        
+        if (isUserOnline && io) {
+          // User is online - send via Socket.IO
+          io.to(roomName).emit('notification', {
+            id: notification._id,
+            message: notification.message,
+            type: notification.type,
+            queue: notification.queue,
+            createdAt: notification.createdAt,
+          });
+          console.log(`📱 Socket.IO notification sent to ${userId}`);
+        } else if (notification.user.fcmToken) {
+          // User is offline - send via FCM push
+          await sendFCMNotification(notification.user.fcmToken, notification.message);
+          console.log(`🔔 FCM push notification sent to ${userId}`);
+        }
       }
 
       notification.isSent = true;

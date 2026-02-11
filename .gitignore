@@ -6,6 +6,9 @@ frontend/node_modules/
 backend/.env
 frontend/.env
 
+# Firebase service account key
+backend/src/config/serviceAccountKey.json
+
 frontend/.next/
 
 .vscode/

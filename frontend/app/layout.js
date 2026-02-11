@@ -8,6 +8,7 @@ import ThemeProvider from "./providers/ThemeProvider";
 import { AuthProvider } from "./context/Authcontext";
 import { LanguageProvider } from "./context/LanguageContext";
 import NotificationProvider from "@/components/notifications/NotificationProvider";
+import FirebaseToken from "@/components/notifications/FirebaseToken";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "./context/Authcontext";
@@ -20,6 +21,7 @@ function LayoutContent({ children }) {
   
   return (
     <NotificationProvider userId={user?.id}>
+      <FirebaseToken />
       <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-[#2D1B69] dark:to-[#4C1D95] text-gray-900 dark:text-white">
         {children}
       </div>

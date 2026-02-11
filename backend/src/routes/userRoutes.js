@@ -1,14 +1,9 @@
-// quick-queue/backend/src/routes/userRoutes.js
-
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
+const userController = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.get("/profile", protect, (req, res) => {
-  res.json({
-    message: "Access granted",
-    user: req.user
-  });
-});
+// Save FCM token
+router.post('/save-fcm-token', protect, userController.saveFcmToken);
 
 module.exports = router;
