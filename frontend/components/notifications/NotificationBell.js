@@ -28,23 +28,13 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    console.log(
-      " NotificationBell mounted, user:",
-      user?.id,
-      "token:",
-      !!token,
-    );
-
     if (user && token) {
       fetchUnreadCount();
       fetchNotifications();
 
-      // Listen for custom window event dispatched by socket.js
       const handleNewNotification = (event) => {
         const notification = event.detail;
-        console.log(" NotificationBell received:", notification);
 
-        // Check if notification already exists to prevent duplicates
         let isNewNotification = false;
         setNotifications((prev) => {
           const exists = prev.some(
@@ -54,25 +44,20 @@ export default function NotificationBell() {
           );
 
           if (exists) {
-            console.log(" Notification already exists, skipping duplicate");
             return prev;
           }
 
           isNewNotification = true;
-          // Add new notification at the beginning with isRead: false
           return [
             { ...notification, isRead: false, _id: notification.id },
             ...prev,
           ];
         });
 
-        // Only increment count if it's actually a new notification
         if (isNewNotification) {
-          console.log(" Incrementing unread count");
           setUnreadCount((prev) => prev + 1);
         }
 
-        // Show toast notification using react-toastify
         toast.success(notification.message, {
           position: "top-right",
           autoClose: 5000,
@@ -81,13 +66,11 @@ export default function NotificationBell() {
           pauseOnHover: true,
           draggable: true,
         });
-      };
+      };  
 
-      console.log(" NotificationBell: Event listener added");
       window.addEventListener("new-notification", handleNewNotification);
 
       return () => {
-        console.log(" NotificationBell: Event listener removed");
         window.removeEventListener("new-notification", handleNewNotification);
       };
     }
