@@ -23,6 +23,13 @@ export default function FirebaseToken() {
         return;
       }
 
+      // Register service worker first
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log("Service worker registered");
+        await navigator.serviceWorker.ready;
+      }
+
       console.log("Requesting notification permission...");
 
       const permission = await Notification.requestPermission();
@@ -40,7 +47,6 @@ export default function FirebaseToken() {
 
       if (token) {
         console.log("FCM TOKEN:", token);
-
         // Save token to backend
         await saveTokenToServer(token);
       } else {

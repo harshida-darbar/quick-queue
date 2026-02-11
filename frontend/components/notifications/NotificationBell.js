@@ -75,7 +75,6 @@ export default function NotificationBell() {
       };
     }
   }, [user, token]);
-  // hello guys how are youuuu??I'm feeling good 
 
   const fetchUnreadCount = async () => {
     if (!token) return;
