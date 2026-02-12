@@ -27,7 +27,7 @@ const sendFCMNotification = async (fcmToken, message) => {
     });
     return result;
   } catch (error) {
-    console.error('❌ FCM Error:', error.code, error.message);
+    console.error(' FCM Error:', error.code, error.message);
     throw error;
   }
 };
@@ -62,6 +62,7 @@ exports.createAppointmentNotifications = async (userId, queueId, bookedSlotId, a
     
     // Only 30 minutes before notification
     const thirtyMinBefore = new Date(appointmentDateTime.getTime() - 30 * 60 * 1000);
+    
     if (thirtyMinBefore > now) {
       notifications.push({
         user: userId,
@@ -89,13 +90,15 @@ exports.checkAndSendNotifications = async (io) => {
   try {
     const now = new Date();
     
+
+    
     const dueNotifications = await Notification.find({
       scheduledFor: { $lte: now },
       isSent: false,
     }).populate('user', 'name email fcmToken').populate('queue', 'title serviceType');
 
     if (dueNotifications.length > 0) {
-      console.log(`\n🔔 Found ${dueNotifications.length} due notification(s)`);
+      console.log(`Sending ${dueNotifications.length} notification(s)`);
     }
 
     for (const notification of dueNotifications) {
@@ -107,10 +110,6 @@ exports.checkAndSendNotifications = async (io) => {
         const socketsInRoom = io ? await io.in(roomName).fetchSockets() : [];
         const isUserOnline = socketsInRoom.length > 0;
         
-        console.log(`\n👤 User: ${notification.user.name} (${userId})`);
-        console.log(`   Online: ${isUserOnline}`);
-        console.log(`   Has FCM Token: ${!!notification.user.fcmToken}`);
-        console.log(`   Message: ${notification.message}`);
         
         if (isUserOnline && io) {
           // User is online - send via Socket.IO
@@ -121,14 +120,11 @@ exports.checkAndSendNotifications = async (io) => {
             queue: notification.queue,
             createdAt: notification.createdAt,
           });
-          console.log(`   ✅ Sent via Socket.IO`);
+          console.log(`✅ Sent to ${notification.user.name} via Socket.IO`);
         } else if (notification.user.fcmToken) {
           // User is offline - send via FCM push
-          console.log(`   📤 Attempting FCM push...`);
           await sendFCMNotification(notification.user.fcmToken, notification.message);
-          console.log(`   ✅ FCM push sent`);
-        } else {
-          console.log(`   ⚠️ No delivery method available`);
+          console.log(`✅ Sent to ${notification.user.name} via FCM`);
         }
       }
 
