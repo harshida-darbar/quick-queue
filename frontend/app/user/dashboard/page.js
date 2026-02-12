@@ -278,13 +278,14 @@ function UserDashboard() {
 
       // Convert to calendar events
       const events = [];
+      const now = new Date();
 
-      // Add availability windows as background events
+      // Add availability windows as background events - split into 30-min slots
       availabilityWindows.forEach((window) => {
-        // Parse date properly - window.date might be a Date object or string
+        // Parse date properly
         let dateStr;
         if (typeof window.date === "string") {
-          dateStr = window.date.split("T")[0]; // Get YYYY-MM-DD part
+          dateStr = window.date.split("T")[0];
         } else {
           dateStr = new Date(window.date).toISOString().split("T")[0];
         }
@@ -293,20 +294,39 @@ function UserDashboard() {
         const startTime = window.startTime.length === 5 ? window.startTime : window.startTime.padStart(5, '0');
         const endTime = window.endTime.length === 5 ? window.endTime : window.endTime.padStart(5, '0');
 
+        const windowStart = new Date(`${dateStr}T${startTime}:00`);
+        const windowEnd = new Date(`${dateStr}T${endTime}:00`);
+
+        // Generate 30-minute slots within the window
+        let currentSlotStart = new Date(windowStart);
+        
+        while (currentSlotStart < windowEnd) {
+          const currentSlotEnd = new Date(currentSlotStart.getTime() + 30 * 60000);
+          
+          // Only show future slots
+          if (currentSlotEnd > now) {
+            const slotStartTime = currentSlotStart.toTimeString().slice(0, 5);
+            const slotEndTime = currentSlotEnd.toTimeString().slice(0, 5);
+            
+            events.push({
+              id: `availability-${window._id}-${slotStartTime}`,
+              title: "Available",
+              start: currentSlotStart.toISOString(),
+              end: currentSlotEnd.toISOString(),
+              display: "background",
+              backgroundColor: "#E0F2FE",
+              borderColor: "#0EA5E9",
+            });
+          }
+          
+          currentSlotStart = currentSlotEnd;
+        }
+
         console.log("Processing window:", {
           date: dateStr,
           startTime: startTime,
           endTime: endTime,
-        }); // Debug log
-
-        events.push({
-          id: `availability-${window._id}`,
-          title: "Available",
-          start: `${dateStr}T${startTime}:00`,
-          end: `${dateStr}T${endTime}:00`,
-          display: "background",
-          backgroundColor: "#E0F2FE",
-          borderColor: "#0EA5E9",
+          slotsGenerated: Math.floor((windowEnd - windowStart) / (30 * 60000))
         });
       });
 
@@ -323,9 +343,17 @@ function UserDashboard() {
         const startTime = slot.startTime.length === 5 ? slot.startTime : slot.startTime.padStart(5, '0');
         const endTime = slot.endTime.length === 5 ? slot.endTime : slot.endTime.padStart(5, '0');
 
+        console.log("Booked slot:", {
+          date: dateStr,
+          startTime: startTime,
+          endTime: endTime,
+          groupSize: slot.groupSize,
+          bookedBy: slot.bookedUserName
+        });
+
         events.push({
           id: `booked-${slot._id}`,
-          title: `Booked (${slot.groupSize} people)`,
+          title: `${startTime} - ${endTime} - Booked`,
           start: `${dateStr}T${startTime}:00`,
           end: `${dateStr}T${endTime}:00`,
           backgroundColor: "#EF4444",
@@ -349,6 +377,13 @@ function UserDashboard() {
   const handleDateSelect = (selectInfo) => {
     const start = new Date(selectInfo.start);
     const end = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+    const now = new Date();
+
+    // Check if selected time is in the past
+    if (start < now) {
+      toast.error("Cannot book appointments in the past. Please select a future time slot.");
+      return;
+    }
 
     // Check if selected time is within availability window
     const isAvailable = calendarEvents.some(
@@ -1047,27 +1082,29 @@ function UserDashboard() {
                       />
                       {t('forms.availableTimeWindows')}
                     </h4>
-                    {calendarEvents.filter(
-                      (event) => event.display === "background",
-                    ).length > 0 ? (
-                      <div className="space-y-2">
-                        {calendarEvents
-                          .filter((event) => event.display === "background")
-                          .map((event, index) => {
-                            const startDateTime = event.start;
-                            const endDateTime = event.end;
-                            const datePart = startDateTime.split("T")[0];
-                            const startTimePart = startDateTime.split("T")[1];
-                            const endTimePart = endDateTime.split("T")[1];
+                    {(() => {
+                      // Filter to get only truly available slots (not overlapping with booked slots)
+                      const availableSlots = calendarEvents
+                        .filter((event) => event.display === "background")
+                        .filter((availableEvent) => {
+                          // Check if this slot overlaps with any booked slot
+                          const hasConflict = calendarEvents.some(
+                            (bookedEvent) =>
+                              bookedEvent.id.startsWith("booked-") &&
+                              new Date(bookedEvent.start) < new Date(availableEvent.end) &&
+                              new Date(bookedEvent.end) > new Date(availableEvent.start)
+                          );
+                          return !hasConflict; // Only include if no conflict
+                        });
 
-                            const [year, month, day] = datePart.split("-");
-                            const dateObj = new Date(
-                              parseInt(year),
-                              parseInt(month) - 1,
-                              parseInt(day),
-                            );
+                      return availableSlots.length > 0 ? (
+                        <div className="space-y-2">
+                          {availableSlots.map((event, index) => {
+                            // Parse the full ISO datetime to get local time
+                            const startDate = new Date(event.start);
+                            const endDate = new Date(event.end);
 
-                            const formattedDate = dateObj.toLocaleDateString(
+                            const formattedDate = startDate.toLocaleDateString(
                               "en-US",
                               {
                                 weekday: "short",
@@ -1076,28 +1113,17 @@ function UserDashboard() {
                               },
                             );
 
-                            const formatTime = (timeStr) => {
-                              const [hours, minutes] = timeStr.split(":");
-                              const hour24 = parseInt(hours);
-                              const hour12 =
-                                hour24 === 0
-                                  ? 12
-                                  : hour24 > 12
-                                    ? hour24 - 12
-                                    : hour24;
-                              const ampm = hour24 >= 12 ? "PM" : "AM";
-                              return `${hour12}:${minutes} ${ampm}`;
+                            const formatTime = (date) => {
+                              const hours = date.getHours();
+                              const minutes = date.getMinutes();
+                              const hour12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+                              const ampm = hours >= 12 ? "PM" : "AM";
+                              const minutesStr = minutes.toString().padStart(2, '0');
+                              return `${hour12}:${minutesStr} ${ampm}`;
                             };
 
-                            const startTime = formatTime(startTimePart);
-                            const endTime = formatTime(endTimePart);
-
-                            // Check if this window has any booked slots
-                            const hasBookedSlots = calendarEvents.some(
-                              (bookedEvent) =>
-                                bookedEvent.id.startsWith("booked-") &&
-                                bookedEvent.start.split("T")[0] === datePart,
-                            );
+                            const startTime = formatTime(startDate);
+                            const endTime = formatTime(endDate);
 
                             return (
                               <div
@@ -1115,25 +1141,24 @@ function UserDashboard() {
                                     </p>
                                   </div>
                                 </div>
-                                <div className={`text-xs font-medium ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
-                                  {hasBookedSlots
-                                    ? t('forms.booked')
-                                    : t('forms.available')}
+                                <div className={`text-xs font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                                  {t('forms.available')}
                                 </div>
                               </div>
                             );
                           })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-3">
-                        <p className={`${theme.textSecondary} text-sm`}>
-                          {t('organizer.noAvailabilityWindows')}
-                        </p>
-                        <p className={`text-xs ${theme.textMuted} mt-1`}>
-                          {t('organizer.pleaseContact')}
-                        </p>
-                      </div>
-                    )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-3">
+                          <p className={`${theme.textSecondary} text-sm`}>
+                            {t('organizer.noAvailabilityWindows')}
+                          </p>
+                          <p className={`text-xs ${theme.textMuted} mt-1`}>
+                            {t('organizer.pleaseContact')}
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className={`mt-3 text-xs ${theme.textSecondary}`}>

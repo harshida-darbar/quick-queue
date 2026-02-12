@@ -123,9 +123,10 @@ exports.checkAndSendNotifications = async (io) => {
           });
           console.log(`   ✅ Sent via Socket.IO`);
         } else if (notification.user.fcmToken) {
-          // User is offline - send via FCM push (TEMPORARILY DISABLED - FIX SYSTEM TIME FIRST)
-          console.log(`   ⚠️ FCM disabled - fix Windows system time sync first`);
-          // await sendFCMNotification(notification.user.fcmToken, notification.message);
+          // User is offline - send via FCM push
+          console.log(`   📤 Attempting FCM push...`);
+          await sendFCMNotification(notification.user.fcmToken, notification.message);
+          console.log(`   ✅ FCM push sent`);
         } else {
           console.log(`   ⚠️ No delivery method available`);
         }
