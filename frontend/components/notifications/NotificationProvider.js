@@ -1,3 +1,5 @@
+// quick-queue/frontend/components/notifications/NotificationProvider.js
+
 'use client';
 import { useEffect } from 'react';
 import { initSocket, disconnectSocket } from '@/lib/socket';

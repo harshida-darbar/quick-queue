@@ -1,3 +1,5 @@
+// quick-queue/frontend/components/notifications/FirebaseToken.jsx
+
 "use client";
 
 import { useEffect } from "react";

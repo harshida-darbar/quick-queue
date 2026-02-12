@@ -1,4 +1,4 @@
-// quick-queue/frontend/app/organizer/service/[id]
+// quick-queue/frontend/app/organizer/service/[id]/page.js
 
 "use client";
 import { useState, useEffect, use } from "react";
