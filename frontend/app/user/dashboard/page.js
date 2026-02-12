@@ -280,7 +280,7 @@ function UserDashboard() {
       const events = [];
       const now = new Date();
 
-      // Add availability windows as background events - split into 30-min slots
+      // Add availability windows as full background blocks (not split into slots)
       availabilityWindows.forEach((window) => {
         // Parse date properly
         let dateStr;
@@ -297,37 +297,29 @@ function UserDashboard() {
         const windowStart = new Date(`${dateStr}T${startTime}:00`);
         const windowEnd = new Date(`${dateStr}T${endTime}:00`);
 
-        // Generate 30-minute slots within the window
-        let currentSlotStart = new Date(windowStart);
-        
-        while (currentSlotStart < windowEnd) {
-          const currentSlotEnd = new Date(currentSlotStart.getTime() + 30 * 60000);
+        // Only show if window end is in the future
+        if (windowEnd > now) {
+          // Adjust start time if it's in the past
+          const displayStart = windowStart < now ? now : windowStart;
           
-          // Only show future slots
-          if (currentSlotEnd > now) {
-            const slotStartTime = currentSlotStart.toTimeString().slice(0, 5);
-            const slotEndTime = currentSlotEnd.toTimeString().slice(0, 5);
-            
-            events.push({
-              id: `availability-${window._id}-${slotStartTime}`,
-              title: "Available",
-              start: currentSlotStart.toISOString(),
-              end: currentSlotEnd.toISOString(),
-              display: "background",
-              backgroundColor: "#E0F2FE",
-              borderColor: "#0EA5E9",
-            });
-          }
-          
-          currentSlotStart = currentSlotEnd;
-        }
+          console.log("Processing window:", {
+            date: dateStr,
+            startTime: startTime,
+            endTime: endTime,
+            displayStart: displayStart.toISOString(),
+            displayEnd: windowEnd.toISOString()
+          });
 
-        console.log("Processing window:", {
-          date: dateStr,
-          startTime: startTime,
-          endTime: endTime,
-          slotsGenerated: Math.floor((windowEnd - windowStart) / (30 * 60000))
-        });
+          events.push({
+            id: `availability-${window._id}`,
+            title: "Available",
+            start: displayStart.toISOString(),
+            end: windowEnd.toISOString(),
+            display: "background",
+            backgroundColor: "#E0F2FE",
+            borderColor: "#0EA5E9",
+          });
+        }
       });
 
       // Add booked slots as events
@@ -343,6 +335,18 @@ function UserDashboard() {
         const startTime = slot.startTime.length === 5 ? slot.startTime : slot.startTime.padStart(5, '0');
         const endTime = slot.endTime.length === 5 ? slot.endTime : slot.endTime.padStart(5, '0');
 
+        // Convert to 12-hour format
+        const format12Hour = (timeStr) => {
+          const [hours, minutes] = timeStr.split(':');
+          const hour = parseInt(hours);
+          const ampm = hour >= 12 ? 'PM' : 'AM';
+          const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          return `${hour12}:${minutes} ${ampm}`;
+        };
+
+        const startTime12 = format12Hour(startTime);
+        const endTime12 = format12Hour(endTime);
+
         console.log("Booked slot:", {
           date: dateStr,
           startTime: startTime,
@@ -353,14 +357,15 @@ function UserDashboard() {
 
         events.push({
           id: `booked-${slot._id}`,
-          title: `${startTime} - ${endTime} - Booked`,
+          title: `${startTime12} - ${endTime12}`,
           start: `${dateStr}T${startTime}:00`,
           end: `${dateStr}T${endTime}:00`,
           backgroundColor: "#EF4444",
           borderColor: "#DC2626",
           textColor: "#FFFFFF",
           display: "block",
-          classNames: ['!bg-red-500', '!border-red-600', '!text-white', 'dark:!bg-red-600', 'dark:!border-red-700']
+          classNames: ['booked-event'],
+          displayEventTime: false
         });
       });
 
@@ -413,16 +418,47 @@ function UserDashboard() {
       return;
     }
 
+    const startTimeStr = start.toTimeString().slice(0, 5);
+    const endTimeStr = end.toTimeString().slice(0, 5);
+
+    // Convert to 12-hour format
+    const format12Hour = (timeStr) => {
+      const [hours, minutes] = timeStr.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      return `${hour12}:${minutes} ${ampm}`;
+    };
+
+    const startTime12 = format12Hour(startTimeStr);
+    const endTime12 = format12Hour(endTimeStr);
+
     setSelectedCalendarSlot({
       start: start.toISOString(),
       end: end.toISOString(),
-      startTime: start.toTimeString().slice(0, 5),
-      endTime: end.toTimeString().slice(0, 5),
+      startTime: startTimeStr,
+      endTime: endTimeStr,
       date: start.toISOString().split("T")[0],
     });
 
+    // Remove any existing selected event and add new one
+    const updatedEvents = calendarEvents.filter(event => event.id !== 'selected-slot');
+    updatedEvents.push({
+      id: 'selected-slot',
+      title: `${startTime12} - ${endTime12}`,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      backgroundColor: '#7c3aed',
+      borderColor: '#6d28d9',
+      textColor: '#ffffff',
+      display: 'block',
+      classNames: ['selected-event'],
+      displayEventTime: false
+    });
+    setCalendarEvents(updatedEvents);
+
     toast.success(
-      `Selected: ${start.toTimeString().slice(0, 5)} - ${end.toTimeString().slice(0, 5)}`,
+      `Selected: ${startTime12} - ${endTime12}`,
     );
   };
 
@@ -963,15 +999,75 @@ function UserDashboard() {
                   <div className={`border ${theme.border} rounded-lg overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-white'}`}>
                     <style jsx global>{`
                       /* Booked slots styling - red background */
-                      .fc-event[class*="booked-"] {
+                      .fc-event.booked-event {
                         background-color: #EF4444 !important;
                         border-color: #DC2626 !important;
                         color: white !important;
                       }
                       
-                      .dark .fc-event[class*="booked-"] {
+                      .fc-event.booked-event .fc-event-time {
+                        display: none !important;
+                      }
+                      
+                      .fc-event.booked-event .fc-event-title {
+                        font-size: 11px !important;
+                        font-weight: 700 !important;
+                        color: white !important;
+                        text-align: center !important;
+                        white-space: nowrap !important;
+                        overflow: visible !important;
+                        line-height: 1.2 !important;
+                      }
+                      
+                      .fc-event.booked-event .fc-event-main {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        height: 100% !important;
+                        white-space: nowrap !important;
+                        padding: 2px 4px !important;
+                      }
+                      
+                      .dark .fc-event.booked-event {
                         background-color: #DC2626 !important;
                         border-color: #B91C1C !important;
+                        color: white !important;
+                      }
+
+                      /* Selected slot styling - purple with white text */
+                      .fc-event.selected-event {
+                        background-color: #7c3aed !important;
+                        border-color: #6d28d9 !important;
+                        color: white !important;
+                        border-width: 2px !important;
+                      }
+                      
+                      .fc-event.selected-event .fc-event-time {
+                        display: none !important;
+                      }
+                      
+                      .fc-event.selected-event .fc-event-title {
+                        font-size: 11px !important;
+                        font-weight: 700 !important;
+                        color: white !important;
+                        text-align: center !important;
+                        white-space: nowrap !important;
+                        overflow: visible !important;
+                        line-height: 1.2 !important;
+                      }
+                      
+                      .fc-event.selected-event .fc-event-main {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        height: 100% !important;
+                        white-space: nowrap !important;
+                        padding: 2px 4px !important;
+                      }
+                      
+                      .dark .fc-event.selected-event {
+                        background-color: #7c3aed !important;
+                        border-color: #6d28d9 !important;
                         color: white !important;
                       }
 
@@ -1014,6 +1110,29 @@ function UserDashboard() {
                         border-color: #dc2626 !important;
                         color: #fecaca !important;
                       }
+                      
+                      /* Event text styling */
+                      .fc-timegrid-event {
+                        font-size: 14px !important;
+                        font-weight: 700 !important;
+                        padding: 6px 8px !important;
+                      }
+                      .fc-event-time {
+                        font-size: 13px !important;
+                        font-weight: 700 !important;
+                        display: block !important;
+                        color: white !important;
+                      }
+                      .fc-event-title {
+                        font-size: 14px !important;
+                        font-weight: 700 !important;
+                        display: block !important;
+                        margin-top: 2px !important;
+                        color: white !important;
+                      }
+                      .fc-event-main {
+                        color: white !important;
+                      }
                     `}</style>
                     <FullCalendar
                       plugins={[
@@ -1031,11 +1150,11 @@ function UserDashboard() {
                       selectable={true}
                       selectMirror={true}
                       select={handleDateSelect}
-                      height={350}
+                      height={500}
                       slotMinTime="08:00:00"
                       slotMaxTime="20:00:00"
-                      slotDuration="00:30:00"
-                      snapDuration="00:30:00"
+                      slotDuration="00:15:00"
+                      snapDuration="00:05:00"
                       allDaySlot={false}
                       eventDisplay="block"
                       eventTextColor="#ffffff"
@@ -1064,6 +1183,12 @@ function UserDashboard() {
                         omitZeroMinute: false,
                         meridiem: "short",
                       }}
+                      eventTimeFormat={{
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        meridiem: false,
+                        hour12: false
+                      }}
                       scrollTime="09:00:00"
                       scrollTimeReset={false}
                       nowIndicator={true}
@@ -1083,26 +1208,49 @@ function UserDashboard() {
                       {t('forms.availableTimeWindows')}
                     </h4>
                     {(() => {
-                      // Filter to get only truly available slots (not overlapping with booked slots)
-                      const availableSlots = calendarEvents
+                      // Generate 30-minute slots from availability windows
+                      const availableSlots = [];
+                      const now = new Date();
+                      
+                      calendarEvents
                         .filter((event) => event.display === "background")
-                        .filter((availableEvent) => {
-                          // Check if this slot overlaps with any booked slot
-                          const hasConflict = calendarEvents.some(
-                            (bookedEvent) =>
-                              bookedEvent.id.startsWith("booked-") &&
-                              new Date(bookedEvent.start) < new Date(availableEvent.end) &&
-                              new Date(bookedEvent.end) > new Date(availableEvent.start)
-                          );
-                          return !hasConflict; // Only include if no conflict
+                        .forEach((window) => {
+                          const windowStart = new Date(window.start);
+                          const windowEnd = new Date(window.end);
+                          
+                          // Generate 30-min slots
+                          let currentSlotStart = new Date(windowStart);
+                          
+                          while (currentSlotStart < windowEnd) {
+                            const currentSlotEnd = new Date(currentSlotStart.getTime() + 30 * 60000);
+                            
+                            // Only include future slots
+                            if (currentSlotEnd > now) {
+                              // Check if this slot overlaps with any booked slot
+                              const hasConflict = calendarEvents.some(
+                                (bookedEvent) =>
+                                  bookedEvent.id.startsWith("booked-") &&
+                                  new Date(bookedEvent.start) < currentSlotEnd &&
+                                  new Date(bookedEvent.end) > currentSlotStart
+                              );
+                              
+                              if (!hasConflict) {
+                                availableSlots.push({
+                                  start: currentSlotStart,
+                                  end: currentSlotEnd
+                                });
+                              }
+                            }
+                            
+                            currentSlotStart = currentSlotEnd;
+                          }
                         });
 
                       return availableSlots.length > 0 ? (
                         <div className="space-y-2">
-                          {availableSlots.map((event, index) => {
-                            // Parse the full ISO datetime to get local time
-                            const startDate = new Date(event.start);
-                            const endDate = new Date(event.end);
+                          {availableSlots.map((slot, index) => {
+                            const startDate = slot.start;
+                            const endDate = slot.end;
 
                             const formattedDate = startDate.toLocaleDateString(
                               "en-US",
