@@ -220,7 +220,7 @@ exports.joinService = async (req, res) => {
   try {
     const serviceId = req.params.id;
     const userId = req.user.id;
-    const { groupSize = 1, memberNames = [] } = req.body;
+    const { groupSize = 1, memberNames = [], paymentAmount, paymentStatus, paymentMethod } = req.body;
 
     // Validate group size
     if (groupSize < 1 || groupSize > 20) {
@@ -288,6 +288,10 @@ exports.joinService = async (req, res) => {
       groupSize,
       memberNames: memberNames.map(name => name.trim()),
       status: initialStatus,
+      paymentAmount: paymentAmount || 0,
+      paymentStatus: paymentStatus || 'completed',
+      paymentMethod: paymentMethod || 'dummy',
+      paymentDate: new Date(),
     });
 
     res.status(201).json({
@@ -296,6 +300,7 @@ exports.joinService = async (req, res) => {
       groupSize,
       memberNames: entry.memberNames,
       status: initialStatus,
+      queueEntry: entry,
     });
   } catch (error) {
     console.error(error);
@@ -487,7 +492,7 @@ exports.getServiceAvailability = async (req, res) => {
 // Book appointment (simplified version)
 exports.bookAppointment = async (req, res) => {
   try {
-    const { queueId, groupSize, memberNames, date, startTime, endTime } = req.body;
+    const { queueId, groupSize, memberNames, date, startTime, endTime, paymentAmount, paymentStatus, paymentMethod } = req.body;
     const userId = req.user.id;
 
     console.log('Booking appointment:', { queueId, date, startTime, endTime, userId });
@@ -514,6 +519,22 @@ exports.bookAppointment = async (req, res) => {
     // Get the ID of the newly added slot
     const newSlot = service.bookedSlots[service.bookedSlots.length - 1];
 
+    // Create appointment record with payment details
+    const appointment = await Appointment.create({
+      queue: queueId,
+      user: userId,
+      date: new Date(date),
+      startTime,
+      endTime,
+      groupSize: Number(groupSize),
+      memberNames: memberNames || [],
+      status: 'confirmed',
+      paymentAmount: paymentAmount || 0,
+      paymentStatus: paymentStatus || 'completed',
+      paymentMethod: paymentMethod || 'dummy',
+      paymentDate: new Date(),
+    });
+
     console.log('Appointment booked, creating notifications...');
 
     // Create notifications for this appointment
@@ -530,6 +551,7 @@ exports.bookAppointment = async (req, res) => {
 
     res.status(201).json({
       message: "Appointment booked successfully",
+      appointment: appointment,
       notificationsCreated: notifications?.length || 0
     });
   } catch (error) {
@@ -569,6 +591,109 @@ exports.getServiceAppointments = async (req, res) => {
       .sort({ date: 1, startTime: 1 });
 
     res.json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get single appointment by ID
+exports.getAppointmentById = async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+    const userId = req.user.id;
+    
+    // Try to find as Appointment document first
+    let appointment = await Appointment.findById(appointmentId)
+      .populate('queue', 'title address serviceType price')
+      .populate('user', 'name email');
+    
+    if (appointment) {
+      // Check if user owns this appointment
+      if (appointment.user._id.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this appointment" });
+      }
+      return res.json(appointment);
+    }
+    
+    // If not found as Appointment, try QueueEntry
+    const queueEntry = await QueueEntry.findById(appointmentId)
+      .populate('queue', 'title address serviceType price')
+      .populate('user', 'name email');
+    
+    if (queueEntry) {
+      // Check if user owns this queue entry
+      if (queueEntry.user._id.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this entry" });
+      }
+      
+      // Transform QueueEntry to look like an appointment for consistent frontend handling
+      const transformedEntry = {
+        _id: queueEntry._id,
+        queue: queueEntry.queue,
+        user: queueEntry.user,
+        groupSize: queueEntry.groupSize,
+        memberNames: queueEntry.memberNames,
+        status: queueEntry.status,
+        tokenNumber: queueEntry.tokenNumber,
+        paymentAmount: queueEntry.paymentAmount,
+        paymentStatus: queueEntry.paymentStatus,
+        paymentMethod: queueEntry.paymentMethod,
+        paymentDate: queueEntry.paymentDate,
+        createdAt: queueEntry.createdAt,
+        type: 'queue', // Indicate this is a queue entry, not appointment
+      };
+      
+      return res.json(transformedEntry);
+    }
+    
+    // If not found in either, search in Queue.bookedSlots (subdocuments)
+    const service = await Queue.findOne({
+      'bookedSlots._id': appointmentId
+    }).populate('organizer', 'name email');
+    
+    if (service) {
+      const slot = service.bookedSlots.id(appointmentId);
+      
+      if (!slot) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      // Check if user owns this slot
+      if (slot.bookedBy.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this appointment" });
+      }
+      
+      // Transform slot to appointment format
+      const appointmentData = {
+        _id: slot._id,
+        date: slot.date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        groupSize: slot.groupSize,
+        memberNames: slot.memberNames,
+        status: slot.status || 'confirmed',
+        paymentAmount: service.price * slot.groupSize || 0,
+        paymentStatus: 'completed',
+        paymentMethod: 'dummy',
+        queue: {
+          _id: service._id,
+          title: service.title,
+          address: service.address,
+          serviceType: service.serviceType,
+          price: service.price,
+        },
+        user: {
+          _id: userId,
+          name: slot.bookedUserName,
+        },
+        type: 'slot', // Indicate this is from bookedSlots
+      };
+      
+      return res.json(appointmentData);
+    }
+    
+    return res.status(404).json({ message: "Appointment or queue entry not found" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

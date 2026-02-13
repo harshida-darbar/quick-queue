@@ -72,7 +72,7 @@ function MyAppointments() {
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/user/dashboard')}
             className={`mr-4 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
           >
             <IoArrowBack size={20} />
@@ -100,7 +100,8 @@ function MyAppointments() {
             {appointments.map((appointment) => (
               <div
                 key={appointment._id}
-                className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6`}
+                onClick={() => router.push(`/user/appointments/${appointment._id}`)}
+                className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 cursor-pointer transform hover:scale-105`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className={`text-lg font-semibold ${theme.textAccent}`}>
@@ -155,6 +156,13 @@ function MyAppointments() {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Click to view indicator */}
+                <div className={`mt-4 pt-4 border-t ${theme.border} text-center`}>
+                  <span className={`text-xs ${theme.textMuted}`}>
+                    {t('appointments.clickToViewTicket')} →
+                  </span>
                 </div>
               </div>
             ))}

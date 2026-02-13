@@ -26,6 +26,7 @@ const {
   getServiceTypes,
   updateService,
   deleteService,
+  getAppointmentById,
 } = require("../controllers/queueController");
 
 // Public routes (for users)
@@ -37,6 +38,7 @@ router.get("/services/:id/status", protect, getUserQueueStatus);
 router.get("/services/:id/availability", protect, getServiceAvailability);
 router.get("/services/:id/appointments", protect, getServiceAppointments);
 router.post("/appointments", protect, bookAppointment);
+router.get("/appointments/:id", protect, getAppointmentById);
 router.get("/my-appointments", protect, getUserAppointments);
 router.get("/user/:id", protect, getUserById);
 
@@ -49,7 +51,6 @@ router.patch("/services/:id/start", protect, authorize([2]), startService);
 router.patch("/services/:id/serving", protect, authorize([2]), moveToServing);
 router.patch("/services/:id/waiting", protect, authorize([2]), moveToWaiting);
 router.patch("/services/:id/complete", protect, authorize([2]), markComplete);
-router.get("/appointments/:id", protect, authorize([2]), getServiceAppointments);
 router.patch("/services/:id/availability", protect, authorize([2]), addAvailabilityWindow);
 
 module.exports = router;

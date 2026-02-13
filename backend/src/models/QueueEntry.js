@@ -33,6 +33,22 @@ const queueEntrySchema = new mongoose.Schema(
       enum: ["waiting", "serving", "complete"],
       default: "waiting",
     },
+    paymentAmount: {
+      type: Number,
+      default: 0,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "refunded"],
+      default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      default: "dummy",
+    },
+    paymentDate: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

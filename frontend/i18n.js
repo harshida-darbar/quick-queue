@@ -68,7 +68,9 @@ const resources = {
         "booking": "Booking...",
         "available": "Available",
         "booked": "Booked",
-        "clickDrag": "Click and drag on the calendar to select a 30-minute slot."
+        "clickDrag": "Click and drag on the calendar to select a 30-minute slot.",
+        "payNow": "Pay Now",
+        "processing": "Processing..."
       },
       "appointments": {
         "noAppointments": "No Appointments Yet",
@@ -77,7 +79,29 @@ const resources = {
         "booked": "Booked",
         "people": "people",
         "organizer": "Organizer",
-        "groupMembers": "Group Members"
+        "groupMembers": "Group Members",
+        "backToAppointments": "Back to My Appointments",
+        "bookingConfirmed": "Booking Confirmed!",
+        "paymentSuccessful": "Your payment was successful",
+        "tokenNumber": "Token Number",
+        "beingServed": "Being Served",
+        "waiting": "Waiting",
+        "complete": "Complete",
+        "date": "Date",
+        "time": "Time",
+        "joinedOn": "Joined On",
+        "person": "Person",
+        "groupSize": "Group Size",
+        "members": "Members",
+        "location": "Location",
+        "paymentDetails": "Payment Details",
+        "totalAmount": "Total Amount",
+        "paid": "Paid",
+        "pending": "Pending",
+        "allBookings": "All Bookings",
+        "appointmentNotFound": "Appointment not found",
+        "backToAppointmentsBtn": "Back to Appointments",
+        "clickToViewTicket": "Click to view ticket"
       },
       "profile": {
         "name": "Name",
@@ -257,7 +281,9 @@ const resources = {
         "booking": "बुक कर रहे हैं...",
         "available": "उपलब्ध",
         "booked": "बुक किया गया",
-        "clickDrag": "30-मिनट का स्लॉट चुनने के लिए कैलेंडर पर क्लिक करें और खींचें।"
+        "clickDrag": "30-मिनट का स्लॉट चुनने के लिए कैलेंडर पर क्लिक करें और खींचें।",
+        "payNow": "अभी भुगतान करें",
+        "processing": "प्रोसेस हो रहा है..."
       },
 
       "appointments": {
@@ -267,7 +293,29 @@ const resources = {
         "booked": "बुक किया गया",
         "people": "लोग",
         "organizer": "आयोजक",
-        "groupMembers": "समूह के सदस्य"
+        "groupMembers": "समूह के सदस्य",
+        "backToAppointments": "मेरी अपॉइंटमेंट्स पर वापस जाएं",
+        "bookingConfirmed": "बुकिंग की पुष्टि हो गई!",
+        "paymentSuccessful": "आपका भुगतान सफल रहा",
+        "tokenNumber": "टोकन नंबर",
+        "beingServed": "सेवा में",
+        "waiting": "प्रतीक्षा में",
+        "complete": "पूर्ण",
+        "date": "दिनांक",
+        "time": "समय",
+        "joinedOn": "शामिल हुए",
+        "person": "व्यक्ति",
+        "groupSize": "समूह का आकार",
+        "members": "सदस्य",
+        "location": "स्थान",
+        "paymentDetails": "भुगतान विवरण",
+        "totalAmount": "कुल राशि",
+        "paid": "भुगतान किया गया",
+        "pending": "लंबित",
+        "allBookings": "सभी बुकिंग",
+        "appointmentNotFound": "अपॉइंटमेंट नहीं मिला",
+        "backToAppointmentsBtn": "अपॉइंटमेंट्स पर वापस जाएं",
+        "clickToViewTicket": "टिकट देखने के लिए क्लिक करें"
       },
 
       "profile": {

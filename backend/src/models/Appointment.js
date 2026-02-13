@@ -44,6 +44,22 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    paymentAmount: {
+      type: Number,
+      default: 0,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed", "refunded"],
+      default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      default: "dummy",
+    },
+    paymentDate: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

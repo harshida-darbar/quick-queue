@@ -194,7 +194,7 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* 🔥 BACKDROP */}
+      {/*  BACKDROP */}
       {showDropdown && (
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"

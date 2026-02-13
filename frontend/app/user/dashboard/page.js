@@ -78,7 +78,9 @@ function UserDashboard() {
       }
 
       try {
-        await api.post(`/queue/appointments`, {
+        const totalAmount = (selectedService.price || 0) * values.groupSize;
+        
+        const response = await api.post(`/queue/appointments`, {
           queueId: selectedService._id,
           groupSize: values.groupSize,
           memberNames: values.memberNames
@@ -87,17 +89,24 @@ function UserDashboard() {
           date: selectedCalendarSlot.date,
           startTime: selectedCalendarSlot.startTime,
           endTime: selectedCalendarSlot.endTime,
+          paymentAmount: totalAmount,
+          paymentStatus: "completed", // Dummy payment - always successful
+          paymentMethod: "dummy",
         });
 
+        const appointmentId = response.data.appointment._id;
+        
         toast.success(
-          `Appointment booked successfully for ${values.groupSize} people!`,
+          `Payment successful! Appointment booked for ${values.groupSize} people.`,
         );
         setShowAppointmentForm(false);
         setSelectedService(null);
         setSelectedCalendarSlot(null);
         setCalendarEvents([]);
         appointmentFormik.resetForm();
-        fetchServices();
+        
+        // Navigate to appointment detail page
+        router.push(`/user/appointments/${appointmentId}`);
       } catch (error) {
         console.error("Error booking appointment:", error);
         if (error.response?.status === 409) {
@@ -230,21 +239,30 @@ function UserDashboard() {
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        await api.post(`/queue/services/${selectedService._id}/join`, {
+        const totalAmount = (selectedService.price || 0) * values.groupSize;
+        
+        const response = await api.post(`/queue/services/${selectedService._id}/join`, {
           groupSize: values.groupSize,
           memberNames: values.memberNames.slice(0, values.groupSize),
+          paymentAmount: totalAmount,
+          paymentStatus: "completed", // Dummy payment - always successful
+          paymentMethod: "dummy",
         });
         
+        const queueEntryId = response.data.queueEntry._id;
+        
         const buttonText = getButtonText(selectedService);
-        const successMessage = buttonText === "Join Queue" 
-          ? `Successfully joined queue for ${values.groupSize} people!`
-          : `Successfully ${buttonText.toLowerCase()}ed for ${values.groupSize} people!`;
+        const successMessage = `Payment successful! ${buttonText === "Join Queue" 
+          ? `Joined queue for ${values.groupSize} people.`
+          : `${buttonText} booked for ${values.groupSize} people.`}`;
         
         toast.success(successMessage);
         setShowJoinForm(false);
         setSelectedService(null);
         joinFormik.resetForm();
-        fetchServices();
+        
+        // Navigate to queue entry detail page
+        router.push(`/user/appointments/${queueEntryId}`);
       } catch (error) {
         console.error("Error joining queue:", error);
         toast.error(error.response?.data?.message || "Failed to join queue");
@@ -882,7 +900,9 @@ function UserDashboard() {
                   >
                     {t('forms.cancel')}
                   </button>
-                  <button
+                  
+                  {/* Original Book Table/Join Queue Button - Commented for Payment Flow */}
+                  {/* <button
                     type="submit"
                     disabled={joinFormik.isSubmitting}
                     className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
@@ -890,6 +910,30 @@ function UserDashboard() {
                     {joinFormik.isSubmitting
                       ? t('forms.joining')
                       : getButtonText(selectedService)}
+                  </button> */}
+                  
+                  {/* New Pay Now Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Validate form before proceeding to payment
+                      joinFormik.validateForm().then((errors) => {
+                        if (Object.keys(errors).length === 0) {
+                          // Proceed with payment and booking
+                          joinFormik.handleSubmit();
+                        } else {
+                          joinFormik.setTouched({
+                            groupSize: true,
+                            memberNames: joinFormik.values.memberNames.map(() => true)
+                          });
+                          toast.error("Please fill all required fields");
+                        }
+                      });
+                    }}
+                    disabled={joinFormik.isSubmitting}
+                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md hover:from-green-700 hover:to-green-800 transition-all duration-300 disabled:opacity-50 outline-none cursor-pointer font-medium"
+                  >
+                    {joinFormik.isSubmitting ? t('forms.processing') : t('forms.payNow')}
                   </button>
                 </div>
               </form>
@@ -1390,7 +1434,9 @@ function UserDashboard() {
                     >
                       {t('forms.cancel')}
                     </button>
-                    <button
+                    
+                    {/* Original Book Appointment Button - Commented for Payment Flow */}
+                    {/* <button
                       onClick={appointmentFormik.handleSubmit}
                       disabled={
                         appointmentFormik.isSubmitting || !selectedCalendarSlot
@@ -1400,6 +1446,36 @@ function UserDashboard() {
                       {appointmentFormik.isSubmitting
                         ? t('forms.booking')
                         : t('dashboard.bookAppointment')}
+                    </button> */}
+                    
+                    {/* New Pay Now Button */}
+                    <button
+                      onClick={() => {
+                        if (!selectedCalendarSlot) {
+                          toast.error("Please select a time slot from the calendar");
+                          return;
+                        }
+                        
+                        // Validate form before proceeding to payment
+                        appointmentFormik.validateForm().then((errors) => {
+                          if (Object.keys(errors).length === 0) {
+                            // Proceed with payment and booking
+                            appointmentFormik.handleSubmit();
+                          } else {
+                            appointmentFormik.setTouched({
+                              groupSize: true,
+                              memberNames: appointmentFormik.values.memberNames.map(() => true)
+                            });
+                            toast.error("Please fill all required fields");
+                          }
+                        });
+                      }}
+                      disabled={
+                        appointmentFormik.isSubmitting || !selectedCalendarSlot
+                      }
+                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md hover:from-green-700 hover:to-green-800 transition-all duration-300 disabled:opacity-50 cursor-pointer outline-none text-sm font-medium"
+                    >
+                      {appointmentFormik.isSubmitting ? t('forms.processing') : t('forms.payNow')}
                     </button>
                   </div>
                 </div>
