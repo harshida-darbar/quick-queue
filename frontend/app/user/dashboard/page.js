@@ -683,6 +683,12 @@ function UserDashboard() {
                         </div>
                       </div>
 
+                      <div className="flex justify-between items-center mb-3">
+                        <div className={`text-lg font-bold ${theme.textAccent}`}>
+                          ₹{service.price || 0}
+                        </div>
+                      </div>
+
                       <div className="flex flex-col space-y-3">
                         {/* Status Badge Row */}
                         <div className="flex justify-between items-center">

@@ -184,7 +184,7 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => token && setShowDropdown(!showDropdown)}
-        className={`relative p-2 ${theme.textPrimary} hover:opacity-80 transition-colors cursor-pointer`}
+        className={`relative p-2 ${theme.textPrimary} hover:opacity-80 outline-none transition-colors cursor-pointer`}
       >
         <FaBell size={20} />
         {unreadCount > 0 && (

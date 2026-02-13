@@ -9,7 +9,7 @@ const notificationService = require("../services/notificationService");
 // Create a new service
 exports.createService = async (req, res) => {
   try {
-    const { title, description, serviceType, photo, address, maxCapacity, appointmentEnabled, availabilityWindows } = req.body;
+    const { title, description, serviceType, photo, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
     
     console.log('Received service data:', req.body); // Debug log
     console.log('Availability windows received:', availabilityWindows); // Debug log
@@ -25,6 +25,7 @@ exports.createService = async (req, res) => {
       photo: photo || "",
       address: address || "",
       maxCapacity,
+      price: price || 0,
       organizer: req.user.id,
       appointmentEnabled: appointmentEnabled || false,
       availabilityWindows: availabilityWindows || [],
@@ -124,6 +125,7 @@ exports.getAllServices = async (req, res) => {
           photo: 1,
           address: 1,
           maxCapacity: 1,
+          price: 1,
           servingCapacity: 1,
           servingCount: 1,
           waitingCount: 1,
@@ -686,7 +688,7 @@ exports.getUserAppointments = async (req, res) => {
 exports.updateService = async (req, res) => {
   try {
     const serviceId = req.params.id;
-    const { title, description, serviceType, photo, address, maxCapacity } = req.body;
+    const { title, description, serviceType, photo, address, maxCapacity, price } = req.body;
     
     const service = await Queue.findById(serviceId);
     if (!service || service.organizer.toString() !== req.user.id) {
@@ -699,6 +701,7 @@ exports.updateService = async (req, res) => {
     service.photo = photo !== undefined ? photo : service.photo;
     service.address = address !== undefined ? address : service.address;
     service.maxCapacity = maxCapacity || service.maxCapacity;
+    service.price = price !== undefined ? price : service.price;
     
     await service.save();
     

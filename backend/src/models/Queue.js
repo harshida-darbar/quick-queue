@@ -85,6 +85,11 @@ const queueSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
+    price: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

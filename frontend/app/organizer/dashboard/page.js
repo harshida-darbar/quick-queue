@@ -25,6 +25,9 @@ const validationSchema = Yup.object({
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
     .required("Max capacity is required"),
+  price: Yup.number()
+    .min(0, "Price cannot be negative")
+    .required("Price is required"),
   appointmentEnabled: Yup.boolean(),
 });
 
@@ -59,6 +62,7 @@ function OrganizerDashboard() {
       photo: "",
       address: "",
       maxCapacity: 1,
+      price: 0,
       appointmentEnabled: false,
     },
     validationSchema: validationSchema,
@@ -85,6 +89,7 @@ function OrganizerDashboard() {
       photo: "",
       address: "",
       maxCapacity: 1,
+      price: 0,
       appointmentEnabled: false,
     },
     validationSchema: validationSchema,
@@ -196,6 +201,7 @@ function OrganizerDashboard() {
       photo: service.photo || "",
       address: service.address || "",
       maxCapacity: service.maxCapacity,
+      price: service.price || 0,
       appointmentEnabled: service.appointmentEnabled || false,
     });
     setAvailabilityWindows(service.availabilityWindows || []);
@@ -415,6 +421,28 @@ function OrganizerDashboard() {
                     {formik.touched.maxCapacity && formik.errors.maxCapacity && (
                       <div className="text-red-500 text-sm mt-1">
                         {formik.errors.maxCapacity}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      Price (₹)
+                    </label>
+                    <input
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formik.values.price}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                      placeholder="Enter price"
+                    />
+                    {formik.touched.price && formik.errors.price && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.price}
                       </div>
                     )}
                   </div>
@@ -671,6 +699,28 @@ function OrganizerDashboard() {
                     {editFormik.touched.maxCapacity && editFormik.errors.maxCapacity && (
                       <div className="text-red-500 text-sm mt-1">
                         {editFormik.errors.maxCapacity}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                      Price (₹)
+                    </label>
+                    <input
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editFormik.values.price}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                      placeholder="Enter price"
+                    />
+                    {editFormik.touched.price && editFormik.errors.price && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {editFormik.errors.price}
                       </div>
                     )}
                   </div>
@@ -962,6 +1012,12 @@ function OrganizerDashboard() {
                           <span className="font-medium">{t('organizer.capacity')}:</span>{" "}
                           {service.maxCapacity}
                         </div>
+                        <div className={`text-sm font-semibold ${theme.textAccent}`}>
+                          ₹{service.price || 0}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mb-4">
                         <div
                           className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(service.status)}`}
                         >
