@@ -95,12 +95,15 @@ function AppointmentDetail() {
 
       <div className="max-w-3xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <button
-          onClick={() => router.push("/user/appointments")}
-          className={`flex items-center gap-2 ${theme.textSecondary} hover:${theme.textAccent} mb-4 transition-colors`}
-        >
-          <FaArrowLeft size={16} className="cursor-pointer"/> {t('appointments.backToAppointments')}
-        </button>
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => router.push("/user/appointments")}
+            className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
+          >
+            <FaArrowLeft size={16} />
+          </button>
+          <span className={theme.textSecondary}>{t('appointments.backToAppointments')}</span>
+        </div>
 
         {/* Success Banner */}
         <div className={`mb-4 p-4 rounded-lg ${isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300'}`}>

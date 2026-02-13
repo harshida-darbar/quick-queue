@@ -146,7 +146,10 @@ export default function ServiceManagement({ params }) {
           onClick={() => router.back()}
           className={`mb-6 ${theme.textAccent} hover:opacity-80 flex items-center font-medium outline-none`}
         >
-          <IoArrowBack size={20} className="cursor-pointer"/> {t('organizer.backToDashboard')}
+          <IoArrowBack size={32} 
+                      className={`mr-4 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
+
+          /> {t('organizer.backToDashboard')}
         </button>
 
         {/* Service Header */}
