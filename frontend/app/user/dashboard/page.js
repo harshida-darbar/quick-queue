@@ -840,6 +840,23 @@ function UserDashboard() {
                   </div>
                 )}
 
+                {/* Total Payment Display */}
+                <div className={`mb-4 p-4 rounded-lg border-2 ${isDark ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/40 border-purple-600' : 'bg-gradient-to-r from-purple-50 to-purple-100 border-purple-300'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-medium ${theme.textSecondary} mb-1`}>
+                        {t('forms.totalPayment')}
+                      </p>
+                      <p className={`text-xs ${theme.textMuted}`}>
+                        ₹{selectedService.price || 0} × {joinFormik.values.groupSize} {joinFormik.values.groupSize === 1 ? 'person' : 'people'}
+                      </p>
+                    </div>
+                    <div className={`text-2xl font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                      ₹{(selectedService.price || 0) * joinFormik.values.groupSize}
+                    </div>
+                  </div>
+                </div>
+
                 <div className={`${isDark ? 'bg-slate-700' : 'bg-gray-50'} p-3 rounded-md mb-4`}>
                   <p className={`text-sm ${theme.textSecondary}`}>
                     <span className="font-medium">{t('forms.service')}:</span>{" "}
@@ -983,6 +1000,23 @@ function UserDashboard() {
                           />
                         ),
                       )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Payment Display */}
+                <div className={`mb-6 p-4 rounded-lg border-2 ${isDark ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/40 border-purple-600' : 'bg-gradient-to-r from-purple-50 to-purple-100 border-purple-300'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-medium ${theme.textSecondary} mb-1`}>
+                        {t('forms.totalPayment')}
+                      </p>
+                      <p className={`text-xs ${theme.textMuted}`}>
+                        ₹{selectedService.price || 0} × {appointmentFormik.values.groupSize} {appointmentFormik.values.groupSize === 1 ? 'person' : 'people'}
+                      </p>
+                    </div>
+                    <div className={`text-2xl font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                      ₹{(selectedService.price || 0) * appointmentFormik.values.groupSize}
                     </div>
                   </div>
                 </div>
