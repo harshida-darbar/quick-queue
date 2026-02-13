@@ -2,6 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { FaBell } from "react-icons/fa";
 import { useAuth } from "@/app/context/Authcontext";
 import { toast } from "react-toastify";
@@ -17,6 +18,7 @@ export default function NotificationBell() {
   const [token, setToken] = useState(null);
   const { isDark } = useTheme();
   const theme = getThemeClass(isDark);
+  const router = useRouter();
 
   // Get token from localStorage
   useEffect(() => {
@@ -160,6 +162,19 @@ export default function NotificationBell() {
     }
   };
 
+  const handleNotificationClick = (notif) => {
+    // Mark as read
+    if (!notif.isRead) {
+      markAsRead(notif._id || notif.id);
+    }
+    
+    // Navigate to service detail page
+    if (notif.queue && notif.queue._id) {
+      setShowDropdown(false);
+      router.push(`/user/service/${notif.queue._id}`);
+    }
+  };
+
   // Show bell icon for all authenticated users, but only fetch data if token exists
   if (!user) {
     return null;
@@ -226,18 +241,18 @@ export default function NotificationBell() {
             notifications.map((notif) => (
               <div
                 key={notif._id || notif.id}
-                onClick={() =>
-                  !notif.isRead && markAsRead(notif._id || notif.id)
-                }
-                className={`p-3 border-b ${theme.border} hover:bg-opacity-50 cursor-pointer ${
+                onClick={() => handleNotificationClick(notif)}
+                className={`p-3 border-b ${theme.border} hover:bg-opacity-50 cursor-pointer transition-colors ${
                   !notif.isRead
                     ? isDark
-                      ? "bg-purple-900/30"
-                      : "bg-blue-50"
-                    : ""
+                      ? "bg-purple-900/30 hover:bg-purple-900/40"
+                      : "bg-blue-50 hover:bg-blue-100"
+                    : isDark
+                      ? "hover:bg-slate-700"
+                      : "hover:bg-gray-50"
                 }`}
               >
-                <p className={`text-sm ${theme.textPrimary}`}>
+                <p className={`text-sm ${theme.textPrimary} font-medium`}>
                   {notif.message}
                 </p>
                 <p className={`text-xs ${theme.textSecondary} mt-1`}>
