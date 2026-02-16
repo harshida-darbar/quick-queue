@@ -60,6 +60,9 @@ function AppointmentDetail() {
   const isQueueEntry = appointment?.type === 'queue' || appointment?.tokenNumber;
 
   const handleDownloadInvoice = () => {
+    // Get translated text
+    const downloadBtnText = t('appointments.downloadInvoicePDF');
+    
     // Create a printable invoice
     const printWindow = window.open('', '_blank');
     const invoiceHTML = `
@@ -264,7 +267,7 @@ function AppointmentDetail() {
           </div>
         </div>
 
-        <button class="download-btn" onclick="window.print()"> Download Invoice (PDF)</button>
+        <button class="download-btn" onclick="window.print()">${downloadBtnText}</button>
 
         <div class="footer">
           <p>Thank you for choosing our service!</p>
@@ -490,8 +493,8 @@ function AppointmentDetail() {
           <button
             onClick={handleDownloadInvoice}
             className="px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 font-medium text-sm flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <FaDownload size={14} /> Invoice
+          >   
+            <FaDownload size={14} /> {t('organizer.invoice')}
           </button>
           <button
             onClick={() => router.push("/user/dashboard")}

@@ -115,6 +115,9 @@ function AppointmentsPage() {
     console.log('Payment status:', appointment.paymentStatus);
     console.log('Payment method:', appointment.paymentMethod);
     
+    // Get translated text
+    const downloadBtnText = t('appointments.downloadInvoicePDF');
+    
     const printWindow = window.open('', '_blank');
     const isQueueEntry = appointment.tokenNumber;
     const invoiceHTML = `
@@ -311,7 +314,7 @@ function AppointmentsPage() {
           </div>
         </div>
 
-        <button class="download-btn" onclick="window.print()">Download Invoice (PDF)</button>
+        <button class="download-btn" onclick="window.print()">${downloadBtnText}</button>
 
         <div class="footer">
           <p>Thank you for choosing our service!</p>

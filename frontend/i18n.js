@@ -101,7 +101,8 @@ const resources = {
         "allBookings": "All Bookings",
         "appointmentNotFound": "Appointment not found",
         "backToAppointmentsBtn": "Back to Appointments",
-        "clickToViewTicket": "Click to view ticket"
+        "clickToViewTicket": "Click to view ticket",
+        "downloadInvoicePDF": "Download Invoice (PDF)"
       },
       "profile": {
         "name": "Name",
@@ -316,7 +317,8 @@ const resources = {
         "allBookings": "सभी बुकिंग",
         "appointmentNotFound": "अपॉइंटमेंट नहीं मिला",
         "backToAppointmentsBtn": "अपॉइंटमेंट्स पर वापस जाएं",
-        "clickToViewTicket": "टिकट देखने के लिए क्लिक करें"
+        "clickToViewTicket": "टिकट देखने के लिए क्लिक करें",
+        "downloadInvoicePDF": "चालान डाउनलोड करें (PDF)"
       },
 
       "profile": {
