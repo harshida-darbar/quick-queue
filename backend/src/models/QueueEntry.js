@@ -49,6 +49,11 @@ const queueEntrySchema = new mongoose.Schema(
     paymentDate: {
       type: Date,
     },
+    invoiceNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   { timestamps: true }
 );

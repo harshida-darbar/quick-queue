@@ -281,6 +281,12 @@ exports.joinService = async (req, res) => {
       message = `Service capacity exceeded. Your group of ${groupSize} (${memberNames.join(', ')}) is in waiting position ${waitingCount + 1}`;
     }
 
+    // Generate unique invoice number
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    const randomNum = Math.floor(10000 + Math.random() * 90000); // 5-digit random number
+    const invoiceNumber = `INV-${dateStr}-${randomNum}`;
+
     const entry = await QueueEntry.create({
       queue: serviceId,
       user: userId,
@@ -292,6 +298,7 @@ exports.joinService = async (req, res) => {
       paymentStatus: paymentStatus || 'completed',
       paymentMethod: paymentMethod || 'dummy',
       paymentDate: new Date(),
+      invoiceNumber: invoiceNumber
     });
 
     res.status(201).json({
@@ -502,6 +509,12 @@ exports.bookAppointment = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
+    // Generate unique invoice number
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    const randomNum = Math.floor(10000 + Math.random() * 90000); // 5-digit random number
+    const invoiceNumber = `INV-${dateStr}-${randomNum}`;
+
     const bookedSlot = {
       date: new Date(date),
       startTime,
@@ -514,7 +527,8 @@ exports.bookAppointment = async (req, res) => {
       paymentAmount: paymentAmount || 0,
       paymentStatus: paymentStatus || 'pending',
       paymentMethod: paymentMethod || '',
-      paymentDate: paymentStatus === 'completed' ? new Date() : null
+      paymentDate: paymentStatus === 'completed' ? new Date() : null,
+      invoiceNumber: invoiceNumber
     };
 
     service.bookedSlots.push(bookedSlot);

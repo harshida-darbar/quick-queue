@@ -63,6 +63,17 @@ function AppointmentDetail() {
     // Get translated text
     const downloadBtnText = t('appointments.downloadInvoicePDF');
     
+    // Generate invoice number if not present (for old bookings)
+    let invoiceNum = appointment.invoiceNumber;
+    if (!invoiceNum) {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const randomNum = Math.floor(10000 + Math.random() * 90000);
+      invoiceNum = `INV-${dateStr}-${randomNum}`;
+    }
+    
+    console.log('Invoice number:', invoiceNum);
+    
     // Create a printable invoice
     const printWindow = window.open('', '_blank');
     const invoiceHTML = `
@@ -189,6 +200,7 @@ function AppointmentDetail() {
         <div class="header">
           <h1>BOOKING INVOICE</h1>
           <div class="success-badge">✓ Payment Confirmed</div>
+          <p style="margin-top: 8px; color: #6b7280; font-size: 12px;">Invoice #: ${invoiceNum}</p>
         </div>
 
         <div class="section">

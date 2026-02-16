@@ -71,6 +71,11 @@ const bookedSlotSchema = new mongoose.Schema({
   paymentDate: {
     type: Date,
   },
+  invoiceNumber: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
 }, { timestamps: true });
 
 const queueSchema = new mongoose.Schema(
