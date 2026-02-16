@@ -510,7 +510,11 @@ exports.bookAppointment = async (req, res) => {
       bookedUserName: req.user.name || 'User',
       groupSize: Number(groupSize),
       memberNames: memberNames || [],
-      status: 'booked'
+      status: 'booked',
+      paymentAmount: paymentAmount || 0,
+      paymentStatus: paymentStatus || 'pending',
+      paymentMethod: paymentMethod || '',
+      paymentDate: paymentStatus === 'completed' ? new Date() : null
     };
 
     service.bookedSlots.push(bookedSlot);

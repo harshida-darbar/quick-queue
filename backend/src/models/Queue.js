@@ -55,6 +55,22 @@ const bookedSlotSchema = new mongoose.Schema({
     enum: ['booked', 'completed', 'cancelled'],
     default: 'booked',
   },
+  paymentAmount: {
+    type: Number,
+    default: 0,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending',
+  },
+  paymentMethod: {
+    type: String,
+    default: '',
+  },
+  paymentDate: {
+    type: Date,
+  },
 }, { timestamps: true });
 
 const queueSchema = new mongoose.Schema(

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { FaArrowLeft, FaCalendarAlt, FaClock, FaUsers, FaMapMarkerAlt, FaCheckCircle, FaMoneyBillWave } from "react-icons/fa";
+import { FaArrowLeft, FaCalendarAlt, FaClock, FaUsers, FaMapMarkerAlt, FaCheckCircle, FaMoneyBillWave, FaDownload } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import ProtectedRoute from "../../../components/ProtectedRoute";
@@ -58,6 +58,225 @@ function AppointmentDetail() {
   };
 
   const isQueueEntry = appointment?.type === 'queue' || appointment?.tokenNumber;
+
+  const handleDownloadInvoice = () => {
+    // Create a printable invoice
+    const printWindow = window.open('', '_blank');
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${appointment.queue?.title || 'Service'}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 13px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4D2FB2;
+            padding-bottom: 10px;
+          }
+          .header h1 {
+            color: #4D2FB2;
+            margin: 0;
+            font-size: 28px;
+          }
+          .success-badge {
+            background: #10B981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 12px;
+          }
+          .section {
+            margin: 12px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+          }
+          .section-title {
+            font-weight: bold;
+            color: #4D2FB2;
+            margin-bottom: 8px;
+            font-size: 14px;
+          }
+          .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .detail-row:last-child {
+            border-bottom: none;
+          }
+          .detail-label {
+            color: #6b7280;
+            font-size: 12px;
+          }
+          .detail-value {
+            font-weight: 600;
+            color: #111827;
+            font-size: 12px;
+            text-align: right;
+          }
+          .payment-section {
+            background: #f3e8ff;
+            border: 2px solid #a855f7;
+            margin-top: 12px;
+          }
+          .total-amount {
+            font-size: 20px;
+            color: #7c3aed;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 15px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 11px;
+          }
+          .download-btn {
+            background: linear-gradient(to right, #4D2FB2, #62109F);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 15px auto;
+            display: block;
+          }
+          .download-btn:hover {
+            background: linear-gradient(to right, #62109F, #8C00FF);
+          }
+          @media print {
+            body { 
+              padding: 15px;
+              font-size: 12px;
+            }
+            .download-btn { display: none; }
+            .section {
+              margin: 10px 0;
+              padding: 8px;
+            }
+            .header {
+              margin-bottom: 12px;
+              padding-bottom: 8px;
+            }
+            .header h1 {
+              font-size: 24px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>BOOKING INVOICE</h1>
+          <div class="success-badge">✓ Payment Confirmed</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Service Details</div>
+          <div class="detail-row">
+            <span class="detail-label">Service Name:</span>
+            <span class="detail-value">${appointment.queue?.title || 'N/A'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Service Type:</span>
+            <span class="detail-value">${appointment.queue?.serviceType || 'N/A'}</span>
+          </div>
+          ${appointment.queue?.address ? `
+          <div class="detail-row">
+            <span class="detail-label">Location:</span>
+            <span class="detail-value">${appointment.queue.address}</span>
+          </div>
+          ` : ''}
+        </div>
+
+        ${isQueueEntry && appointment.tokenNumber ? `
+        <div class="section">
+          <div class="section-title">Token Information</div>
+          <div class="detail-row">
+            <span class="detail-label">Token Number:</span>
+            <span class="detail-value">#${appointment.tokenNumber}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">${appointment.status === 'serving' ? 'Being Served' : appointment.status === 'waiting' ? 'Waiting' : 'Complete'}</span>
+          </div>
+        </div>
+        ` : ''}
+
+        <div class="section">
+          <div class="section-title">Booking Details</div>
+          ${appointment.date ? `
+          <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">${formatDate(appointment.date)}</span>
+          </div>
+          ` : ''}
+          ${appointment.startTime && appointment.endTime ? `
+          <div class="detail-row">
+            <span class="detail-label">Time:</span>
+            <span class="detail-value">${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}</span>
+          </div>
+          ` : ''}
+          ${isQueueEntry && !appointment.date && appointment.createdAt ? `
+          <div class="detail-row">
+            <span class="detail-label">Joined On:</span>
+            <span class="detail-value">${formatDate(appointment.createdAt)}</span>
+          </div>
+          ` : ''}
+          <div class="detail-row">
+            <span class="detail-label">Group Size:</span>
+            <span class="detail-value">${appointment.groupSize} ${appointment.groupSize === 1 ? 'Person' : 'People'}</span>
+          </div>
+          ${appointment.memberNames && appointment.memberNames.length > 0 ? `
+          <div class="detail-row">
+            <span class="detail-label">Members:</span>
+            <span class="detail-value">${appointment.memberNames.join(', ')}</span>
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="section payment-section">
+          <div class="section-title">Payment Information</div>
+          <div class="detail-row">
+            <span class="detail-label">Payment Status:</span>
+            <span class="detail-value">${appointment.paymentStatus === 'completed' ? '✓ Paid' : 'Pending'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label" style="font-size: 14px;">Total Amount:</span>
+            <span class="total-amount">₹${appointment.paymentAmount || 0}</span>
+          </div>
+        </div>
+
+        <button class="download-btn" onclick="window.print()"> Download Invoice (PDF)</button>
+
+        <div class="footer">
+          <p>Thank you for choosing our service!</p>
+          <p>Invoice generated on ${new Date().toLocaleString()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+  };
 
   if (loading) {
     return (
@@ -260,6 +479,27 @@ function AppointmentDetail() {
           </div>
         </div>
 
+        {/* Action Buttons */}
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => router.push("/user/appointments")}
+            className="px-4 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium text-sm cursor-pointer"
+          >
+            {t('appointments.allBookings')}
+          </button>
+          <button
+            onClick={handleDownloadInvoice}
+            className="px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 font-medium text-sm flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <FaDownload size={14} /> Invoice
+          </button>
+          <button
+            onClick={() => router.push("/user/dashboard")}
+            className={`px-4 py-3 border ${theme.border} rounded-lg ${theme.textSecondary} hover:${theme.textAccent} transition-colors font-medium text-sm cursor-pointer`}
+          >
+            {t('appointments.browseServices')}
+          </button>
+        </div>
         
       </div>
     </div>

@@ -905,7 +905,9 @@ function UserDashboard() {
                   {/* <button
                     type="submit"
                     disabled={joinFormik.isSubmitting}
-                    className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
+                    className="px-4 py-2 bg-
+                    
+                        [#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
                   >
                     {joinFormik.isSubmitting
                       ? t('forms.joining')
