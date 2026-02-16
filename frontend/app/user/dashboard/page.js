@@ -166,6 +166,9 @@ function UserDashboard() {
 
       const fetchedServices = response.data.services;
       const totalPages = response.data.totalPages;
+      
+      console.log('Fetched services:', fetchedServices);
+      console.log('First service rating data:', fetchedServices[0]?.averageRating, fetchedServices[0]?.totalReviews);
 
       const servicesWithStatus = await Promise.all(
         fetchedServices.map(async (service) => {

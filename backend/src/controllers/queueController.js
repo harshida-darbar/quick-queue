@@ -132,6 +132,8 @@ exports.getAllServices = async (req, res) => {
           appointmentEnabled: 1,
           timeSlots: 1,
           isFull: 1,
+          averageRating: 1,
+          totalReviews: 1,
         },
       },
     ];
