@@ -783,6 +783,7 @@ exports.getUserAppointments = async (req, res) => {
   try {
     const userId = req.user.id;
     
+    // Get booked appointments
     const services = await Queue.find({
       'bookedSlots.bookedBy': userId
     }).populate('organizer', 'name');
@@ -803,26 +804,84 @@ exports.getUserAppointments = async (req, res) => {
           groupSize: slot.groupSize,
           memberNames: slot.memberNames,
           status: slot.status,
-          service: {
+          paymentAmount: slot.paymentAmount,
+          paymentStatus: slot.paymentStatus,
+          invoiceNumber: slot.invoiceNumber,
+          type: 'appointment',
+          queue: {
             _id: service._id,
             title: service.title,
             serviceType: service.serviceType,
-            organizer: service.organizer
+            organizer: service.organizer,
+            address: service.address
           }
         });
       });
     });
     
-    // Sort by date and time
+    // Sort by date/time (newest first)
     appointments.sort((a, b) => {
       const dateA = new Date(`${a.date.toISOString().split('T')[0]}T${a.startTime}`);
       const dateB = new Date(`${b.date.toISOString().split('T')[0]}T${b.startTime}`);
-      return dateA - dateB;
+      return dateB - dateA;
     });
     
     res.json(appointments);
   } catch (error) {
     console.error('Error fetching user appointments:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all user's service interactions (for reviews) - includes both appointments and queue entries
+exports.getUserServiceInteractions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const interactions = [];
+    
+    // Get booked appointments
+    const services = await Queue.find({
+      'bookedSlots.bookedBy': userId
+    });
+    
+    services.forEach(service => {
+      const userSlots = service.bookedSlots.filter(slot => 
+        slot.bookedBy.toString() === userId
+      );
+      
+      userSlots.forEach(slot => {
+        interactions.push({
+          _id: slot._id,
+          date: slot.date,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          status: slot.status,
+          type: 'appointment',
+          queue: {
+            _id: service._id,
+            title: service.title
+          }
+        });
+      });
+    });
+    
+    // Get queue entries
+    const queueEntries = await QueueEntry.find({ user: userId })
+      .populate('queue', 'title');
+    
+    queueEntries.forEach(entry => {
+      interactions.push({
+        _id: entry._id,
+        status: entry.status,
+        createdAt: entry.createdAt,
+        type: 'queue',
+        queue: entry.queue
+      });
+    });
+    
+    res.json(interactions);
+  } catch (error) {
+    console.error('Error fetching user interactions:', error);
     res.status(500).json({ message: "Server error" });
   }
 };

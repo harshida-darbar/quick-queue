@@ -15,6 +15,7 @@ import {
   FaSearch,
   FaFilter,
   FaMapMarkerAlt,
+  FaStar,
 } from "react-icons/fa";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -680,6 +681,28 @@ function UserDashboard() {
                       <p className={`${theme.textSecondary} mb-2 flex-1 min-h-[3rem]`}>
                         {service.description}
                       </p>
+
+                      {/* Rating Display */}
+                      <div className={`mb-3 p-2 rounded-lg ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                        {service.totalReviews > 0 ? (
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <FaStar className="text-yellow-500" size={14} />
+                              <span className={`font-bold ${theme.textPrimary} text-sm`}>
+                                {service.averageRating?.toFixed(1)}
+                              </span>
+                            </div>
+                            <span className={`text-xs ${theme.textMuted}`}>
+                              ({service.totalReviews} {service.totalReviews === 1 ? t('appointments.review') : t('appointments.reviews')})
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <FaStar className={`${theme.textMuted}`} size={14} />
+                            <span className={`text-xs ${theme.textMuted}`}>{t('appointments.noReviewsYet')}</span>
+                          </div>
+                        )}
+                      </div>
 
                       {service.address && (
                         <p className={`text-xs ${theme.textMuted} mb-4 line-clamp-2 flex items-start gap-1`}>

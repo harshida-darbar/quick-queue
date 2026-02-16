@@ -70,6 +70,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/queue", queueRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reviews", require("./src/routes/reviewRoutes"));
 app.get("/", (req, res) => {
   res.send("Quick Queue Backend Running");
 });

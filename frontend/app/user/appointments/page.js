@@ -105,7 +105,7 @@ function MyAppointments() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className={`text-lg font-semibold ${theme.textAccent}`}>
-                    {appointment.service.title}
+                    {appointment.queue?.title || appointment.service?.title || 'Service'}
                   </h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
                     {t('appointments.booked')}
@@ -113,19 +113,38 @@ function MyAppointments() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <IoCalendarOutline size={16} className={theme.textSecondary} />
-                    <span className={`text-sm ${theme.textSecondary}`}>
-                      {formatDate(appointment.date)}
-                    </span>
-                  </div>
+                  {appointment.date && (
+                    <div className="flex items-center gap-3">
+                      <IoCalendarOutline size={16} className={theme.textSecondary} />
+                      <span className={`text-sm ${theme.textSecondary}`}>
+                        {formatDate(appointment.date)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {appointment.tokenNumber && (
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm font-bold ${theme.textAccent}`}>
+                        Token #{appointment.tokenNumber}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        appointment.status === 'complete' ? 'bg-green-100 text-green-800' :
+                        appointment.status === 'serving' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {appointment.status}
+                      </span>
+                    </div>
+                  )}
 
-                  <div className="flex items-center gap-3">
-                    <IoTimeOutline size={16} className={theme.textSecondary} />
-                    <span className={`text-sm ${theme.textSecondary}`}>
-                      {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
-                    </span>
-                  </div>
+                  {appointment.startTime && appointment.endTime && (
+                    <div className="flex items-center gap-3">
+                      <IoTimeOutline size={16} className={theme.textSecondary} />
+                      <span className={`text-sm ${theme.textSecondary}`}>
+                        {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-3">
                     <IoPeopleOutline size={16} className={theme.textSecondary} />
@@ -134,12 +153,14 @@ function MyAppointments() {
                     </span>
                   </div>
 
-                  <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
-                    <p className={`text-xs ${theme.textMuted} mb-1`}>{t('appointments.organizer')}:</p>
-                    <p className={`text-sm font-medium ${theme.textPrimary}`}>
-                      {appointment.service.organizer.name}
-                    </p>
-                  </div>
+                  {(appointment.queue?.organizer || appointment.service?.organizer) && (
+                    <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                      <p className={`text-xs ${theme.textMuted} mb-1`}>{t('appointments.organizer')}:</p>
+                      <p className={`text-sm font-medium ${theme.textPrimary}`}>
+                        {appointment.queue?.organizer?.name || appointment.service?.organizer?.name}
+                      </p>
+                    </div>
+                  )}
 
                   {appointment.memberNames && appointment.memberNames.length > 0 && (
                     <div className="mt-3">

@@ -132,6 +132,17 @@ const queueSchema = new mongoose.Schema(
     },
     availabilityWindows: [availabilityWindowSchema],
     bookedSlots: [bookedSlotSchema],
+    // Rating and reviews
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

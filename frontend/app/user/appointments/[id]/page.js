@@ -28,6 +28,9 @@ function AppointmentDetail() {
   const fetchAppointmentDetails = async () => {
     try {
       const response = await api.get(`/queue/appointments/${appointmentId}`);
+      console.log('Appointment data:', response.data);
+      console.log('Payment status:', response.data.paymentStatus);
+      console.log('Payment amount:', response.data.paymentAmount);
       setAppointment(response.data);
     } catch (error) {
       console.error("Error fetching appointment:", error);
@@ -495,7 +498,7 @@ function AppointmentDetail() {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 mt-4">
           <button
             onClick={() => router.push("/user/appointments")}
             className="px-4 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium text-sm cursor-pointer"

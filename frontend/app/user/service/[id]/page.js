@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaStar } from "react-icons/fa";
+import ReactStars from "react-rating-stars-component";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import { IoArrowBack } from "react-icons/io5";
@@ -24,11 +25,20 @@ export default function ServiceDetails({ params }) {
   const [userStatus, setUserStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [userCompletedAppointments, setUserCompletedAppointments] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
     fetchServiceDetails();
     fetchUserStatus();
+    fetchReviews();
+    fetchUserCompletedAppointments();
   }, [resolvedParams.id]);
 
   const fetchServiceDetails = async () => {
@@ -51,6 +61,108 @@ export default function ServiceDetails({ params }) {
       setUserStatus(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const response = await api.get(`/reviews/queue/${resolvedParams.id}`);
+      setReviews(response.data.reviews || []);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const fetchUserCompletedAppointments = async () => {
+    try {
+      const response = await api.get('/queue/my-interactions');
+      console.log('All user interactions:', response.data);
+      console.log('Current service ID:', resolvedParams.id);
+      
+      const now = new Date();
+      
+      // Check both booked appointments AND queue entries
+      const completed = response.data.filter(interaction => {
+        console.log('Checking interaction:', interaction._id, 'Queue ID:', interaction.queue?._id, 'Status:', interaction.status, 'Type:', interaction.type);
+        
+        // Must be for this service
+        if (interaction.queue?._id !== resolvedParams.id) {
+          console.log('Queue ID does not match');
+          return false;
+        }
+        
+        // Check if status is completed
+        if (interaction.status === 'complete' || interaction.status === 'completed') {
+          console.log('Status is complete/completed');
+          return true;
+        }
+        
+        // For appointments with time slots, check if end time has passed
+        if (interaction.type === 'appointment' && interaction.endTime && interaction.date) {
+          const [hours, minutes] = interaction.endTime.split(':');
+          const endDateTime = new Date(interaction.date);
+          endDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          const isPast = now > endDateTime;
+          console.log('End time check:', endDateTime, 'Is past:', isPast);
+          return isPast;
+        }
+        
+        console.log('No match found');
+        return false;
+      });
+      
+      console.log('Completed interactions:', completed);
+      setUserCompletedAppointments(completed);
+    } catch (error) {
+      console.error("Error fetching user interactions:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    console.log('Submit review clicked, rating:', rating);
+    
+    if (rating === 0) {
+      toast.error(t('appointments.pleaseSelectRating'));
+      return;
+    }
+
+    if (userCompletedAppointments.length === 0) {
+      toast.error(t('appointments.mustCompleteAppointment'));
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      console.log('Submitting review with data:', {
+        queueId: resolvedParams.id,
+        appointmentId: userCompletedAppointments[0]._id,
+        rating: rating,
+        review: reviewText,
+      });
+      
+      const response = await api.post("/reviews/submit", {
+        queueId: resolvedParams.id,
+        appointmentId: userCompletedAppointments[0]._id,
+        rating: rating,
+        review: reviewText,
+      });
+
+      console.log('Review submitted successfully:', response.data);
+      toast.success(t('appointments.reviewSubmitted'));
+      setShowReviewForm(false);
+      setRating(0);
+      setReviewText("");
+      fetchReviews();
+      fetchServiceDetails();
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -226,7 +338,7 @@ export default function ServiceDetails({ params }) {
         </div>
 
         {/* Waiting List */}
-        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6`}>
+        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 mb-6`}>
           <h2 className={`text-xl font-semibold ${theme.textPrimary} mb-4`}>{t('organizer.waitingList')}</h2>
           {waitingUsers.length === 0 ? (
             <p className={theme.textMuted}>{t('organizer.noOneWaiting')}</p>
@@ -244,6 +356,163 @@ export default function ServiceDetails({ params }) {
                       {t('dashboard.waiting')}
                     </span>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Reviews Section - Always visible */}
+        <div className={`${theme.cardBg} rounded-lg shadow-lg p-6`}>
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex-1">
+              <h2 className={`text-2xl font-semibold ${theme.textPrimary} mb-4`}>{t('appointments.reviews')}</h2>
+              {service.totalReviews > 0 && (
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className={`text-5xl font-bold ${theme.textPrimary} mb-2`}>
+                      {service.averageRating?.toFixed(1) || '0.0'}
+                    </div>
+                    <div className="flex items-center justify-center mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar 
+                          key={i} 
+                          className={i < Math.round(service.averageRating) ? 'text-yellow-500' : isDark ? 'text-gray-600' : 'text-gray-300'} 
+                          size={20} 
+                        />
+                      ))}
+                    </div>
+                    <div className={`text-sm ${theme.textMuted}`}>
+                      {service.totalReviews} {service.totalReviews === 1 ? t('appointments.review') : t('appointments.reviews')}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Only show Write Review button if user has completed appointment */}
+            {userCompletedAppointments.length > 0 && !showReviewForm && (
+              <button
+                onClick={() => setShowReviewForm(true)}
+                className="px-4 py-2 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium text-sm flex items-center gap-2"
+              >
+                <FaStar size={14} /> {t('appointments.writeReview')}
+              </button>
+            )}
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <div className={`mb-6 p-6 rounded-xl border-2 ${isDark ? 'border-purple-700 bg-purple-900/20' : 'border-purple-200 bg-purple-50'}`}>
+              <h3 className={`text-lg font-bold ${theme.textPrimary} mb-4`}>{t('appointments.rateService')}</h3>
+              
+              <div className="mb-4">
+                <label className={`block text-sm font-medium ${theme.textSecondary} mb-2`}>
+                  {t('appointments.yourRating')} *
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                    >
+                      <FaStar
+                        size={40}
+                        className={star <= rating ? 'text-yellow-500' : isDark ? 'text-gray-600' : 'text-gray-300'}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p className={`text-sm ${theme.textMuted} mt-2`}>
+                    {rating} {rating === 1 ? 'star' : 'stars'} selected
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label className={`block text-sm font-medium ${theme.textSecondary} mb-2`}>
+                  {t('appointments.writeReview')}
+                </label>
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder={t('appointments.reviewPlaceholder')}
+                  rows={4}
+                  maxLength={500}
+                  className={`w-full px-4 py-3 rounded-lg border ${theme.border} ${theme.cardBg} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                />
+                <p className={`text-xs ${theme.textMuted} mt-1`}>{reviewText.length}/500</p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview || rating === 0}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? t('appointments.submittingReview') : t('appointments.submitReview')}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowReviewForm(false);
+                    setRating(0);
+                    setReviewText("");
+                  }}
+                  disabled={submittingReview}
+                  className={`px-6 py-3 border ${theme.border} rounded-lg ${theme.textSecondary} hover:${theme.textAccent} transition-colors disabled:opacity-50`}
+                >
+                  {t('forms.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Reviews List */}
+          {reviewsLoading ? (
+            <div className="text-center py-8">
+              <div className={`text-lg ${theme.textMuted}`}>{t('common.loading')}</div>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-8">
+              <FaStar className={`mx-auto mb-3 ${theme.textMuted}`} size={48} />
+              <p className={`text-lg ${theme.textMuted}`}>{t('appointments.noReviewsYet')}</p>
+              <p className={`text-sm ${theme.textMuted} mt-1`}>{t('appointments.beFirstToReview')}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review._id} className={`p-4 rounded-lg border ${theme.border} ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full ${isDark ? 'bg-purple-700' : 'bg-purple-200'} flex items-center justify-center`}>
+                        <span className={`font-bold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
+                          {review.user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className={`font-semibold ${theme.textPrimary}`}>{review.user?.name || 'Anonymous'}</p>
+                        <div className="flex items-center gap-2">
+                          <ReactStars
+                            count={5}
+                            value={review.rating}
+                            size={16}
+                            activeColor="#ffd700"
+                            color={isDark ? '#4a5568' : '#e2e8f0'}
+                            edit={false}
+                          />
+                          <span className={`text-xs ${theme.textMuted}`}>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {review.review && (
+                    <p className={`${theme.textSecondary} mt-2 ml-13`}>{review.review}</p>
+                  )}
                 </div>
               ))}
             </div>

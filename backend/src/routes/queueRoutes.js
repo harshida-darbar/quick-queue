@@ -22,6 +22,7 @@ const {
   getServiceAvailability,
   addAvailabilityWindow,
   getUserAppointments,
+  getUserServiceInteractions,
   getUserById,
   getServiceTypes,
   updateService,
@@ -40,6 +41,7 @@ router.get("/services/:id/appointments", protect, getServiceAppointments);
 router.post("/appointments", protect, bookAppointment);
 router.get("/appointments/:id", protect, getAppointmentById);
 router.get("/my-appointments", protect, getUserAppointments);
+router.get("/my-interactions", protect, getUserServiceInteractions);
 router.get("/user/:id", protect, getUserById);
 
 // Organizer routes
