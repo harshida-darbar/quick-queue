@@ -723,6 +723,119 @@ exports.getAppointmentById = async (req, res) => {
   }
 };
 
+// Cancel appointment
+exports.cancelAppointment = async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+    const userId = req.user.id;
+    
+    // Try to find as Appointment document first
+    let appointment = await Appointment.findById(appointmentId);
+    
+    if (appointment) {
+      // Check if user owns this appointment
+      if (appointment.user.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this appointment" });
+      }
+      
+      // Check if appointment is in the future and more than 1 hour away
+      const now = new Date();
+      const appointmentDate = new Date(appointment.date);
+      const [hours, minutes] = appointment.startTime.split(':');
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      if (now >= appointmentDate) {
+        return res.status(400).json({ message: "Cannot cancel past appointments" });
+      }
+      
+      // Check if less than 1 hour before appointment
+      const timeDiff = appointmentDate - now;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      
+      if (hoursDiff < 1) {
+        return res.status(400).json({ message: "Cannot cancel appointment. Only 1 hour or less is left before the appointment starts." });
+      }
+      
+      // Delete the appointment
+      await Appointment.findByIdAndDelete(appointmentId);
+      
+      return res.json({ message: "Appointment cancelled successfully" });
+    }
+    
+    // If not found as Appointment, try to find in Queue.bookedSlots
+    const service = await Queue.findOne({ "bookedSlots._id": appointmentId });
+    
+    if (service) {
+      const slot = service.bookedSlots.id(appointmentId);
+      
+      if (!slot) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      // Check if user owns this slot
+      if (slot.bookedBy.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this appointment" });
+      }
+      
+      // Check if appointment is in the future and more than 1 hour away
+      const now = new Date();
+      const appointmentDate = new Date(slot.date);
+      const [hours, minutes] = slot.startTime.split(':');
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      if (now >= appointmentDate) {
+        return res.status(400).json({ message: "Cannot cancel past appointments" });
+      }
+      
+      // Check if less than 1 hour before appointment
+      const timeDiff = appointmentDate - now;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      
+      if (hoursDiff < 1) {
+        return res.status(400).json({ message: "Cannot cancel appointment. Only 1 hour or less is left before the appointment starts." });
+      }
+      
+      // Remove the slot from bookedSlots array
+      service.bookedSlots.pull(appointmentId);
+      await service.save();
+      
+      return res.json({ message: "Appointment cancelled successfully" });
+    }
+    
+    // If not found as Appointment or in bookedSlots, try QueueEntry
+    const queueEntry = await QueueEntry.findById(appointmentId);
+    
+    if (queueEntry) {
+      // Check if user owns this queue entry
+      if (queueEntry.user.toString() !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this entry" });
+      }
+      
+      // Check if entry is not completed
+      if (queueEntry.status === 'complete') {
+        return res.status(400).json({ message: "Cannot cancel completed entries" });
+      }
+      
+      // Update the queue's serving capacity if the entry was being served
+      if (queueEntry.status === 'serving') {
+        await Queue.findByIdAndUpdate(queueEntry.queue, {
+          $inc: { servingCapacity: -queueEntry.groupSize }
+        });
+      }
+      
+      // Delete the queue entry
+      await QueueEntry.findByIdAndDelete(appointmentId);
+      
+      return res.json({ message: "Queue entry cancelled successfully" });
+    }
+    
+    return res.status(404).json({ message: "Appointment or queue entry not found" });
+  } catch (error) {
+    console.error("Error cancelling appointment:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get user's current queue status
 exports.getUserQueueStatus = async (req, res) => {
   try {

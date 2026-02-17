@@ -18,6 +18,7 @@ const {
   startService,
   getUserQueueStatus,
   bookAppointment,
+  cancelAppointment,
   getServiceAppointments,
   getServiceAvailability,
   addAvailabilityWindow,
@@ -42,6 +43,7 @@ router.get("/services/:id/availability", protect, getServiceAvailability);
 router.get("/services/:id/appointments", protect, getServiceAppointments);
 router.post("/appointments", protect, bookAppointment);
 router.get("/appointments/:id", protect, getAppointmentById);
+router.delete("/appointments/:id", protect, cancelAppointment);
 router.get("/my-appointments", protect, getUserAppointments);
 router.get("/my-interactions", protect, getUserServiceInteractions);
 router.get("/my-queue-entries", protect, getMyQueueEntries);
