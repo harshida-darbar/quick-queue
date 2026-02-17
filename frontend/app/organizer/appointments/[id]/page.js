@@ -384,11 +384,9 @@ function AppointmentsPage() {
         <div className="flex items-center mb-8">
           <button
             onClick={() => router.back()}
-            className={`mr-4 p-2 ${theme.textAccent} hover:opacity-80 rounded-lg transition-colors cursor-pointer outline-none`}
+            className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-200'}`}
           >
-             <FaArrowLeft size={30}
-            className={`mr-4 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
-            />
+            <FaArrowLeft size={20} />
           </button> 
           <div>
             <h1 className={`text-3xl font-bold ${theme.textPrimary}`}>

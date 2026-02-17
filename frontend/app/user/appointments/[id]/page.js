@@ -360,9 +360,9 @@ function AppointmentDetail() {
         <div className="flex items-center gap-2 mb-4">
           <button
             onClick={() => router.push("/user/appointments")}
-            className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
+            className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-200'}`}
           >
-            <FaArrowLeft size={16} />
+            <FaArrowLeft size={20} />
           </button>
           <span className={theme.textSecondary}>{t('appointments.backToAppointments')}</span>
         </div>

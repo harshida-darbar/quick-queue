@@ -115,7 +115,7 @@ function ProfilePage() {
         <div className="flex items-center mb-6">
           <button
             onClick={() => router.back()}
-            className={`mr-3 p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white hover:bg-opacity-20'}`}
+            className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer outline-none ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-200'}`}
           >
             <IoArrowBack size={20} />
           </button>

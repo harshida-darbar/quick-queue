@@ -301,10 +301,12 @@ export default function BookedServiceTicket({ params }) {
       <div className="max-w-3xl mx-auto p-6">
         <button
           onClick={() => router.push("/user/booked-services")}
-          className={`mb-6 ${theme.textAccent} flex items-center font-medium outline-none`}
+          className={`mb-6 flex items-center font-medium outline-none`}
         >
-          <IoArrowBack size={20} className="mr-1 cursor-pointer hover:bg-white hover:bg-opacity-20 rounded-lg p-1" />
-          {t('appointments.backToBookedServices')}
+          <div className={`p-2 ${theme.textAccent} rounded-lg transition-colors cursor-pointer ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-200'}`}>
+            <IoArrowBack size={20} />
+          </div>
+          <span className={`ml-2 ${theme.textAccent}`}>{t('appointments.backToBookedServices')}</span>
         </button>
 
         {/* Ticket Card */}
