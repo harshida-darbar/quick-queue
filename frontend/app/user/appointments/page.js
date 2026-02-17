@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { IoCalendarOutline, IoTimeOutline, IoPeopleOutline, IoArrowBack, IoCheckmarkCircle, IoCloseCircle, IoRefreshCircle, IoDownloadOutline } from "react-icons/io5";
+import { IoCalendarOutline, IoTimeOutline, IoPeopleOutline, IoArrowBack, IoCheckmarkCircle, IoCloseCircle, IoRefreshCircle, IoDownloadOutline, IoWarning } from "react-icons/io5";
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -70,9 +70,16 @@ function MyAppointments() {
       
       const timeDiff = appointmentDate - now;
       const hoursDiff = timeDiff / (1000 * 60 * 60);
+      const minutesLeft = Math.floor(timeDiff / (1000 * 60));
       
       if (hoursDiff < 1) {
-        toast.error("Cannot cancel appointment. Only 1 hour is left before the appointment starts.");
+        if (minutesLeft <= 0) {
+          toast.error("Cannot cancel appointment. The appointment time has already started or passed.");
+        } else if (minutesLeft === 1) {
+          toast.error("Cannot cancel appointment. Only 1 minute is left before the appointment starts.");
+        } else {
+          toast.error(`Cannot cancel appointment. Only ${minutesLeft} minutes left before the appointment starts.`);
+        }
         return;
       }
     }
@@ -171,6 +178,21 @@ function MyAppointments() {
             Past ({pastAppointments.length})
           </button>
         </div>
+
+        {/* Cancellation Policy Notice for Upcoming Tab */}
+        {activeTab === 'upcoming' && upcomingAppointments.length > 0 && (
+          <div className={`mb-6 p-4 rounded-lg border-l-4 border-yellow-500 ${isDark ? 'bg-yellow-900/20' : 'bg-yellow-50'}`}>
+            <div className="flex items-start gap-3">
+              <IoWarning className="text-yellow-500 text-2xl flex-shrink-0 mt-0.5" />
+              <div>
+                <p className={`font-semibold ${theme.textPrimary} mb-1`}>Cancellation Policy</p>
+                <p className={`text-sm ${theme.textSecondary}`}>
+                  You can cancel your appointment anytime, but cancellations must be made at least 1 hour before your scheduled appointment time.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {displayedAppointments.length === 0 ? (
           <div className={`text-center py-12 ${theme.cardBg} rounded-lg shadow-lg`}>
