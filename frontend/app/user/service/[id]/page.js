@@ -394,7 +394,7 @@ export default function ServiceDetails({ params }) {
             {userCompletedAppointments.length > 0 && !showReviewForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
-                className="px-4 py-2 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium text-sm flex items-center gap-2 cursor-pointer"
               >
                 <FaStar size={14} /> {t('appointments.writeReview')}
               </button>
@@ -451,7 +451,7 @@ export default function ServiceDetails({ params }) {
                 <button
                   onClick={handleSubmitReview}
                   disabled={submittingReview || rating === 0}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {submittingReview ? t('appointments.submittingReview') : t('appointments.submitReview')}
                 </button>
@@ -462,8 +462,7 @@ export default function ServiceDetails({ params }) {
                     setReviewText("");
                   }}
                   disabled={submittingReview}
-                  className={`px-6 py-3 border ${theme.border} rounded-lg ${theme.textSecondary} hover:${theme.textAccent} transition-colors disabled:opacity-50`}
-                >
+                  className={`px-6 py-3 border ${theme.border} rounded-lg ${theme.textSecondary} hover:${theme.textAccent} transition-colors disabled:opacity-50 cursor-pointer`}>
                   {t('forms.cancel')}
                 </button>
               </div>

@@ -34,7 +34,26 @@ const submitReview = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    if (appointment.status !== "complete" && appointment.status !== "completed") {
+    // Check if appointment is eligible for review
+    let isEligible = false;
+    
+    // Check if status is completed
+    if (appointment.status === "complete" || appointment.status === "completed") {
+      isEligible = true;
+    }
+    
+    // For booked appointments, check if end time has passed
+    if (!isEligible && appointmentModel === "Queue" && appointment.endTime && appointment.date) {
+      const now = new Date();
+      const [hours, minutes] = appointment.endTime.split(':');
+      const endDateTime = new Date(appointment.date);
+      endDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      if (now > endDateTime) {
+        isEligible = true;
+      }
+    }
+    
+    if (!isEligible) {
       return res.status(400).json({ message: "Can only review completed appointments" });
     }
 
