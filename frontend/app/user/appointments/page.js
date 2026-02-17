@@ -307,14 +307,7 @@ function MyAppointments() {
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Click to view indicator */}
-                  <div className={`mt-4 pt-4 border-t ${theme.border} text-center`}>
-                    <span className={`text-xs ${theme.textMuted}`}>
-                      {t('appointments.clickToViewTicket')} →
-                    </span>
-                  </div>
+                  </div>              
                 </div>
 
                 {/* Action Buttons */}
