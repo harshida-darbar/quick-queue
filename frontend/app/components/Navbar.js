@@ -234,15 +234,26 @@ export default function Navbar() {
                       </button>
                     )}
                     {user.role === 3 && (
-                      <button
-                        onClick={() => {
-                          setShowDropdown(false);
-                          router.push("/user/appointments");
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
-                      >
-                        {t("navbar.myAppointments")}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            router.push("/user/appointments");
+                          }}
+                          className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
+                        >
+                          {t("navbar.myAppointments")}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            router.push("/user/booked-services");
+                          }}
+                          className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
+                        >
+                          {t("navbar.myBookedServices")}
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={() => {

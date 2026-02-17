@@ -693,9 +693,12 @@ exports.getAppointmentById = async (req, res) => {
         groupSize: slot.groupSize,
         memberNames: slot.memberNames,
         status: slot.status || 'confirmed',
-        paymentAmount: service.price * slot.groupSize || 0,
-        paymentStatus: 'completed',
-        paymentMethod: 'dummy',
+        paymentAmount: slot.paymentAmount || service.price * slot.groupSize || 0,
+        paymentStatus: slot.paymentStatus || 'completed',
+        paymentMethod: slot.paymentMethod || 'dummy',
+        paymentDate: slot.paymentDate,
+        invoiceNumber: slot.invoiceNumber,
+        createdAt: slot.createdAt || slot._id.getTimestamp(), // Add createdAt from slot or extract from MongoDB ObjectId
         queue: {
           _id: service._id,
           title: service.title,
@@ -939,3 +942,45 @@ exports.deleteService = async (req, res) => {
   }
 };
 
+
+
+// Get all user's queue entries (for My Booked Services page)
+exports.getMyQueueEntries = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const queueEntries = await QueueEntry.find({ user: userId })
+      .populate('queue', 'title serviceType address organizer')
+      .sort({ createdAt: -1 });
+    
+    res.json(queueEntries);
+  } catch (error) {
+    console.error('Error fetching queue entries:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get single queue entry by ID (for ticket detail page)
+exports.getQueueEntryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    const queueEntry = await QueueEntry.findById(id)
+      .populate('queue', 'title serviceType address organizer');
+    
+    if (!queueEntry) {
+      return res.status(404).json({ message: "Queue entry not found" });
+    }
+    
+    // Check if user owns this entry
+    if (queueEntry.user.toString() !== userId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    
+    res.json(queueEntry);
+  } catch (error) {
+    console.error('Error fetching queue entry:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

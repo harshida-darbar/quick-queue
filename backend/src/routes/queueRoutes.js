@@ -28,6 +28,8 @@ const {
   updateService,
   deleteService,
   getAppointmentById,
+  getMyQueueEntries,
+  getQueueEntryById,
 } = require("../controllers/queueController");
 
 // Public routes (for users)
@@ -42,6 +44,8 @@ router.post("/appointments", protect, bookAppointment);
 router.get("/appointments/:id", protect, getAppointmentById);
 router.get("/my-appointments", protect, getUserAppointments);
 router.get("/my-interactions", protect, getUserServiceInteractions);
+router.get("/my-queue-entries", protect, getMyQueueEntries);
+router.get("/queue-entry/:id", protect, getQueueEntryById);
 router.get("/user/:id", protect, getUserById);
 
 // Organizer routes

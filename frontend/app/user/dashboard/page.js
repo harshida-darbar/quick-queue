@@ -556,7 +556,7 @@ function UserDashboard() {
     return (
       <div className={`min-h-screen ${theme.pageBg}`}>
         <Navbar />
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
           <div className={`text-xl ${theme.textAccent}`}>{t('common.loading')}</div>
         </div>
       </div>

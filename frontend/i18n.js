@@ -13,6 +13,7 @@ const resources = {
       "navbar": {
         "myProfile": "My Profile",
         "myAppointments": "My Appointments",
+        "myBookedServices": "My Booked Services",
         "logout": "Logout",
         "confirmLogout": "Confirm Logout",
         "logoutMessage": "Are you sure you want to logout?",
@@ -120,7 +121,15 @@ const resources = {
         "reviews": "Reviews",
         "seeAllReviews": "See All Reviews",
         "allReviews": "All Reviews",
-        "noReviews": "No reviews yet"
+        "noBookedServices": "No booked services yet",
+        "backToBookedServices": "Back to Booked Services",
+        "bookedDate": "Booked Date",
+        "bookedTime": "Booked Time",
+        "bookingCreated": "Booking Created",
+        "pricePerPerson": "Price per person",
+        "numberOfPeople": "Number of people",
+        "noReviews": "No reviews yet",
+        "invoice": "Invoice"
       },
       "profile": {
         "name": "Name",
@@ -244,6 +253,7 @@ const resources = {
       "navbar": {
         "myProfile": "मेरी प्रोफ़ाइल",
         "myAppointments": "मेरी अपॉइंटमेंट्स",
+        "myBookedServices": "मेरी बुक की गई सेवाएं",
         "logout": "लॉगआउट",
         "confirmLogout": "लॉगआउट की पुष्टि करें",
         "logoutMessage": "क्या आप वाकई लॉगआउट करना चाहते हैं?",
@@ -354,7 +364,15 @@ const resources = {
         "reviews": "समीक्षाएं",
         "seeAllReviews": "सभी समीक्षाएं देखें",
         "allReviews": "सभी समीक्षाएं",
-        "noReviews": "अभी तक कोई समीक्षा नहीं"
+        "noBookedServices": "अभी तक कोई बुक की गई सेवा नहीं",
+        "backToBookedServices": "बुक की गई सेवाओं पर वापस जाएं",
+        "bookedDate": "बुक की गई तारीख",
+        "bookedTime": "बुक किया गया समय",
+        "bookingCreated": "बुकिंग बनाई गई",
+        "pricePerPerson": "प्रति व्यक्ति मूल्य",
+        "numberOfPeople": "लोगों की संख्या",
+        "noReviews": "अभी तक कोई समीक्षा नहीं",
+        "invoice": "चालान"
       },
 
       "profile": {
