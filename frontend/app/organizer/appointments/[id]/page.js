@@ -111,14 +111,11 @@ function AppointmentsPage() {
 
   const handleDownloadInvoice = (appointment) => {
     console.log('Invoice appointment data:', appointment);
-    console.log('Payment amount:', appointment.paymentAmount);
-    console.log('Payment status:', appointment.paymentStatus);
-    console.log('Payment method:', appointment.paymentMethod);
     
-    // Get translated text
-    const downloadBtnText = t('appointments.downloadInvoicePDF');
+    const pricePerPerson = (appointment.paymentAmount || service?.price || 0) / (appointment.groupSize || 1);
+    const totalAmount = appointment.paymentAmount || service?.price || 0;
     
-    // Generate invoice number if not present (for old bookings)
+    // Generate invoice number if not present
     let invoiceNum = appointment.invoiceNumber;
     if (!invoiceNum) {
       const now = new Date();
@@ -127,217 +124,246 @@ function AppointmentsPage() {
       invoiceNum = `INV-${dateStr}-${randomNum}`;
     }
     
-    console.log('Invoice number:', invoiceNum);
-    
-    const printWindow = window.open('', '_blank');
-    const isQueueEntry = appointment.tokenNumber;
+    const invoiceWindow = window.open('', '_blank');
     const invoiceHTML = `
       <!DOCTYPE html>
       <html>
       <head>
         <title>Invoice - ${service?.title || 'Service'}</title>
         <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 800px;
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 15px 10px; 
+            max-width: 900px; 
             margin: 0 auto;
-            font-size: 13px;
+            background: #f5f5f5;
           }
-          .header {
-            text-align: center;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #4D2FB2;
-            padding-bottom: 10px;
+          .invoice-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
           }
-          .header h1 {
-            color: #4D2FB2;
-            margin: 0;
-            font-size: 28px;
-          }
-          .success-badge {
-            background: #10B981;
+          .header { 
+            text-align: center; 
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
+          }
+          .header h1 { 
+            font-size: 26px;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+          }
+          .payment-badge {
             display: inline-block;
-            margin-top: 5px;
+            background: #10b981;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
             font-size: 12px;
+            margin-top: 6px;
           }
-          .section {
-            margin: 12px 0;
-            padding: 10px;
-            background: #f9fafb;
-            border-radius: 6px;
-          }
-          .section-title {
-            font-weight: bold;
-            color: #4D2FB2;
-            margin-bottom: 8px;
-            font-size: 14px;
-          }
-          .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #e5e7eb;
-          }
-          .detail-row:last-child {
-            border-bottom: none;
-          }
-          .detail-label {
-            color: #6b7280;
+          .invoice-number {
+            color: rgba(255,255,255,0.9);
             font-size: 12px;
+            margin-top: 6px;
           }
-          .detail-value {
+          .content { padding: 18px; }
+          .section { 
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+          }
+          .section:last-child { border-bottom: none; margin-bottom: 0; }
+          .section-title { 
+            font-size: 15px;
             font-weight: 600;
-            color: #111827;
-            font-size: 12px;
-            text-align: right;
+            color: #667eea;
+            margin-bottom: 8px;
           }
-          .payment-section {
-            background: #f3e8ff;
-            border: 2px solid #a855f7;
-            margin-top: 12px;
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
           }
-          .total-amount {
-            font-size: 20px;
-            color: #7c3aed;
-            font-weight: bold;
+          .info-item {
+            display: flex;
+            flex-direction: column;
           }
-          .footer {
-            margin-top: 15px;
-            text-align: center;
+          .info-label {
+            font-size: 10px;
             color: #6b7280;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .info-value {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+          .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+          }
+          .member-badge {
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 2px 8px;
+            border-radius: 20px;
             font-size: 11px;
           }
-          .download-btn {
-            background: linear-gradient(to right, #4D2FB2, #62109F);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 15px auto;
-            display: block;
+          .payment-box {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 5px;
           }
-          .download-btn:hover {
-            background: linear-gradient(to right, #62109F, #8C00FF);
+          .payment-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+          }
+          .payment-row.total {
+            font-size: 17px;
+            font-weight: bold;
+            color: #667eea;
+            padding-top: 8px;
+            border-top: 2px solid #c4b5fd;
+            margin-top: 5px;
+          }
+          .footer {
+            text-align: center;
+            padding: 6px;
+            color: #6b7280;
+            font-size: 10px;
+            background: #f9fafb;
           }
           @media print {
-            body { 
-              padding: 15px;
-              font-size: 12px;
-            }
-            .download-btn { display: none; }
-            .section {
-              margin: 10px 0;
-              padding: 8px;
-            }
-            .header {
-              margin-bottom: 12px;
-              padding-bottom: 8px;
-            }
-            .header h1 {
-              font-size: 24px;
-            }
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+            .invoice-container { box-shadow: none; }
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>BOOKING INVOICE</h1>
-          <div class="success-badge">✓ Payment Confirmed</div>
-          <p style="margin-top: 8px; color: #6b7280; font-size: 12px;">Invoice #: ${invoiceNum}</p>
-        </div>
+        <div class="invoice-container">
+          <div class="header">
+            <h1>BOOKING INVOICE</h1>
+            <div class="payment-badge">✓ Payment Confirmed</div>
+            <div class="invoice-number">Invoice #: ${invoiceNum}</div>
+          </div>
+          
+          <div class="content">
+            <div class="section">
+              <div class="section-title">Service Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Service Name</div>
+                  <div class="info-value">${service?.title || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Service Type</div>
+                  <div class="info-value" style="text-transform: capitalize;">${service?.serviceType || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Customer</div>
+                  <div class="info-value">${appointment.user.name}</div>
+                </div>
+                ${service?.address ? `
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Location</div>
+                    <div class="info-value">${service.address}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
 
-        <div class="section">
-          <div class="section-title">Service Details</div>
-          <div class="detail-row">
-            <span class="detail-label">Service Name:</span>
-            <span class="detail-value">${service?.title || 'N/A'}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Service Type:</span>
-            <span class="detail-value">${service?.serviceType || 'N/A'}</span>
-          </div>
-          ${service?.address ? `
-          <div class="detail-row">
-            <span class="detail-label">Location:</span>
-            <span class="detail-value">${service.address}</span>
-          </div>
-          ` : ''}
-        </div>
+            <div class="section">
+              <div class="section-title">Booking Details</div>
+              <div class="info-grid">
+                ${appointment.date ? `
+                <div class="info-item">
+                  <div class="info-label">Appointment Date</div>
+                  <div class="info-value">${formatDate(appointment.date)}</div>
+                </div>
+                ` : ''}
+                ${appointment.startTime && appointment.endTime ? `
+                <div class="info-item">
+                  <div class="info-label">Appointment Time</div>
+                  <div class="info-value">${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}</div>
+                </div>
+                ` : ''}
+                <div class="info-item">
+                  <div class="info-label">Group Size</div>
+                  <div class="info-value">${appointment.groupSize} ${appointment.groupSize === 1 ? 'Person' : 'People'}</div>
+                </div>
+                ${appointment.createdAt ? `
+                <div class="info-item">
+                  <div class="info-label">Booked Date</div>
+                  <div class="info-value">${formatDate(appointment.createdAt)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Booked Time</div>
+                  <div class="info-value">${new Date(appointment.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                </div>
+                ` : ''}
+                ${appointment.memberNames && appointment.memberNames.length > 0 ? `
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Members</div>
+                    <div class="members-list">
+                      ${appointment.memberNames.map(name => `<span class="member-badge">${name}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
 
-        <div class="section">
-          <div class="section-title">Customer Details</div>
-          <div class="detail-row">
-            <span class="detail-label">Customer Name:</span>
-            <span class="detail-value">${appointment.user.name}</span>
+            <div class="section">
+              <div class="section-title">Payment Information</div>
+              <div class="payment-box">
+                <div class="payment-row">
+                  <span>Price per person:</span>
+                  <span>₹${pricePerPerson.toFixed(2)}</span>
+                </div>
+                <div class="payment-row">
+                  <span>Number of people:</span>
+                  <span>× ${appointment.groupSize}</span>
+                </div>
+                <div class="payment-row">
+                  <span>Payment Status:</span>
+                  <span style="color: #10b981;">✓ Paid</span>
+                </div>
+                <div class="payment-row total">
+                  <span>Total Amount:</span>
+                  <span>₹${totalAmount}</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="section">
-          <div class="section-title">Booking Details</div>
-          ${appointment.date ? `
-          <div class="detail-row">
-            <span class="detail-label">Date:</span>
-            <span class="detail-value">${formatDate(appointment.date)}</span>
+          <div class="footer">
+            <p>Thank you for choosing our service!</p>
+            <p style="margin-top: 5px;">Invoice generated on ${new Date().toLocaleString()}</p>
           </div>
-          ` : ''}
-          ${appointment.startTime && appointment.endTime ? `
-          <div class="detail-row">
-            <span class="detail-label">Time:</span>
-            <span class="detail-value">${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}</span>
-          </div>
-          ` : ''}
-          <div class="detail-row">
-            <span class="detail-label">Group Size:</span>
-            <span class="detail-value">${appointment.groupSize} ${appointment.groupSize === 1 ? 'Person' : 'People'}</span>
-          </div>
-          ${appointment.memberNames && appointment.memberNames.length > 0 ? `
-          <div class="detail-row">
-            <span class="detail-label">Members:</span>
-            <span class="detail-value">${appointment.memberNames.join(', ')}</span>
-          </div>
-          ` : ''}
-          <div class="detail-row">
-            <span class="detail-label">Status:</span>
-            <span class="detail-value">${appointment.status}</span>
-          </div>
-        </div>
 
-        <div class="section payment-section">
-          <div class="section-title">Payment Information</div>
-          <div class="detail-row">
-            <span class="detail-label">Payment Status:</span>
-            <span class="detail-value">${appointment.paymentStatus === 'completed' ? '✓ Paid' : 'Pending'}</span>
+          <div class="no-print" style="text-align: center; padding: 20px;">
+            <button onclick="window.print()" style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">
+              Download Invoice (PDF)
+            </button>
           </div>
-          <div class="detail-row">
-            <span class="detail-label" style="font-size: 14px;">Total Amount:</span>
-            <span class="total-amount">₹${appointment.paymentAmount || service?.price || 0}</span>
-          </div>
-        </div>
-
-        <button class="download-btn" onclick="window.print()">${downloadBtnText}</button>
-
-        <div class="footer">
-          <p>Thank you for choosing our service!</p>
-          <p>Invoice generated on ${new Date().toLocaleString()}</p>
         </div>
       </body>
       </html>
     `;
     
-    printWindow.document.write(invoiceHTML);
-    printWindow.document.close();
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
   };
 
   const handleUserClick = async (userId) => {

@@ -5,9 +5,10 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { FaHospital, FaUtensils, FaCut, FaBuilding } from "react-icons/fa";
+import { FaHospital, FaUtensils, FaCut, FaBuilding, FaDownload } from "react-icons/fa";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
+import StarRating from "../../../components/StarRating";
 import { IoArrowBack } from "react-icons/io5";
 import { useTheme } from "../../../context/ThemeContext";
 import { getThemeClass } from "../../../config/colors";
@@ -21,6 +22,8 @@ export default function ServiceManagement({ params }) {
   const [loading, setLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
   const { isDark } = useTheme();
@@ -29,6 +32,7 @@ export default function ServiceManagement({ params }) {
 
   useEffect(() => {
     fetchServiceDetails();
+    fetchReviews();
     const interval = setInterval(fetchServiceDetails, 5000);
     return () => clearInterval(interval);
   }, [resolvedParams.id]);
@@ -47,6 +51,18 @@ export default function ServiceManagement({ params }) {
       toast.error("Failed to fetch service details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const response = await api.get(`/reviews/queue/${resolvedParams.id}?limit=100`);
+      setReviews(response.data.reviews || []);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
@@ -97,6 +113,258 @@ export default function ServiceManagement({ params }) {
       console.error("Error marking complete:", error);
       toast.error("Error marking user as complete");
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const handleDownloadQueueInvoice = (entry) => {
+    const pricePerPerson = (service?.price || 0) / (entry.groupSize || 1);
+    const totalAmount = entry.paymentAmount || service?.price || 0;
+    
+    // Generate invoice number if not present
+    let invoiceNum = entry.invoiceNumber;
+    if (!invoiceNum) {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const randomNum = Math.floor(10000 + Math.random() * 90000);
+      invoiceNum = `INV-${dateStr}-${randomNum}`;
+    }
+    
+    const invoiceWindow = window.open('', '_blank');
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${service?.title || 'Service'}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 15px 10px; 
+            max-width: 900px; 
+            margin: 0 auto;
+            background: #f5f5f5;
+          }
+          .invoice-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+          }
+          .header { 
+            text-align: center; 
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+          }
+          .header h1 { 
+            font-size: 26px;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+          }
+          .payment-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 6px;
+          }
+          .invoice-number {
+            color: rgba(255,255,255,0.9);
+            font-size: 12px;
+            margin-top: 6px;
+          }
+          .content { padding: 18px; }
+          .section { 
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+          }
+          .section:last-child { border-bottom: none; margin-bottom: 0; }
+          .section-title { 
+            font-size: 15px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+          }
+          .info-item {
+            display: flex;
+            flex-direction: column;
+          }
+          .info-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .info-value {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+          .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+          }
+          .member-badge {
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+          }
+          .payment-box {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 5px;
+          }
+          .payment-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+          }
+          .payment-row.total {
+            font-size: 17px;
+            font-weight: bold;
+            color: #667eea;
+            padding-top: 8px;
+            border-top: 2px solid #c4b5fd;
+            margin-top: 5px;
+          }
+          .footer {
+            text-align: center;
+            padding: 6px;
+            color: #6b7280;
+            font-size: 10px;
+            background: #f9fafb;
+          }
+          @media print {
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+            .invoice-container { box-shadow: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <div class="header">
+            <h1>BOOKING INVOICE</h1>
+            <div class="payment-badge">✓ Payment Confirmed</div>
+            <div class="invoice-number">Invoice #: ${invoiceNum}</div>
+          </div>
+          
+          <div class="content">
+            <div class="section">
+              <div class="section-title">Service Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Service Name</div>
+                  <div class="info-value">${service?.title || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Service Type</div>
+                  <div class="info-value" style="text-transform: capitalize;">${service?.serviceType || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Token Number</div>
+                  <div class="info-value" style="color: #667eea; font-size: 20px;">#${entry.tokenNumber}</div>
+                </div>
+                ${service?.address ? `
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Location</div>
+                    <div class="info-value">${service.address}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Booking Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Booked Date</div>
+                  <div class="info-value">${formatDate(entry.createdAt)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Booked Time</div>
+                  <div class="info-value">${new Date(entry.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Group Size</div>
+                  <div class="info-value">${entry.groupSize} ${entry.groupSize === 1 ? 'Person' : 'People'}</div>
+                </div>
+                ${entry.memberNames && entry.memberNames.length > 0 ? `
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Members</div>
+                    <div class="members-list">
+                      ${entry.memberNames.map(name => `<span class="member-badge">${name}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Payment Information</div>
+              <div class="payment-box">
+                <div class="payment-row">
+                  <span>Price per person:</span>
+                  <span>₹${pricePerPerson.toFixed(2)}</span>
+                </div>
+                <div class="payment-row">
+                  <span>Number of people:</span>
+                  <span>× ${entry.groupSize}</span>
+                </div>
+                <div class="payment-row">
+                  <span>Payment Status:</span>
+                  <span style="color: #10b981;">✓ Paid</span>
+                </div>
+                <div class="payment-row total">
+                  <span>Total Amount:</span>
+                  <span>₹${totalAmount}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing our service!</p>
+            <p style="margin-top: 5px;">Invoice generated on ${new Date().toLocaleString()}</p>
+          </div>
+
+          <div class="no-print" style="text-align: center; padding: 20px;">
+            <button onclick="window.print()" style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">
+              Download Invoice (PDF)
+            </button>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
   };
 
   const getServiceIcon = (type) => {
@@ -257,6 +525,13 @@ export default function ServiceManagement({ params }) {
                       >
                         {t('organizer.startServing')} ({entry.groupSize} {t('organizer.people')})
                       </button>
+                      <button
+                        onClick={() => handleDownloadQueueInvoice(entry)}
+                        className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm cursor-pointer outline-none flex items-center justify-center gap-2"
+                      >
+                        <FaDownload size={12} />
+                        {t('appointments.invoice')}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -300,12 +575,18 @@ export default function ServiceManagement({ params }) {
                       )}
                     </div>
                     <div className="flex flex-col space-y-2">
-                      
                       <button
                         onClick={() => handleMarkComplete(entry._id)}
-                        className="px-3 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-md hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 text-sm  cursor-pointer outline-none"
+                        className="px-3 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-md hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 text-sm cursor-pointer outline-none"
                       >
                         {t('organizer.complete')}
+                      </button>
+                      <button
+                        onClick={() => handleDownloadQueueInvoice(entry)}
+                        className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm cursor-pointer outline-none flex items-center justify-center gap-2"
+                      >
+                        <FaDownload size={12} />
+                        {t('appointments.invoice')}
                       </button>
                     </div>
                   </div>
@@ -353,11 +634,105 @@ export default function ServiceManagement({ params }) {
                         {new Date(entry.updatedAt).toLocaleString()}
                       </div>
                     </div>
+                    <button
+                      onClick={() => handleDownloadQueueInvoice(entry)}
+                      className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm cursor-pointer outline-none flex items-center justify-center gap-2"
+                    >
+                      <FaDownload size={12} />
+                      {t('appointments.invoice')}
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className={`mt-6 ${theme.cardBg} rounded-lg shadow-lg p-6`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className={`text-xl font-semibold ${theme.textPrimary}`}>
+              {t('appointments.reviews')}
+            </h3>
+            <div className="flex items-center gap-3">
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${theme.textAccent}`}>
+                  {service.averageRating ? service.averageRating.toFixed(1) : '0.0'}
+                </div>
+                <StarRating rating={service.averageRating || 0} size={20} />
+                <div className={`text-sm ${theme.textMuted} mt-1`}>
+                  {service.totalReviews || 0} {service.totalReviews === 1 ? t('appointments.review') : t('appointments.reviews')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {reviewsLoading ? (
+            <div className={`text-center py-8 ${theme.textSecondary}`}>
+              Loading reviews...
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className={`text-center py-8 ${theme.textMuted}`}>
+              {t('appointments.noReviews')}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {reviews.slice(0, 3).map((review) => (
+                  <div
+                    key={review._id}
+                    className={`p-4 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-200'}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {review.user?.profileImage ? (
+                          <img
+                            src={`http://localhost:5000${review.user.profileImage}`}
+                            alt={review.user.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#62109F] to-[#8C00FF] flex items-center justify-center text-white font-semibold ${review.user?.profileImage ? 'hidden' : ''}`}>
+                          {review.user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <div className={`font-semibold ${theme.textPrimary}`}>
+                            {review.user?.name || 'Anonymous'}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <StarRating rating={review.rating} size={16} />
+                            <span className={`text-xs ${theme.textMuted}`}>
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {review.review && (
+                      <p className={`${theme.textSecondary} text-sm mt-2 ml-13`}>
+                        {review.review}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {reviews.length > 3 && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => router.push(`/user/reviews/${resolvedParams.id}`)}
+                    className="px-6 py-2 bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white rounded-lg hover:from-[#8C00FF] hover:to-[#6F00FF] transition-all duration-300 cursor-pointer outline-none"
+                  >
+                    {t('appointments.seeAllReviews')}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Quick Actions */}
