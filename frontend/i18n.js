@@ -118,6 +118,8 @@ const resources = {
         "review": "Review",
         "rating": "Rating",
         "reviews": "Reviews",
+        "seeAllReviews": "See All Reviews",
+        "allReviews": "All Reviews",
         "noReviews": "No reviews yet"
       },
       "profile": {
@@ -350,6 +352,8 @@ const resources = {
         "review": "समीक्षा",
         "rating": "रेटिंग",
         "reviews": "समीक्षाएं",
+        "seeAllReviews": "सभी समीक्षाएं देखें",
+        "allReviews": "सभी समीक्षाएं",
         "noReviews": "अभी तक कोई समीक्षा नहीं"
       },
 

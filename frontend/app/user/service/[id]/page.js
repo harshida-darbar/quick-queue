@@ -7,9 +7,9 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { FaHospital, FaUtensils, FaCut, FaBuilding, FaStar } from "react-icons/fa";
-import ReactStars from "react-rating-stars-component";
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
+import StarRating from "../../../components/StarRating";
 import { IoArrowBack } from "react-icons/io5";
 import { useTheme } from "../../../context/ThemeContext";
 import { getThemeClass } from "../../../config/colors";
@@ -410,21 +410,13 @@ export default function ServiceDetails({ params }) {
                 <label className={`block text-sm font-medium ${theme.textSecondary} mb-2`}>
                   {t('appointments.yourRating')} *
                 </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      className="focus:outline-none transition-transform hover:scale-110"
-                    >
-                      <FaStar
-                        size={40}
-                        className={star <= rating ? 'text-yellow-500' : isDark ? 'text-gray-600' : 'text-gray-300'}
-                      />
-                    </button>
-                  ))}
-                </div>
+                <StarRating 
+                  rating={rating} 
+                  onRatingChange={setRating} 
+                  size={40} 
+                  editable={true}
+                  showValue={true}
+                />
                 {rating > 0 && (
                   <p className={`text-sm ${theme.textMuted} mt-2`}>
                     {rating} {rating === 1 ? 'star' : 'stars'} selected
@@ -481,40 +473,47 @@ export default function ServiceDetails({ params }) {
               <p className={`text-sm ${theme.textMuted} mt-1`}>{t('appointments.beFirstToReview')}</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {reviews.map((review) => (
-                <div key={review._id} className={`p-4 rounded-lg border ${theme.border} ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full ${isDark ? 'bg-purple-700' : 'bg-purple-200'} flex items-center justify-center`}>
-                        <span className={`font-bold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
-                          {review.user?.name?.charAt(0).toUpperCase() || 'U'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className={`font-semibold ${theme.textPrimary}`}>{review.user?.name || 'Anonymous'}</p>
-                        <div className="flex items-center gap-2">
-                          <ReactStars
-                            count={5}
-                            value={review.rating}
-                            size={16}
-                            activeColor="#ffd700"
-                            color={isDark ? '#4a5568' : '#e2e8f0'}
-                            edit={false}
-                          />
-                          <span className={`text-xs ${theme.textMuted}`}>
-                            {new Date(review.createdAt).toLocaleDateString()}
+            <>
+              <div className="space-y-4">
+                {reviews.slice(0, 3).map((review) => (
+                  <div key={review._id} className={`p-4 rounded-lg border ${theme.border} ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full ${isDark ? 'bg-purple-700' : 'bg-purple-200'} flex items-center justify-center`}>
+                          <span className={`font-bold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
+                            {review.user?.name?.charAt(0).toUpperCase() || 'U'}
                           </span>
+                        </div>
+                        <div>
+                          <p className={`font-semibold ${theme.textPrimary}`}>{review.user?.name || 'Anonymous'}</p>
+                          <div className="flex items-center gap-2">
+                            <StarRating rating={review.rating} size={16} editable={false} />
+                            <span className={`text-xs ${theme.textMuted}`}>
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    {review.review && (
+                      <p className={`${theme.textSecondary} mt-2 ml-13`}>{review.review}</p>
+                    )}
                   </div>
-                  {review.review && (
-                    <p className={`${theme.textSecondary} mt-2 ml-13`}>{review.review}</p>
-                  )}
+                ))}
+              </div>
+              
+              {/* See All Reviews Button */}
+              {reviews.length > 3 && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => router.push(`/user/reviews/${resolvedParams.id}`)}
+                    className="px-6 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium cursor-pointer"
+                  >
+                    {t('appointments.seeAllReviews')} ({reviews.length})
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
