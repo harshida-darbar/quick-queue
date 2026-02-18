@@ -134,6 +134,55 @@ exports.getDashboardAnalytics = async (req, res) => {
       },
     ]);
 
+    // Revenue by week (last 12 weeks)
+    const twelveWeeksAgo = new Date();
+    twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+    const revenueByWeek = await QueueEntry.aggregate([
+      {
+        $match: {
+          paymentStatus: "completed",
+          createdAt: { $gte: twelveWeeksAgo },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            week: { $week: "$createdAt" },
+          },
+          revenue: { $sum: "$paymentAmount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { "_id.year": 1, "_id.week": 1 },
+      },
+    ]);
+
+    // Revenue by month (last 12 months)
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    const revenueByMonth = await QueueEntry.aggregate([
+      {
+        $match: {
+          paymentStatus: "completed",
+          createdAt: { $gte: twelveMonthsAgo },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m", date: "$createdAt" },
+          },
+          revenue: { $sum: "$paymentAmount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
     // Bookings by service type
     const bookingsByServiceType = await QueueEntry.aggregate([
       {
@@ -172,6 +221,8 @@ exports.getDashboardAnalytics = async (req, res) => {
         week: weekRevenue[0]?.revenue || 0,
         month: monthRevenue[0]?.revenue || 0,
         byDay: revenueByDay,
+        byWeek: revenueByWeek,
+        byMonth: revenueByMonth,
       },
       ratings: {
         average: avgRatingData[0]?.averageRating || 0,
@@ -258,11 +309,16 @@ exports.getAllServicesAdmin = async (req, res) => {
       .populate("organizer", "name email")
       .sort({ createdAt: -1 });
 
-    // Add computed fields
-    const servicesWithExtras = services.map(service => ({
-      ...service.toObject(),
-      totalBookings: service.bookedSlots?.length || 0,
-    }));
+    // Add computed fields and map database fields to frontend expectations
+    const servicesWithExtras = services.map(service => {
+      const serviceObj = service.toObject();
+      return {
+        ...serviceObj,
+        photoUrl: serviceObj.photo || serviceObj.photoUrl, // Map photo to photoUrl
+        location: serviceObj.address || serviceObj.location, // Map address to location
+        totalBookings: serviceObj.bookedSlots?.length || 0,
+      };
+    });
 
     res.json(servicesWithExtras);
   } catch (error) {

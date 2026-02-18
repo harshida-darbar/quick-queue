@@ -337,7 +337,7 @@ function ReviewsManagement() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && reviewToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className={`${theme.cardBg} rounded-lg shadow-2xl max-w-md w-full p-6`}>
             <div className="text-center mb-6">
               <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-4">

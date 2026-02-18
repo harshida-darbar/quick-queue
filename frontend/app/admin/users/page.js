@@ -2,7 +2,6 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
@@ -12,7 +11,6 @@ import {
   IoEye,
   IoFilter,
   IoClose,
-  IoCheckmarkCircle,
   IoPersonCircle,
   IoDownload,
 } from "react-icons/io5";
@@ -26,7 +24,6 @@ function UsersManagement() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const theme = getThemeClass(isDark);
-  const router = useRouter();
 
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -88,16 +85,7 @@ function UsersManagement() {
     setFilteredUsers(filtered);
   };
 
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await api.put(`/admin/users/${userId}/role`, { role: newRole });
-      toast.success("User role updated successfully");
-      fetchUsers();
-    } catch (error) {
-      console.error("Error updating role:", error);
-      toast.error("Failed to update user role");
-    }
-  };
+
 
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
@@ -248,7 +236,7 @@ function UsersManagement() {
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${theme.border} ${theme.inputBg} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${theme.border} ${theme.input} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
             </div>
 
@@ -258,7 +246,7 @@ function UsersManagement() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className={`px-4 py-2 rounded-lg border ${theme.border} ${theme.inputBg} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer`}
+                className={`px-4 py-2 rounded-lg border ${theme.border} ${theme.input} ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer`}
               >
                 <option value="all">All Roles</option>
                 <option value="1">Admin</option>
@@ -327,18 +315,13 @@ function UsersManagement() {
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <select
-                          value={user.role}
-                          onChange={(e) => handleRoleChange(user._id, parseInt(e.target.value))}
-                          disabled={user.role === 1}
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(
                             user.role
-                          )} ${user.role === 1 ? "cursor-not-allowed" : "cursor-pointer"}`}
+                          )}`}
                         >
-                          <option value={1}>Admin</option>
-                          <option value={2}>Organizer</option>
-                          <option value={3}>User</option>
-                        </select>
+                          {getRoleName(user.role)}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <p className={`text-sm ${theme.textPrimary}`}>
@@ -357,7 +340,7 @@ function UsersManagement() {
                               setSelectedUser(user);
                               setShowDetailsModal(true);
                             }}
-                            className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer outline-none"
+                            className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer outline-none backdrop-blur-lg"
                             title="View Details"
                           >
                             <IoEye size={18} />
@@ -368,7 +351,7 @@ function UsersManagement() {
                                 setUserToDelete(user);
                                 setShowDeleteModal(true);
                               }}
-                              className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800 transition-colors cursor-pointer outline-none"
+                              className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800 transition-colors cursor-pointer outline-none backdrop-blur-lg"
                               title="Delete User"
                             >
                               <IoTrash size={18} />
@@ -387,7 +370,7 @@ function UsersManagement() {
 
       {/* User Details Modal */}
       {showDetailsModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className={`${theme.cardBg} rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto`}>
             <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 flex items-center justify-between">
               <h3 className="text-xl font-bold">User Details</h3>
@@ -457,7 +440,7 @@ function UsersManagement() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && userToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className={`${theme.cardBg} rounded-lg shadow-2xl max-w-md w-full p-6`}>
             <div className="text-center mb-6">
               <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-4">

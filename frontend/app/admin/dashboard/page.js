@@ -52,6 +52,7 @@ function AdminDashboard() {
   const theme = getThemeClass(isDark);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [revenuePeriod, setRevenuePeriod] = useState("daily"); // daily, weekly, monthly
   const router = useRouter();
 
   useEffect(() => {
@@ -81,20 +82,48 @@ function AdminDashboard() {
     );
   }
 
-  // Revenue Line Chart Data
-  const revenueChartData = {
-    labels: analytics?.revenue.byDay.map(d => new Date(d._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) || [],
-    datasets: [
-      {
-        label: t('admin.dailyRevenue'),
-        data: analytics?.revenue.byDay.map(d => d.revenue) || [],
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
+  // Revenue Line Chart Data - Dynamic based on period
+  const getRevenueChartData = () => {
+    let labels = [];
+    let data = [];
+
+    if (revenuePeriod === "daily") {
+      labels = analytics?.revenue.byDay.map(d => 
+        new Date(d._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      ) || [];
+      data = analytics?.revenue.byDay.map(d => d.revenue) || [];
+    } else if (revenuePeriod === "weekly") {
+      labels = analytics?.revenue.byWeek.map(d => 
+        `Week ${d._id.week}, ${d._id.year}`
+      ) || [];
+      data = analytics?.revenue.byWeek.map(d => d.revenue) || [];
+    } else if (revenuePeriod === "monthly") {
+      labels = analytics?.revenue.byMonth.map(d => 
+        new Date(d._id + "-01").toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      ) || [];
+      data = analytics?.revenue.byMonth.map(d => d.revenue) || [];
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: revenuePeriod === "daily" 
+            ? t('admin.dailyRevenue') 
+            : revenuePeriod === "weekly" 
+            ? "Weekly Revenue" 
+            : "Monthly Revenue",
+          data,
+          borderColor: 'rgb(99, 102, 241)',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
   };
+
+  const revenueChartData = getRevenueChartData();
 
   // Bookings Bar Chart Data
   const bookingsChartData = {
@@ -290,9 +319,43 @@ function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Revenue Line Chart */}
           <div className={`${theme.cardBg} rounded-lg shadow-lg p-6 border ${theme.border}`}>
-            <h3 className={`text-lg font-semibold ${theme.textPrimary} mb-4`}>
-              {t('admin.revenueTrend')}
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${theme.textPrimary}`}>
+                {t('admin.revenueTrend')}
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRevenuePeriod("daily")}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all cursor-pointer outline-none ${
+                    revenuePeriod === "daily"
+                      ? "bg-purple-600 text-white"
+                      : `${theme.cardBg} ${theme.textSecondary} hover:bg-gray-100 dark:hover:bg-gray-800`
+                  }`}
+                >
+                  Daily
+                </button>
+                <button
+                  onClick={() => setRevenuePeriod("weekly")}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all cursor-pointer outline-none ${
+                    revenuePeriod === "weekly"
+                      ? "bg-purple-600 text-white"
+                      : `${theme.cardBg} ${theme.textSecondary} hover:bg-gray-100 dark:hover:bg-gray-800`
+                  }`}
+                >
+                  Weekly
+                </button>
+                <button
+                  onClick={() => setRevenuePeriod("monthly")}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all cursor-pointer outline-none ${
+                    revenuePeriod === "monthly"
+                      ? "bg-purple-600 text-white"
+                      : `${theme.cardBg} ${theme.textSecondary} hover:bg-gray-100 dark:hover:bg-gray-800`
+                  }`}
+                >
+                  Monthly
+                </button>
+              </div>
+            </div>
             <div style={{ height: '300px' }}>
               <Line data={revenueChartData} options={chartOptions} />
             </div>
