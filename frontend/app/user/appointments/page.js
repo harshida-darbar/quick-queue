@@ -217,8 +217,8 @@ function MyAppointments() {
             {displayedAppointments.map((appointment) => (
               <div
                 key={appointment._id}
+                >
                 className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-6 border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}
-              >
                 <div 
                   onClick={() => router.push(`/user/appointments/${appointment._id}`)}
                   className="cursor-pointer"

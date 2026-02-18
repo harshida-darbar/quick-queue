@@ -253,6 +253,15 @@ export default function Navbar() {
                         >
                           {t("navbar.myBookedServices")}
                         </button>
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            router.push("/user/wishlist");
+                          }}
+                          className={`block w-full text-left px-4 py-2 text-sm ${theme.textPrimary} hover:bg-[#B7A3E3] hover:text-white transition-colors cursor-pointer outline-none`}
+                        >
+                          Saved Services
+                        </button>
                       </>
                     )}
                     <button

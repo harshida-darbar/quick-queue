@@ -71,6 +71,8 @@ app.use("/api/queue", queueRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reviews", require("./src/routes/reviewRoutes"));
+app.use("/api/wishlist", require("./src/routes/wishlistRoutes"));
+app.use("/api/admin", require("./src/routes/adminRoutes"));
 app.get("/", (req, res) => {
   res.send("Quick Queue Backend Running");
 });

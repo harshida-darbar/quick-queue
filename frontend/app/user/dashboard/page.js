@@ -17,6 +17,7 @@ import {
   FaMapMarkerAlt,
   FaStar,
 } from "react-icons/fa";
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import FullCalendar from "@fullcalendar/react";
@@ -48,6 +49,7 @@ function UserDashboard() {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [wishlistItems, setWishlistItems] = useState(new Set());
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [selectedCalendarSlot, setSelectedCalendarSlot] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -131,6 +133,7 @@ function UserDashboard() {
   useEffect(() => {
     fetchServices(true);
     fetchServiceTypes();
+    fetchWishlist();
   }, []);
 
   useEffect(() => {
@@ -222,6 +225,38 @@ function UserDashboard() {
       setServiceTypes(response.data);
     } catch (error) {
       console.error("Error fetching service types:", error);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    try {
+      const response = await api.get("/wishlist");
+      const wishlistServiceIds = new Set(response.data.map(item => item.service._id));
+      setWishlistItems(wishlistServiceIds);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    }
+  };
+
+  const toggleWishlist = async (serviceId, e) => {
+    e.stopPropagation();
+    try {
+      if (wishlistItems.has(serviceId)) {
+        await api.delete(`/wishlist/${serviceId}`);
+        setWishlistItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(serviceId);
+          return newSet;
+        });
+        toast.success("Removed from wishlist");
+      } else {
+        await api.post("/wishlist", { serviceId });
+        setWishlistItems(prev => new Set([...prev, serviceId]));
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      toast.error(error.response?.data?.message || "Failed to update wishlist");
     }
   };
 
@@ -648,12 +683,25 @@ function UserDashboard() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service, index) => {
+                const isInWishlist = wishlistItems.has(service._id);
                 return (
                   <div
                     key={service._id}
-                    className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:scale-105`}
+                    className={`${theme.cardBg} rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:scale-105 relative`}
                     onClick={(e) => handleCardClick(service, e)}
                   >
+                    {/* Wishlist Heart Icon */}
+                    <button
+                      onClick={(e) => toggleWishlist(service._id, e)}
+                      className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors z-10 cursor-pointer outline-none"
+                    >
+                      {isInWishlist ? (
+                        <IoHeart size={24} className="text-red-500" />
+                      ) : (
+                        <IoHeartOutline size={24} className={theme.textSecondary} />
+                      )}
+                    </button>
+
                     <div className="p-6 flex-1 flex flex-col">
                       <div className="flex items-center mb-4">
                         {getServiceIcon(service.serviceType)}
