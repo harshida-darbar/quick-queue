@@ -303,7 +303,7 @@ function ProfilePage() {
 
 export default function ProtectedProfilePage() {
   return (
-    <ProtectedRoute allowedRoles={[2, 3]}>
+    <ProtectedRoute allowedRoles={[1, 2, 3]}>
       <ProfilePage />
     </ProtectedRoute>
   );

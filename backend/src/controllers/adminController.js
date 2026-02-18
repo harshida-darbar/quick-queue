@@ -195,34 +195,11 @@ exports.getDashboardAnalytics = async (req, res) => {
 // Get all users with pagination
 exports.getAllUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const search = req.query.search || "";
-
-    const query = search
-      ? {
-          $or: [
-            { name: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
-
-    const users = await User.find(query)
+    const users = await User.find()
       .select("-password")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
-    const total = await User.countDocuments(query);
-
-    res.json({
-      users,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      total,
-    });
+    res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Server error" });
@@ -277,36 +254,41 @@ exports.deleteUser = async (req, res) => {
 // Get all services with pagination
 exports.getAllServicesAdmin = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const search = req.query.search || "";
-
-    const query = search
-      ? {
-          $or: [
-            { title: { $regex: search, $options: "i" } },
-            { serviceType: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
-
-    const services = await Queue.find(query)
+    const services = await Queue.find()
       .populate("organizer", "name email")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
-    const total = await Queue.countDocuments(query);
+    // Add computed fields
+    const servicesWithExtras = services.map(service => ({
+      ...service.toObject(),
+      totalBookings: service.bookedSlots?.length || 0,
+    }));
 
-    res.json({
-      services,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      total,
-    });
+    res.json(servicesWithExtras);
   } catch (error) {
     console.error("Error fetching services:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Delete service
+exports.deleteService = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+
+    const service = await Queue.findByIdAndDelete(serviceId);
+
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    // Also delete related queue entries and reviews
+    await QueueEntry.deleteMany({ queue: serviceId });
+    await Review.deleteMany({ queue: serviceId });
+
+    res.json({ message: "Service deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting service:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -314,25 +296,22 @@ exports.getAllServicesAdmin = async (req, res) => {
 // Get all reviews with pagination
 exports.getAllReviews = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
     const reviews = await Review.find()
       .populate("user", "name email")
-      .populate("queue", "title")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .populate("queue", "title serviceType")
+      .sort({ createdAt: -1 });
 
-    const total = await Review.countDocuments();
+    // Transform to match frontend expectations
+    const transformedReviews = reviews.map(review => ({
+      _id: review._id,
+      user: review.user,
+      service: review.queue, // Map queue to service
+      rating: review.rating,
+      reviewText: review.review, // Map review to reviewText
+      createdAt: review.createdAt,
+    }));
 
-    res.json({
-      reviews,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      total,
-    });
+    res.json(transformedReviews);
   } catch (error) {
     console.error("Error fetching reviews:", error);
     res.status(500).json({ message: "Server error" });
@@ -372,25 +351,33 @@ exports.deleteReview = async (req, res) => {
 // Get all payments/transactions
 exports.getAllPayments = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
     const payments = await QueueEntry.find({ paymentStatus: "completed" })
       .populate("user", "name email")
-      .populate("queue", "title")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .populate("queue", "title serviceType price")
+      .sort({ paymentDate: -1 });
 
-    const total = await QueueEntry.countDocuments({ paymentStatus: "completed" });
-
-    res.json({
-      payments,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      total,
+    // Transform data to include service info and price per person
+    const transformedPayments = payments.map((payment) => {
+      const pricePerPerson = payment.groupSize > 0 
+        ? Math.round(payment.paymentAmount / payment.groupSize) 
+        : payment.paymentAmount;
+      
+      return {
+        _id: payment._id,
+        user: payment.user,
+        service: payment.queue,
+        paymentAmount: payment.paymentAmount,
+        pricePerPerson: pricePerPerson,
+        paymentStatus: payment.paymentStatus,
+        paymentMethod: payment.paymentMethod === "dummy" ? "Online" : payment.paymentMethod,
+        paymentDate: payment.paymentDate || payment.createdAt,
+        invoiceNumber: payment.invoiceNumber,
+        groupSize: payment.groupSize,
+        createdAt: payment.createdAt,
+      };
     });
+
+    res.json(transformedPayments);
   } catch (error) {
     console.error("Error fetching payments:", error);
     res.status(500).json({ message: "Server error" });

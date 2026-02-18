@@ -11,6 +11,7 @@ const {
   updateUserRole,
   deleteUser,
   getAllServicesAdmin,
+  deleteService,
   getAllReviews,
   deleteReview,
   getAllPayments,
@@ -30,6 +31,7 @@ router.delete("/users/:userId", deleteUser);
 
 // Service management
 router.get("/services", getAllServicesAdmin);
+router.delete("/services/:serviceId", deleteService);
 
 // Review management
 router.get("/reviews", getAllReviews);

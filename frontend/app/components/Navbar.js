@@ -222,7 +222,7 @@ export default function Navbar() {
                         हिंदी
                       </button>
                     </div>
-                    {(user.role === 2 || user.role === 3) && (
+                    {(user.role === 1 || user.role === 2 || user.role === 3) && (
                       <button
                         onClick={() => {
                           setShowDropdown(false);
