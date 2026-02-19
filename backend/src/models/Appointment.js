@@ -60,6 +60,17 @@ const appointmentSchema = new mongoose.Schema(
     paymentDate: {
       type: Date,
     },
+    cancelledAt: {
+      type: Date,
+    },
+    refundPercentage: {
+      type: Number,
+      default: 0,
+    },
+    refundAmount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

@@ -738,7 +738,12 @@ exports.cancelAppointment = async (req, res) => {
         return res.status(403).json({ message: "Not authorized to cancel this appointment" });
       }
       
-      // Check if appointment is in the future and more than 1 hour away
+      // Check if already cancelled
+      if (appointment.status === 'cancelled') {
+        return res.status(400).json({ message: "Appointment is already cancelled" });
+      }
+      
+      // Check if appointment is in the future
       const now = new Date();
       const appointmentDate = new Date(appointment.date);
       const [hours, minutes] = appointment.startTime.split(':');
@@ -748,18 +753,44 @@ exports.cancelAppointment = async (req, res) => {
         return res.status(400).json({ message: "Cannot cancel past appointments" });
       }
       
-      // Check if less than 1 hour before appointment
+      // Calculate hours until appointment
       const timeDiff = appointmentDate - now;
       const hoursDiff = timeDiff / (1000 * 60 * 60);
       
-      if (hoursDiff < 1) {
-        return res.status(400).json({ message: "Cannot cancel appointment. Only 1 hour or less is left before the appointment starts." });
+      // Calculate refund percentage based on cancellation time
+      let refundPercentage = 0;
+      let refundMessage = "No refund";
+      
+      if (hoursDiff >= 24) {
+        refundPercentage = 50;
+        refundMessage = "50% refund";
+      } else if (hoursDiff >= 12) {
+        refundPercentage = 25;
+        refundMessage = "25% refund";
+      } else if (hoursDiff >= 6) {
+        refundPercentage = 10;
+        refundMessage = "10% refund";
+      } else {
+        refundPercentage = 0;
+        refundMessage = "No refund (less than 6 hours)";
       }
       
-      // Delete the appointment
-      await Appointment.findByIdAndDelete(appointmentId);
+      const refundAmount = appointment.paymentAmount ? (appointment.paymentAmount * refundPercentage) / 100 : 0;
       
-      return res.json({ message: "Appointment cancelled successfully" });
+      // Mark as cancelled and store refund info
+      appointment.status = 'cancelled';
+      appointment.cancelledAt = new Date();
+      appointment.refundPercentage = refundPercentage;
+      appointment.refundAmount = refundAmount;
+      await appointment.save();
+      
+      return res.json({ 
+        message: "Appointment cancelled successfully",
+        refundPercentage,
+        refundAmount,
+        refundMessage,
+        originalAmount: appointment.paymentAmount || 0
+      });
     }
     
     // If not found as Appointment, try to find in Queue.bookedSlots
@@ -777,7 +808,12 @@ exports.cancelAppointment = async (req, res) => {
         return res.status(403).json({ message: "Not authorized to cancel this appointment" });
       }
       
-      // Check if appointment is in the future and more than 1 hour away
+      // Check if already cancelled
+      if (slot.status === 'cancelled') {
+        return res.status(400).json({ message: "Appointment is already cancelled" });
+      }
+      
+      // Check if appointment is in the future
       const now = new Date();
       const appointmentDate = new Date(slot.date);
       const [hours, minutes] = slot.startTime.split(':');
@@ -787,23 +823,49 @@ exports.cancelAppointment = async (req, res) => {
         return res.status(400).json({ message: "Cannot cancel past appointments" });
       }
       
-      // Check if less than 1 hour before appointment
+      // Calculate hours until appointment
       const timeDiff = appointmentDate - now;
       const hoursDiff = timeDiff / (1000 * 60 * 60);
       
-      if (hoursDiff < 1) {
-        return res.status(400).json({ message: "Cannot cancel appointment. Only 1 hour or less is left before the appointment starts." });
+      // Calculate refund percentage based on cancellation time
+      let refundPercentage = 0;
+      let refundMessage = "No refund";
+      
+      if (hoursDiff >= 24) {
+        refundPercentage = 50;
+        refundMessage = "50% refund";
+      } else if (hoursDiff >= 12) {
+        refundPercentage = 25;
+        refundMessage = "25% refund";
+      } else if (hoursDiff >= 6) {
+        refundPercentage = 10;
+        refundMessage = "10% refund";
+      } else {
+        refundPercentage = 0;
+        refundMessage = "No refund (less than 6 hours)";
       }
       
-      // Remove the slot from bookedSlots array
-      service.bookedSlots.pull(appointmentId);
+      const paymentAmount = slot.paymentAmount || (service.price * (slot.groupSize || 1));
+      const refundAmount = (paymentAmount * refundPercentage) / 100;
+      
+      // Mark slot as cancelled and store refund info
+      slot.status = 'cancelled';
+      slot.cancelledAt = new Date();
+      slot.refundPercentage = refundPercentage;
+      slot.refundAmount = refundAmount;
       await service.save();
       
-      return res.json({ message: "Appointment cancelled successfully" });
+      return res.json({ 
+        message: "Appointment cancelled successfully",
+        refundPercentage,
+        refundAmount,
+        refundMessage,
+        originalAmount: paymentAmount
+      });
     }
     
     // If not found as Appointment or in bookedSlots, try QueueEntry
-    const queueEntry = await QueueEntry.findById(appointmentId);
+    const queueEntry = await QueueEntry.findById(appointmentId).populate('queue', 'price');
     
     if (queueEntry) {
       // Check if user owns this queue entry
@@ -816,6 +878,38 @@ exports.cancelAppointment = async (req, res) => {
         return res.status(400).json({ message: "Cannot cancel completed entries" });
       }
       
+      // Check if already cancelled
+      if (queueEntry.status === 'cancelled') {
+        return res.status(400).json({ message: "Entry is already cancelled" });
+      }
+      
+      // For queue entries, calculate refund based on creation time
+      const now = new Date();
+      const createdAt = new Date(queueEntry.createdAt);
+      const timeDiff = now - createdAt;
+      const hoursSinceCreation = timeDiff / (1000 * 60 * 60);
+      
+      // Calculate refund percentage (inverse - more time passed = less refund)
+      let refundPercentage = 0;
+      let refundMessage = "No refund";
+      
+      if (hoursSinceCreation <= 1) {
+        refundPercentage = 50;
+        refundMessage = "50% refund";
+      } else if (hoursSinceCreation <= 6) {
+        refundPercentage = 25;
+        refundMessage = "25% refund";
+      } else if (hoursSinceCreation <= 12) {
+        refundPercentage = 10;
+        refundMessage = "10% refund";
+      } else {
+        refundPercentage = 0;
+        refundMessage = "No refund (more than 12 hours)";
+      }
+      
+      const paymentAmount = queueEntry.paymentAmount || 0;
+      const refundAmount = (paymentAmount * refundPercentage) / 100;
+      
       // Update the queue's serving capacity if the entry was being served
       if (queueEntry.status === 'serving') {
         await Queue.findByIdAndUpdate(queueEntry.queue, {
@@ -823,10 +917,20 @@ exports.cancelAppointment = async (req, res) => {
         });
       }
       
-      // Delete the queue entry
-      await QueueEntry.findByIdAndDelete(appointmentId);
+      // Mark as cancelled and store refund info
+      queueEntry.status = 'cancelled';
+      queueEntry.cancelledAt = new Date();
+      queueEntry.refundPercentage = refundPercentage;
+      queueEntry.refundAmount = refundAmount;
+      await queueEntry.save();
       
-      return res.json({ message: "Queue entry cancelled successfully" });
+      return res.json({ 
+        message: "Queue entry cancelled successfully",
+        refundPercentage,
+        refundAmount,
+        refundMessage,
+        originalAmount: paymentAmount
+      });
     }
     
     return res.status(404).json({ message: "Appointment or queue entry not found" });

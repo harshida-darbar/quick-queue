@@ -30,7 +30,7 @@ const queueEntrySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["waiting", "serving", "complete"],
+      enum: ["waiting", "serving", "complete", "cancelled"],
       default: "waiting",
     },
     paymentAmount: {
@@ -53,6 +53,17 @@ const queueEntrySchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
+    },
+    cancelledAt: {
+      type: Date,
+    },
+    refundPercentage: {
+      type: Number,
+      default: 0,
+    },
+    refundAmount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

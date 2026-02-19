@@ -76,6 +76,17 @@ const bookedSlotSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  cancelledAt: {
+    type: Date,
+  },
+  refundPercentage: {
+    type: Number,
+    default: 0,
+  },
+  refundAmount: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: true });
 
 const queueSchema = new mongoose.Schema(
