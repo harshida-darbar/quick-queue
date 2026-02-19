@@ -68,10 +68,15 @@ function OrganizerDashboard() {
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        await api.put(`/queue/services/${editingService._id}`, values);
+        const serviceData = {
+          ...values,
+          availabilityWindows: values.appointmentEnabled ? availabilityWindows : []
+        };
+        await api.put(`/queue/services/${editingService._id}`, serviceData);
         toast.success("Service updated successfully!");
         setShowEditForm(false);
         setEditingService(null);
+        setAvailabilityWindows([]);
         fetchServices(true);
       } catch (error) {
         console.error("Error updating service:", error);

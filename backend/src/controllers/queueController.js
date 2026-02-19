@@ -1008,7 +1008,7 @@ exports.getUserServiceInteractions = async (req, res) => {
 exports.updateService = async (req, res) => {
   try {
     const serviceId = req.params.id;
-    const { title, description, serviceType, photo, address, maxCapacity, price } = req.body;
+    const { title, description, serviceType, photo, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
     
     const service = await Queue.findById(serviceId);
     if (!service || service.organizer.toString() !== req.user.id) {
@@ -1022,6 +1022,8 @@ exports.updateService = async (req, res) => {
     service.address = address !== undefined ? address : service.address;
     service.maxCapacity = maxCapacity || service.maxCapacity;
     service.price = price !== undefined ? price : service.price;
+    service.appointmentEnabled = appointmentEnabled !== undefined ? appointmentEnabled : service.appointmentEnabled;
+    service.availabilityWindows = availabilityWindows !== undefined ? availabilityWindows : service.availabilityWindows;
     
     await service.save();
     
