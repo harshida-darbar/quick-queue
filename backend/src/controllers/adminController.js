@@ -14,45 +14,57 @@ exports.getDashboardAnalytics = async (req, res) => {
     const weekStart = new Date(now.setDate(now.getDate() - 7));
     const monthStart = new Date(now.setDate(now.getDate() - 30));
 
-    // Total bookings
-    const totalBookings = await QueueEntry.countDocuments();
-    const todayBookings = await QueueEntry.countDocuments({
+    // Total bookings from Appointment collection (exclude cancelled)
+    const totalBookings = await Appointment.countDocuments({ status: { $ne: 'cancelled' } });
+    const todayBookings = await Appointment.countDocuments({
       createdAt: { $gte: todayStart },
+      status: { $ne: 'cancelled' }
     });
-    const weekBookings = await QueueEntry.countDocuments({
+    const weekBookings = await Appointment.countDocuments({
       createdAt: { $gte: weekStart },
+      status: { $ne: 'cancelled' }
     });
-    const monthBookings = await QueueEntry.countDocuments({
+    const monthBookings = await Appointment.countDocuments({
       createdAt: { $gte: monthStart },
+      status: { $ne: 'cancelled' }
     });
 
-    // Booking status breakdown
-    const completedBookings = await QueueEntry.countDocuments({
-      status: "complete",
+    // Booking status breakdown from Appointment collection
+    const completedBookings = await Appointment.countDocuments({
+      status: "completed",
     });
-    const servingBookings = await QueueEntry.countDocuments({
-      status: "serving",
+    const confirmedBookings = await Appointment.countDocuments({
+      status: "confirmed",
     });
-    const waitingBookings = await QueueEntry.countDocuments({
-      status: "waiting",
+    const scheduledBookings = await Appointment.countDocuments({
+      status: "scheduled",
     });
 
-    // Revenue calculation
-    const revenueData = await QueueEntry.aggregate([
+    // Revenue calculation from Appointment collection
+    // Include: completed payments (non-cancelled) + cancellation fees from cancelled appointments
+    const revenueData = await Appointment.aggregate([
       {
         $match: {
-          paymentStatus: "completed",
+          paymentStatus: "completed"
         },
       },
       {
         $group: {
           _id: null,
-          totalRevenue: { $sum: "$paymentAmount" },
+          totalRevenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] }, // Cancellation fee
+                "$paymentAmount" // Full amount for non-cancelled
+              ]
+            }
+          },
         },
       },
     ]);
 
-    const todayRevenue = await QueueEntry.aggregate([
+    const todayRevenue = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -62,12 +74,20 @@ exports.getDashboardAnalytics = async (req, res) => {
       {
         $group: {
           _id: null,
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
         },
       },
     ]);
 
-    const weekRevenue = await QueueEntry.aggregate([
+    const weekRevenue = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -77,12 +97,20 @@ exports.getDashboardAnalytics = async (req, res) => {
       {
         $group: {
           _id: null,
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
         },
       },
     ]);
 
-    const monthRevenue = await QueueEntry.aggregate([
+    const monthRevenue = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -92,7 +120,15 @@ exports.getDashboardAnalytics = async (req, res) => {
       {
         $group: {
           _id: null,
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
         },
       },
     ]);
@@ -113,8 +149,8 @@ exports.getDashboardAnalytics = async (req, res) => {
     const totalOrganizers = await User.countDocuments({ role: 2 });
     const totalServices = await Queue.countDocuments();
 
-    // Revenue by day (last 7 days)
-    const revenueByDay = await QueueEntry.aggregate([
+    // Revenue by day (last 7 days) from Appointment collection
+    const revenueByDay = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -126,7 +162,15 @@ exports.getDashboardAnalytics = async (req, res) => {
           _id: {
             $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
           },
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
           count: { $sum: 1 },
         },
       },
@@ -138,7 +182,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     // Revenue by week (last 12 weeks)
     const twelveWeeksAgo = new Date();
     twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
-    const revenueByWeek = await QueueEntry.aggregate([
+    const revenueByWeek = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -151,7 +195,15 @@ exports.getDashboardAnalytics = async (req, res) => {
             year: { $year: "$createdAt" },
             week: { $week: "$createdAt" },
           },
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
           count: { $sum: 1 },
         },
       },
@@ -163,7 +215,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     // Revenue by month (last 12 months)
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-    const revenueByMonth = await QueueEntry.aggregate([
+    const revenueByMonth = await Appointment.aggregate([
       {
         $match: {
           paymentStatus: "completed",
@@ -175,7 +227,15 @@ exports.getDashboardAnalytics = async (req, res) => {
           _id: {
             $dateToString: { format: "%Y-%m", date: "$createdAt" },
           },
-          revenue: { $sum: "$paymentAmount" },
+          revenue: { 
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "cancelled"] },
+                { $subtract: ["$paymentAmount", "$refundAmount"] },
+                "$paymentAmount"
+              ]
+            }
+          },
           count: { $sum: 1 },
         },
       },
@@ -184,8 +244,13 @@ exports.getDashboardAnalytics = async (req, res) => {
       },
     ]);
 
-    // Bookings by service type
-    const bookingsByServiceType = await QueueEntry.aggregate([
+    // Bookings by service type from Appointment collection
+    const bookingsByServiceType = await Appointment.aggregate([
+      {
+        $match: {
+          status: { $ne: 'cancelled' }
+        }
+      },
       {
         $lookup: {
           from: "queues",
@@ -213,8 +278,8 @@ exports.getDashboardAnalytics = async (req, res) => {
         week: weekBookings,
         month: monthBookings,
         completed: completedBookings,
-        serving: servingBookings,
-        waiting: waitingBookings,
+        confirmed: confirmedBookings,
+        scheduled: scheduledBookings,
       },
       revenue: {
         total: revenueData[0]?.totalRevenue || 0,
@@ -408,7 +473,10 @@ exports.deleteReview = async (req, res) => {
 // Get all payments/transactions
 exports.getAllPayments = async (req, res) => {
   try {
-    const payments = await QueueEntry.find({ paymentStatus: "completed" })
+    const payments = await Appointment.find({ 
+      paymentStatus: "completed",
+      status: { $ne: 'cancelled' }
+    })
       .populate("user", "name email")
       .populate("queue", "title serviceType price")
       .sort({ paymentDate: -1 });

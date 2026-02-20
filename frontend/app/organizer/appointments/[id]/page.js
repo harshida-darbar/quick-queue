@@ -38,49 +38,24 @@ function AppointmentsPage() {
       const serviceResponse = await api.get(`/queue/services/${serviceId}`);
       setService(serviceResponse.data.service);
 
-      // Fetch service availability to get booked slots
-      const availabilityResponse = await api.get(`/queue/services/${serviceId}/availability`);
-      const { bookedSlots } = availabilityResponse.data;
+      // Fetch all appointments including cancelled ones for organizer
+      const appointmentsResponse = await api.get(`/queue/services/${serviceId}/appointments`);
+      const appointments = appointmentsResponse.data.appointments || [];
       
-      console.log('Raw booked slots:', bookedSlots);
+      console.log('Appointments from API:', appointments);
       
-      // Transform booked slots into appointments format with user data
-      const appointmentsData = await Promise.all(
-        bookedSlots.map(async (slot) => {
-          console.log('Processing slot:', slot);
-          
-          let userName = 'Unknown User';
-          let userProfileImage = slot.bookedUserProfileImage;
-          
-          // Always fetch user data from API since bookedUserName is just 'User'
-          if (slot.bookedBy) {
-            try {
-              console.log('Fetching user data for ID:', slot.bookedBy);
-              const userResponse = await api.get(`/queue/user/${slot.bookedBy}`);
-              console.log('User response:', userResponse.data);
-              userName = userResponse.data.name || 'Unknown User';
-              userProfileImage = userResponse.data.profileImage;
-            } catch (error) {
-              console.error('Error fetching user data:', error);
-            }
-          }
-          
-          const appointmentData = {
-            ...slot,
-            id: slot._id,
-            user: {
-              id: slot.bookedBy,
-              name: userName,
-              profileImage: userProfileImage
-            }
-          };
-          
-          console.log('Final appointment data:', appointmentData);
-          return appointmentData;
-        })
-      );
+      // Transform appointments into the format expected by the UI
+      const appointmentsData = appointments.map((appointment) => ({
+        ...appointment,
+        id: appointment._id,
+        user: {
+          id: appointment.user._id,
+          name: appointment.user.name,
+          profileImage: appointment.user.profileImage
+        }
+      }));
 
-      console.log('All appointments data:', appointmentsData);
+      console.log('Transformed appointments:', appointmentsData);
       setAppointments(appointmentsData);
     } catch (error) {
       console.error("Error fetching appointments:", error);

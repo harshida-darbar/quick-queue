@@ -476,10 +476,11 @@ exports.getServiceAvailability = async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    // Populate user details for booked slots
+    // Filter out cancelled slots and populate user details for active booked slots
     const User = require('../models/User');
+    const activeSlots = service.bookedSlots.filter(slot => slot.status !== 'cancelled');
     const bookedSlotsWithUserData = await Promise.all(
-      service.bookedSlots.map(async (slot) => {
+      activeSlots.map(async (slot) => {
         const user = await User.findById(slot.bookedBy).select('name profileImage');
         return {
           ...slot.toObject(),
@@ -491,6 +492,35 @@ exports.getServiceAvailability = async (req, res) => {
     res.json({
       availabilityWindows: service.availabilityWindows || [],
       bookedSlots: bookedSlotsWithUserData
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all appointments for a service (including cancelled) - for organizers
+exports.getServiceAppointments = async (req, res) => {
+  try {
+    const serviceId = req.params.id;
+    
+    const service = await Queue.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    // Check if user is the organizer
+    if (service.organizer.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Fetch all appointments for this service from Appointment collection
+    const appointments = await Appointment.find({ queue: serviceId })
+      .populate("user", "name email profileImage")
+      .sort({ date: -1, startTime: -1 });
+
+    res.json({
+      appointments: appointments
     });
   } catch (error) {
     console.error(error);
@@ -553,6 +583,7 @@ exports.bookAppointment = async (req, res) => {
       paymentStatus: paymentStatus || 'completed',
       paymentMethod: paymentMethod || 'dummy',
       paymentDate: new Date(),
+      invoiceNumber: invoiceNumber,
     });
 
     console.log('Appointment booked, creating notifications...');
@@ -601,21 +632,7 @@ exports.addAvailabilityWindow = async (req, res) => {
   }
 };
 
-// Get appointments for a service (accessible to all users)
-exports.getServiceAppointments = async (req, res) => {
-  try {
-    const serviceId = req.params.id;
-    
-    const appointments = await Appointment.find({ queue: serviceId })
-      .populate('user', 'name email')
-      .sort({ date: 1, startTime: 1 });
 
-    res.json(appointments);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
 
 // Get single appointment by ID
 exports.getAppointmentById = async (req, res) => {
@@ -861,7 +878,7 @@ exports.cancelAppointment = async (req, res) => {
       const paymentAmount = slot.paymentAmount || (service.price * (slot.groupSize || 1));
       const refundAmount = (paymentAmount * refundPercentage) / 100;
       
-      // Mark slot as cancelled and store refund info
+      // Mark slot as cancelled and store refund info (keep it for history)
       slot.status = 'cancelled';
       slot.cancelledAt = new Date();
       slot.refundPercentage = refundPercentage;

@@ -60,6 +60,9 @@ const appointmentSchema = new mongoose.Schema(
     paymentDate: {
       type: Date,
     },
+    invoiceNumber: {
+      type: String,
+    },
     cancelledAt: {
       type: Date,
     },

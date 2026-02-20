@@ -20,8 +20,8 @@ const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
   description: Yup.string().required("Description is required"),
   serviceType: Yup.string().required("Service type is required"),
-  photo: Yup.string().url("Must be a valid URL"),
-  address: Yup.string(),
+  photo: Yup.string().url("Must be a valid URL").required("url is required"),
+  address: Yup.string().required("Address is required."),
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
     .required("Max capacity is required"),
