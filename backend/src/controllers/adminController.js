@@ -378,11 +378,13 @@ exports.getAllServicesAdmin = async (req, res) => {
     // Add computed fields and map database fields to frontend expectations
     const servicesWithExtras = services.map(service => {
       const serviceObj = service.toObject();
+      // Count only active bookings (exclude cancelled)
+      const activeBookings = serviceObj.bookedSlots?.filter(slot => slot.status !== 'cancelled').length || 0;
       return {
         ...serviceObj,
         photoUrl: serviceObj.photo || serviceObj.photoUrl, // Map photo to photoUrl
         location: serviceObj.address || serviceObj.location, // Map address to location
-        totalBookings: serviceObj.bookedSlots?.length || 0,
+        totalBookings: activeBookings,
       };
     });
 
