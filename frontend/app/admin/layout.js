@@ -42,6 +42,11 @@ export default function AdminLayout({ children }) {
       icon: IoBusinessOutline,
     },
     {
+      name: 'Live Queue',
+      path: '/admin/queue',
+      icon: IoPeople,
+    },
+    {
       name: 'Appointments',
       path: '/admin/appointments',
       icon: IoCalendarOutline,

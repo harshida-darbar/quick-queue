@@ -534,6 +534,46 @@ exports.getAllPayments = async (req, res) => {
   }
 };
 
+// Get all queue entry payments (direct service joins)
+exports.getAllQueuePayments = async (req, res) => {
+  try {
+    const queuePayments = await QueueEntry.find({ 
+      paymentStatus: "completed"
+    })
+      .populate("user", "name email")
+      .populate("queue", "title serviceType price")
+      .sort({ paymentDate: -1 });
+
+    // Transform data to match payment format
+    const transformedPayments = queuePayments.map((entry) => {
+      const pricePerPerson = entry.groupSize > 0 
+        ? Math.round(entry.paymentAmount / entry.groupSize) 
+        : entry.paymentAmount;
+      
+      return {
+        _id: entry._id,
+        user: entry.user,
+        service: entry.queue,
+        paymentAmount: entry.paymentAmount,
+        pricePerPerson: pricePerPerson,
+        paymentStatus: entry.paymentStatus,
+        paymentMethod: entry.paymentMethod === "dummy" ? "Online" : entry.paymentMethod,
+        paymentDate: entry.paymentDate || entry.createdAt,
+        invoiceNumber: entry.invoiceNumber,
+        groupSize: entry.groupSize,
+        tokenNumber: entry.tokenNumber,
+        status: entry.status, // serving, waiting, complete
+        createdAt: entry.createdAt,
+      };
+    });
+
+    res.json(transformedPayments);
+  } catch (error) {
+    console.error("Error fetching queue payments:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get all appointments
 exports.getAllAppointments = async (req, res) => {
   try {

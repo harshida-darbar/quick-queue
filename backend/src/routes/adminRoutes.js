@@ -15,6 +15,7 @@ const {
   getAllReviews,
   deleteReview,
   getAllPayments,
+  getAllQueuePayments,
   getAllAppointments,
 } = require("../controllers/adminController");
 
@@ -40,6 +41,7 @@ router.delete("/reviews/:reviewId", deleteReview);
 
 // Payment management
 router.get("/payments", getAllPayments);
+router.get("/payments/queue", getAllQueuePayments);
 
 // Appointment management
 router.get("/appointments", getAllAppointments);

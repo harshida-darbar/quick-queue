@@ -28,7 +28,9 @@ function PaymentsManagement() {
   const theme = getThemeClass(isDark);
   const router = useRouter();
 
-  const [payments, setPayments] = useState([]);
+  const [activeTab, setActiveTab] = useState("appointments"); // 'appointments' or 'services'
+  const [appointmentPayments, setAppointmentPayments] = useState([]);
+  const [queuePayments, setQueuePayments] = useState([]);
   const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,30 +38,40 @@ function PaymentsManagement() {
   const [dateFilter, setDateFilter] = useState("all");
 
   useEffect(() => {
-    fetchPayments();
+    fetchAllPayments();
   }, []);
 
   useEffect(() => {
     filterPayments();
-  }, [payments, searchTerm, statusFilter, dateFilter]);
+  }, [appointmentPayments, queuePayments, activeTab, searchTerm, statusFilter, dateFilter]);
 
-  const fetchPayments = async () => {
+  const fetchAllPayments = async () => {
     try {
-      const response = await api.get("/admin/payments");
-      const paymentsData = Array.isArray(response.data) ? response.data : [];
-      setPayments(paymentsData);
-      setFilteredPayments(paymentsData);
+      // Fetch both appointment and queue payments
+      const [appointmentsRes, queueRes] = await Promise.all([
+        api.get("/admin/payments"),
+        api.get("/admin/payments/queue")
+      ]);
+      
+      const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : [];
+      const queueData = Array.isArray(queueRes.data) ? queueRes.data : [];
+      
+      setAppointmentPayments(appointmentsData);
+      setQueuePayments(queueData);
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to fetch payments");
-      setPayments([]);
-      setFilteredPayments([]);
+      setAppointmentPayments([]);
+      setQueuePayments([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filterPayments = () => {
+    // Get payments based on active tab
+    const payments = activeTab === "appointments" ? appointmentPayments : queuePayments;
+    
     if (!Array.isArray(payments)) {
       setFilteredPayments([]);
       return;
@@ -107,6 +119,7 @@ function PaymentsManagement() {
   };
 
   const calculateTotalRevenue = () => {
+    const payments = activeTab === "appointments" ? appointmentPayments : queuePayments;
     if (!Array.isArray(payments)) return 0;
     return payments
       .filter((p) => p.paymentStatus === "completed")
@@ -114,16 +127,34 @@ function PaymentsManagement() {
   };
 
   const exportToCSV = () => {
-    const headers = ["Date", "Invoice", "User", "Service", "Amount", "Status", "Method"];
-    const rows = filteredPayments.map((payment) => [
-      new Date(payment.paymentDate).toLocaleDateString(),
-      payment.invoiceNumber || "N/A",
-      payment.user?.name || "Unknown",
-      payment.service?.title || "Unknown",
-      `₹${payment.paymentAmount || 0}`,
-      payment.paymentStatus || "pending",
-      payment.paymentMethod || "N/A",
-    ]);
+    const headers = activeTab === "services" 
+      ? ["Date", "Invoice", "Token", "User", "Service", "Amount", "Status", "Method", "Queue Status"]
+      : ["Date", "Invoice", "User", "Service", "Amount", "Status", "Method"];
+    
+    const rows = filteredPayments.map((payment) => {
+      const baseRow = [
+        new Date(payment.paymentDate).toLocaleDateString(),
+        payment.invoiceNumber || "N/A",
+      ];
+      
+      if (activeTab === "services") {
+        baseRow.push(`#${payment.tokenNumber || "N/A"}`);
+      }
+      
+      baseRow.push(
+        payment.user?.name || "Unknown",
+        payment.service?.title || "Unknown",
+        `₹${payment.paymentAmount || 0}`,
+        payment.paymentStatus || "pending",
+        payment.paymentMethod || "N/A"
+      );
+      
+      if (activeTab === "services") {
+        baseRow.push(payment.status || "N/A");
+      }
+      
+      return baseRow;
+    });
 
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -184,6 +215,30 @@ function PaymentsManagement() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setActiveTab("appointments")}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 outline-none cursor-pointer ${
+              activeTab === "appointments"
+                ? "bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white shadow-lg"
+                : `${theme.cardBg} ${theme.textSecondary} hover:opacity-80`
+            }`}
+          >
+            Appointments ({appointmentPayments.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 outline-none cursor-pointer ${
+              activeTab === "services"
+                ? "bg-gradient-to-r from-[#62109F] to-[#8C00FF] text-white shadow-lg"
+                : `${theme.cardBg} ${theme.textSecondary} hover:opacity-80`
+            }`}
+          >
+            Services ({queuePayments.length})
+          </button>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className={`${theme.cardBg} rounded-lg shadow p-4 border ${theme.border}`}>
@@ -193,19 +248,23 @@ function PaymentsManagement() {
           <div className={`${theme.cardBg} rounded-lg shadow p-4 border ${theme.border}`}>
             <p className={`text-sm ${theme.textSecondary} mb-1`}>Total Transactions</p>
             <p className={`text-2xl font-bold ${theme.textAccent}`}>
-              {Array.isArray(payments) ? payments.length : 0}
+              {activeTab === "appointments" ? appointmentPayments.length : queuePayments.length}
             </p>
           </div>
           <div className={`${theme.cardBg} rounded-lg shadow p-4 border ${theme.border}`}>
             <p className={`text-sm ${theme.textSecondary} mb-1`}>Completed</p>
             <p className={`text-2xl font-bold text-green-600`}>
-              {Array.isArray(payments) ? payments.filter((p) => p.paymentStatus === "completed").length : 0}
+              {activeTab === "appointments" 
+                ? appointmentPayments.filter((p) => p.paymentStatus === "completed").length 
+                : queuePayments.filter((p) => p.paymentStatus === "completed").length}
             </p>
           </div>
           <div className={`${theme.cardBg} rounded-lg shadow p-4 border ${theme.border}`}>
             <p className={`text-sm ${theme.textSecondary} mb-1`}>Pending</p>
             <p className={`text-2xl font-bold text-yellow-600`}>
-              {Array.isArray(payments) ? payments.filter((p) => p.paymentStatus === "pending").length : 0}
+              {activeTab === "appointments" 
+                ? appointmentPayments.filter((p) => p.paymentStatus === "pending").length 
+                : queuePayments.filter((p) => p.paymentStatus === "pending").length}
             </p>
           </div>
         </div>
@@ -258,7 +317,7 @@ function PaymentsManagement() {
 
           <div className="mt-4 flex items-center gap-2">
             <p className={`text-sm ${theme.textSecondary}`}>
-              Showing {filteredPayments.length} of {payments.length} transactions
+              Showing {filteredPayments.length} of {activeTab === "appointments" ? appointmentPayments.length : queuePayments.length} transactions
             </p>
           </div>
         </div>
@@ -271,17 +330,23 @@ function PaymentsManagement() {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Date</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Invoice</th>
+                  {activeTab === "services" && (
+                    <th className="px-6 py-4 text-left text-sm font-semibold">Token</th>
+                  )}
                   <th className="px-6 py-4 text-left text-sm font-semibold">User</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Service</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Amount</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Method</th>
+                  {activeTab === "services" && (
+                    <th className="px-6 py-4 text-left text-sm font-semibold">Queue Status</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredPayments.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
+                    <td colSpan={activeTab === "services" ? "9" : "7"} className="px-6 py-12 text-center">
                       <p className={`${theme.textSecondary}`}>No payments found</p>
                     </td>
                   </tr>
@@ -307,6 +372,13 @@ function PaymentsManagement() {
                           {payment.invoiceNumber || "N/A"}
                         </p>
                       </td>
+                      {activeTab === "services" && (
+                        <td className="px-6 py-4">
+                          <span className={`text-sm font-bold ${theme.textAccent}`}>
+                            #{payment.tokenNumber || "N/A"}
+                          </span>
+                        </td>
+                      )}
                       <td className="px-6 py-4">
                         <p className={`text-sm font-medium ${theme.textPrimary}`}>
                           {payment.user?.name || "Unknown"}
@@ -353,6 +425,23 @@ function PaymentsManagement() {
                           </span>
                         </div>
                       </td>
+                      {activeTab === "services" && (
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              payment.status === "serving"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                : payment.status === "waiting"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : payment.status === "complete"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                            }`}
+                          >
+                            {payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1) || "N/A"}
+                          </span>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
