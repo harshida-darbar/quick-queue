@@ -9,7 +9,7 @@ const notificationService = require("../services/notificationService");
 // Create a new service
 exports.createService = async (req, res) => {
   try {
-    const { title, description, serviceType, photo, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
+    const { title, description, serviceType, photo, photos, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
     
     console.log('Received service data:', req.body); // Debug log
     console.log('Availability windows received:', availabilityWindows); // Debug log
@@ -18,11 +18,20 @@ exports.createService = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // Handle photos array - if photos array is provided, use it; otherwise use single photo
+    let photoArray = [];
+    if (photos && Array.isArray(photos) && photos.length > 0) {
+      photoArray = photos;
+    } else if (photo) {
+      photoArray = [photo];
+    }
+
     const service = await Queue.create({
       title,
       description,
       serviceType,
-      photo: photo || "",
+      photo: photoArray[0] || "", // Keep first photo as main photo for backward compatibility
+      photos: photoArray, // Store all photos in array
       address: address || "",
       maxCapacity,
       price: price || 0,
@@ -123,6 +132,7 @@ exports.getAllServices = async (req, res) => {
           description: 1,
           serviceType: 1,
           photo: 1,
+          photos: 1,
           address: 1,
           maxCapacity: 1,
           price: 1,

@@ -27,6 +27,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import InfiniteScroll from "react-infinite-scroll-component";
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
+import ImageCarousel from "../../components/ImageCarousel";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useTheme } from "../../context/ThemeContext";
 import { getThemeClass } from "../../config/colors";
@@ -684,6 +685,7 @@ function UserDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service, index) => {
                 const isInWishlist = wishlistItems.has(service._id);
+                
                 return (
                   <div
                     key={service._id}
@@ -715,19 +717,11 @@ function UserDashboard() {
                         </div>
                       </div>
 
-                      {service.photo && (
-                        <div className="relative w-full h-32 mb-4">
-                          <Image
-                            src={service.photo}
-                            alt={service.title}
-                            fill
-                            className="object-cover rounded-lg"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        </div>
-                      )}
+                      <ImageCarousel
+                        images={service.photos && service.photos.length > 0 ? service.photos : (service.photo ? [service.photo] : [])}
+                        alt={service.title}
+                        className="w-full h-48 mb-4 rounded-lg overflow-hidden"
+                      />
 
                       <p className={`${theme.textSecondary} mb-2 flex-1 min-h-[3rem]`}>
                         {service.description}

@@ -12,6 +12,7 @@ import { FaHospital, FaUtensils, FaCut, FaBuilding, FaEdit, FaTrash, FaTimes, Fa
 import InfiniteScroll from 'react-infinite-scroll-component';
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
+import ImageCarousel from "../../components/ImageCarousel";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useTheme } from "../../context/ThemeContext";
 import { getThemeClass } from "../../config/colors";
@@ -20,7 +21,8 @@ const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
   description: Yup.string().required("Description is required"),
   serviceType: Yup.string().required("Service type is required"),
-  photo: Yup.string().url("Must be a valid URL").required("url is required"),
+  photo: Yup.string().url("Must be a valid URL"),
+  photos: Yup.string(), // Comma-separated image URLs
   address: Yup.string().required("Address is required."),
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
@@ -60,6 +62,7 @@ function OrganizerDashboard() {
       description: "",
       serviceType: "",
       photo: "",
+      photos: "",
       address: "",
       maxCapacity: 1,   
       price: 0,
@@ -68,8 +71,14 @@ function OrganizerDashboard() {
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
+        // Handle multiple photos
+        const photosArray = values.photos 
+          ? values.photos.split(',').map(url => url.trim()).filter(url => url)
+          : (values.photo ? [values.photo] : []);
+        
         const serviceData = {
           ...values,
+          photos: photosArray,
           availabilityWindows: values.appointmentEnabled ? availabilityWindows : []
         };
         await api.put(`/queue/services/${editingService._id}`, serviceData);
@@ -92,6 +101,7 @@ function OrganizerDashboard() {
       description: "",
       serviceType: "",
       photo: "",
+      photos: "",
       address: "",
       maxCapacity: 1,
       price: 0,
@@ -100,8 +110,14 @@ function OrganizerDashboard() {
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        // Handle multiple photos
+        const photosArray = values.photos 
+          ? values.photos.split(',').map(url => url.trim()).filter(url => url)
+          : (values.photo ? [values.photo] : []);
+        
         const serviceData = {
           ...values,
+          photos: photosArray,
           availabilityWindows: values.appointmentEnabled ? availabilityWindows : []
         };
         await api.post("/queue/services", serviceData);
@@ -204,6 +220,7 @@ function OrganizerDashboard() {
       description: service.description,
       serviceType: service.serviceType,
       photo: service.photo || "",
+      photos: service.photos && service.photos.length > 0 ? service.photos.join(', ') : "",
       address: service.address || "",
       maxCapacity: service.maxCapacity,
       price: service.price || 0,
@@ -393,19 +410,23 @@ function OrganizerDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="mb-4">
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                      {t('organizer.photoUrl')}
+                      Service Images (Multiple)
                     </label>
                     <input
-                      name="photo"
-                      type="url"
-                      value={formik.values.photo}
+                      name="photos"
+                      type="text"
+                      value={formik.values.photos}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
+                      placeholder="Enter image URLs separated by commas"
                       className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                     />
-                    {formik.touched.photo && formik.errors.photo && (
+                    <p className={`text-xs ${theme.textMuted} mt-1`}>
+                      Separate multiple URLs with commas
+                    </p>
+                    {formik.touched.photos && formik.errors.photos && (
                       <div className="text-red-500 text-sm mt-1">
-                        {formik.errors.photo}
+                        {formik.errors.photos}
                       </div>
                     )}
                   </div>
@@ -671,19 +692,23 @@ function OrganizerDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="mb-4">
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                      {t('organizer.photoUrl')}
+                      Service Images (Multiple)
                     </label>
                     <input
-                      name="photo"
-                      type="url"
-                      value={editFormik.values.photo}
+                      name="photos"
+                      type="text"
+                      value={editFormik.values.photos}
                       onChange={editFormik.handleChange}
                       onBlur={editFormik.handleBlur}
+                      placeholder="Enter image URLs separated by commas"
                       className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                     />
-                    {editFormik.touched.photo && editFormik.errors.photo && (
+                    <p className={`text-xs ${theme.textMuted} mt-1`}>
+                      Separate multiple URLs with commas
+                    </p>
+                    {editFormik.touched.photos && editFormik.errors.photos && (
                       <div className="text-red-500 text-sm mt-1">
-                        {editFormik.errors.photo}
+                        {editFormik.errors.photos}
                       </div>
                     )}
                   </div>
@@ -987,19 +1012,11 @@ function OrganizerDashboard() {
                         </div>
                       </div>
 
-                      {service.photo && (
-                        <div className="relative w-full h-32 mb-4">
-                          <Image
-                            src={service.photo}
-                            alt={service.title}
-                            fill
-                            className="object-cover rounded-lg"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        </div>
-                      )}
+                      <ImageCarousel
+                        images={service.photos && service.photos.length > 0 ? service.photos : (service.photo ? [service.photo] : [])}
+                        alt={service.title}
+                        className="w-full h-48 mb-4 rounded-lg overflow-hidden"
+                      />
 
                       <p className={`${theme.textSecondary} mb-2 flex-1 min-h-[3rem] line-clamp-3`}>
                         {service.description}

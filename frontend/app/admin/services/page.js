@@ -22,6 +22,7 @@ import {
 } from "react-icons/io5";
 import api from "../../utils/api";
 import Navbar from "../../components/Navbar";
+import ImageCarousel from "../../components/ImageCarousel";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useTheme } from "../../context/ThemeContext";
 import { getThemeClass } from "../../config/colors";
@@ -305,25 +306,16 @@ function ServicesManagement() {
                 className={`${theme.cardBg} rounded-lg shadow-lg overflow-hidden border ${theme.border} hover:shadow-xl transition-shadow`}
               >
                 {/* Service Image */}
-                <div className="relative h-48 bg-gradient-to-br from-purple-500 to-purple-600">
-                  {service.photoUrl ? (
-                    <img
-                      src={service.photoUrl}
-                      alt={service.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.parentElement.querySelector('.fallback-icon').style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div className="fallback-icon w-full h-full flex items-center justify-center" style={{ display: service.photoUrl ? 'none' : 'flex' }}>
-                    <IoBusinessOutline size={64} className="text-white/50" />
-                  </div>
+                <div className="relative h-48">
+                  <ImageCarousel
+                    images={service.photos && service.photos.length > 0 ? service.photos : (service.photoUrl || service.photo ? [service.photoUrl || service.photo] : [])}
+                    alt={service.title}
+                    className="w-full h-full"
+                  />
                   <span
                     className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
                       service.status
-                    )}`}
+                    )} z-20`}
                   >
                     {service.status?.charAt(0).toUpperCase() + service.status?.slice(1)}
                   </span>
@@ -423,17 +415,14 @@ function ServicesManagement() {
             </div>
 
             <div className="p-6">
-              {/* Service Image */}
-              {selectedService.photoUrl && (
-                <img
-                  src={selectedService.photoUrl}
+              {/* Service Image Carousel */}
+              <div className="mb-6">
+                <ImageCarousel
+                  images={selectedService.photos && selectedService.photos.length > 0 ? selectedService.photos : (selectedService.photoUrl || selectedService.photo ? [selectedService.photoUrl || selectedService.photo] : [])}
                   alt={selectedService.title}
-                  className="w-full h-64 object-cover rounded-lg mb-6"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  className="w-full h-64 rounded-lg overflow-hidden"
                 />
-              )}
+              </div>
 
               {/* Title and Status */}
               <div className="flex items-start justify-between mb-4">

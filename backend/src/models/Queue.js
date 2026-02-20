@@ -108,6 +108,9 @@ const queueSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    photos: [{
+      type: String,
+    }],
     address: {
       type: String,
       default: "",

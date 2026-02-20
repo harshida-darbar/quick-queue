@@ -10,6 +10,7 @@ import { FaHospital, FaUtensils, FaCut, FaBuilding, FaStar } from "react-icons/f
 import api from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
 import StarRating from "../../../components/StarRating";
+import ImageCarousel from "../../../components/ImageCarousel";
 import { IoArrowBack } from "react-icons/io5";
 import { useTheme } from "../../../context/ThemeContext";
 import { getThemeClass } from "../../../config/colors";
@@ -252,17 +253,11 @@ export default function ServiceDetails({ params }) {
             </div>
           </div>
           
-          {service.photo && (
-            <div className="relative w-full h-48 mb-4">
-              <Image 
-                src={service.photo} 
-                alt={service.title}
-                fill
-                className="object-cover rounded-lg"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          )}
+          <ImageCarousel
+            images={service.photos && service.photos.length > 0 ? service.photos : (service.photo ? [service.photo] : [])}
+            alt={service.title}
+            className="w-full h-64 mb-4 rounded-lg overflow-hidden"
+          />
           
           <p className={`${theme.textSecondary} mb-6`}>{service.description}</p>
           
