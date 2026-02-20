@@ -40,6 +40,17 @@ exports.getDashboardAnalytics = async (req, res) => {
       status: "scheduled",
     });
 
+    // Queue status counts from QueueEntry collection (for live queue management)
+    const servingCount = await QueueEntry.countDocuments({
+      status: "serving",
+    });
+    const waitingCount = await QueueEntry.countDocuments({
+      status: "waiting",
+    });
+    const completedQueueCount = await QueueEntry.countDocuments({
+      status: "complete",
+    });
+
     // Revenue calculation from Appointment collection
     // Include: completed payments (non-cancelled) + cancellation fees from cancelled appointments
     const revenueData = await Appointment.aggregate([
@@ -277,9 +288,11 @@ exports.getDashboardAnalytics = async (req, res) => {
         today: todayBookings,
         week: weekBookings,
         month: monthBookings,
-        completed: completedBookings,
+        completed: completedBookings + completedQueueCount, // Include both appointment and queue completions
         confirmed: confirmedBookings,
         scheduled: scheduledBookings,
+        serving: servingCount, // Currently serving from queue
+        waiting: waitingCount, // Currently waiting from queue
       },
       revenue: {
         total: revenueData[0]?.totalRevenue || 0,
@@ -376,17 +389,27 @@ exports.getAllServicesAdmin = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Add computed fields and map database fields to frontend expectations
-    const servicesWithExtras = services.map(service => {
+    const servicesWithExtras = await Promise.all(services.map(async (service) => {
       const serviceObj = service.toObject();
+      
       // Count only active bookings (exclude cancelled)
       const activeBookings = serviceObj.bookedSlots?.filter(slot => slot.status !== 'cancelled').length || 0;
+      
+      // Calculate current capacity from QueueEntry (people currently being served)
+      const servingEntries = await QueueEntry.find({
+        queue: service._id,
+        status: "serving",
+      });
+      const currentCapacity = servingEntries.reduce((sum, entry) => sum + (entry.groupSize || 1), 0);
+      
       return {
         ...serviceObj,
         photoUrl: serviceObj.photo || serviceObj.photoUrl, // Map photo to photoUrl
         location: serviceObj.address || serviceObj.location, // Map address to location
         totalBookings: activeBookings,
+        currentCapacity: currentCapacity, // Add current serving capacity
       };
-    });
+    }));
 
     res.json(servicesWithExtras);
   } catch (error) {

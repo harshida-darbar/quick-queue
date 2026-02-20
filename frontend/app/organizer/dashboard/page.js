@@ -61,7 +61,7 @@ function OrganizerDashboard() {
       serviceType: "",
       photo: "",
       address: "",
-      maxCapacity: 1,
+      maxCapacity: 1,   
       price: 0,
       appointmentEnabled: false,
     },
