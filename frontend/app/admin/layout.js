@@ -9,6 +9,7 @@ import {
   IoBusinessOutline, 
   IoCash, 
   IoStar,
+  IoCalendarOutline,
   IoMenu,
   IoClose
 } from "react-icons/io5";
@@ -39,6 +40,11 @@ export default function AdminLayout({ children }) {
       name: t('admin.services'),
       path: '/admin/services',
       icon: IoBusinessOutline,
+    },
+    {
+      name: 'Appointments',
+      path: '/admin/appointments',
+      icon: IoCalendarOutline,
     },
     {
       name: t('admin.payments'),

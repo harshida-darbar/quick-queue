@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Queue = require("../models/Queue");
 const QueueEntry = require("../models/QueueEntry");
 const Review = require("../models/Review");
+const Appointment = require("../models/Appointment");
 
 // Get dashboard analytics
 exports.getDashboardAnalytics = async (req, res) => {
@@ -436,6 +437,28 @@ exports.getAllPayments = async (req, res) => {
     res.json(transformedPayments);
   } catch (error) {
     console.error("Error fetching payments:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get all appointments
+exports.getAllAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find()
+      .populate("user", "name email profileImage")
+      .populate({
+        path: "queue",
+        select: "title serviceType address price",
+        populate: {
+          path: "organizer",
+          select: "name email"
+        }
+      })
+      .sort({ date: -1, startTime: -1 });
+
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

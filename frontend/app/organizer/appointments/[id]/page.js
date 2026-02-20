@@ -109,6 +109,312 @@ function AppointmentsPage() {
     });
   };
 
+  const handleDownloadRefundInvoice = (appointment) => {
+    console.log('Refund invoice appointment data:', appointment);
+    
+    let originalAmount = appointment.paymentAmount || service?.price || 0;
+    let refundAmount = appointment.refundAmount || 0;
+    let refundPercentage = appointment.refundPercentage || 0;
+    
+    // If refund data is missing (old cancelled appointments), calculate it now
+    if (refundPercentage === 0 && appointment.date && appointment.startTime) {
+      const cancelTime = appointment.cancelledAt ? new Date(appointment.cancelledAt) : new Date();
+      const appointmentDate = new Date(appointment.date);
+      const [hours, minutes] = appointment.startTime.split(':');
+      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      const timeDiff = appointmentDate - cancelTime;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      
+      if (hoursDiff >= 24) {
+        refundPercentage = 50;
+      } else if (hoursDiff >= 12) {
+        refundPercentage = 25;
+      } else if (hoursDiff >= 6) {
+        refundPercentage = 10;
+      }
+      
+      refundAmount = (originalAmount * refundPercentage) / 100;
+    }
+    
+    // Format dates properly
+    const formatDateWithTime = (dateString) => {
+      if (!dateString) return 'N/A';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return 'N/A';
+      }
+    };
+
+    const formatDateOnly = (dateString) => {
+      if (!dateString) return 'N/A';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric'
+        });
+      } catch (e) {
+        return 'N/A';
+      }
+    };
+    
+    // Use updatedAt or current time for cancelled date if cancelledAt is missing
+    const cancelledDate = appointment.cancelledAt || appointment.updatedAt || new Date().toISOString();
+    const bookingDate = appointment.createdAt || new Date(appointment.date).toISOString();
+    
+    // Generate invoice number if not present
+    let invoiceNum = appointment.invoiceNumber;
+    if (!invoiceNum) {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const randomNum = Math.floor(10000 + Math.random() * 90000);
+      invoiceNum = `REF-${dateStr}-${randomNum}`;
+    }
+    
+    const invoiceWindow = window.open('', '_blank');
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Refund Invoice - ${service?.title || 'Service'}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 15px 10px; 
+            max-width: 900px; 
+            margin: 0 auto;
+            background: #f5f5f5;
+          }
+          .invoice-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+          }
+          .header { 
+            text-align: center; 
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+          }
+          .header h1 { 
+            font-size: 26px;
+            margin-bottom: 6px;
+            letter-spacing: 2px;
+          }
+          .refund-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 6px;
+          }
+          .invoice-number {
+            color: rgba(255,255,255,0.9);
+            font-size: 12px;
+            margin-top: 6px;
+          }
+          .content { padding: 18px; }
+          .section { 
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+          }
+          .section:last-child { border-bottom: none; margin-bottom: 0; }
+          .section-title { 
+            font-size: 15px;
+            font-weight: 600;
+            color: #ef4444;
+            margin-bottom: 8px;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+          }
+          .info-item {
+            display: flex;
+            flex-direction: column;
+          }
+          .info-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .info-value {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 500;
+          }
+          .refund-box {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 5px;
+          }
+          .refund-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+          }
+          .refund-row.total {
+            font-size: 17px;
+            font-weight: bold;
+            color: #10b981;
+            padding-top: 8px;
+            border-top: 2px solid #fca5a5;
+            margin-top: 5px;
+          }
+          .cancelled-notice {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+          }
+          .cancelled-notice p {
+            color: #92400e;
+            font-size: 13px;
+            margin-bottom: 4px;
+          }
+          .footer {
+            text-align: center;
+            padding: 6px;
+            color: #6b7280;
+            font-size: 10px;
+            background: #f9fafb;
+          }
+          @media print {
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+            .invoice-container { box-shadow: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <div class="header">
+            <h1>REFUND INVOICE</h1>
+            <div class="refund-badge">✓ Cancelled & Refunded</div>
+            <div class="invoice-number">Invoice #: ${invoiceNum}</div>
+          </div>
+          
+          <div class="content">
+            <div class="cancelled-notice">
+              <p><strong>Appointment Cancelled</strong></p>
+              <p>Cancelled on: ${formatDateWithTime(cancelledDate)}</p>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Service Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Service Name</div>
+                  <div class="info-value">${service?.title || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Service Type</div>
+                  <div class="info-value" style="text-transform: capitalize;">${service?.serviceType || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Customer</div>
+                  <div class="info-value">${appointment.user.name}</div>
+                </div>
+                ${service?.address ? `
+                  <div class="info-item" style="grid-column: 1 / -1;">
+                    <div class="info-label">Location</div>
+                    <div class="info-value">${service.address}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Original Booking Details</div>
+              <div class="info-grid">
+                ${appointment.date ? `
+                  <div class="info-item">
+                    <div class="info-label">Booked Date</div>
+                    <div class="info-value">${formatDateOnly(appointment.date)}</div>
+                  </div>
+                ` : ''}
+                ${appointment.startTime ? `
+                  <div class="info-item">
+                    <div class="info-label">Time Slot</div>
+                    <div class="info-value">${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime || 'N/A')}</div>
+                  </div>
+                ` : ''}
+                <div class="info-item">
+                  <div class="info-label">Group Size</div>
+                  <div class="info-value">${appointment.groupSize || 1} ${appointment.groupSize === 1 ? 'Person' : 'People'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Booking Date</div>
+                  <div class="info-value">${formatDateOnly(bookingDate)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Refund Information</div>
+              <div class="refund-box">
+                <div class="refund-row">
+                  <span>Original Amount:</span>
+                  <span>₹${originalAmount.toFixed(2)}</span>
+                </div>
+                <div class="refund-row">
+                  <span>Refund Percentage:</span>
+                  <span>${refundPercentage}%</span>
+                </div>
+                <div class="refund-row">
+                  <span>Cancellation Fee:</span>
+                  <span>₹${(originalAmount - refundAmount).toFixed(2)}</span>
+                </div>
+                <div class="refund-row total">
+                  <span>Refund Amount:</span>
+                  <span>₹${refundAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>This is a system-generated refund invoice</p>
+            <p style="margin-top: 5px;">Generated on ${new Date().toLocaleString()}</p>
+          </div>
+
+          <div class="no-print" style="text-align: center; padding: 20px;">
+            <button onclick="window.print()" style="padding: 12px 30px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">
+              Download Refund Invoice (PDF)
+            </button>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+  };
+
   const handleDownloadInvoice = (appointment) => {
     console.log('Invoice appointment data:', appointment);
     
@@ -513,9 +819,9 @@ function AppointmentsPage() {
                         </td>
                         <td className="px-4 py-4 text-center">
                           <button
-                            onClick={() => handleDownloadInvoice(appointment)}
-                            className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors cursor-pointer outline-none"
-                            title="Download Invoice"
+                            onClick={() => appointment.status === 'cancelled' ? handleDownloadRefundInvoice(appointment) : handleDownloadInvoice(appointment)}
+                            className={`p-2 ${appointment.status === 'cancelled' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded-lg transition-colors cursor-pointer outline-none`}
+                            title={appointment.status === 'cancelled' ? 'Download Refund Invoice' : 'Download Invoice'}
                           >
                             <FaDownload size={14} />
                           </button>

@@ -15,6 +15,7 @@ const {
   getAllReviews,
   deleteReview,
   getAllPayments,
+  getAllAppointments,
 } = require("../controllers/adminController");
 
 // All routes require admin authentication (role 1)
@@ -39,5 +40,8 @@ router.delete("/reviews/:reviewId", deleteReview);
 
 // Payment management
 router.get("/payments", getAllPayments);
+
+// Appointment management
+router.get("/appointments", getAllAppointments);
 
 module.exports = router;

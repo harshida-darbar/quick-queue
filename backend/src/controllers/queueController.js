@@ -784,6 +784,19 @@ exports.cancelAppointment = async (req, res) => {
       appointment.refundAmount = refundAmount;
       await appointment.save();
       
+      // Also update in Queue.bookedSlots if it exists there
+      const service = await Queue.findOne({ "bookedSlots._id": appointmentId });
+      if (service) {
+        const slot = service.bookedSlots.id(appointmentId);
+        if (slot) {
+          slot.status = 'cancelled';
+          slot.cancelledAt = new Date();
+          slot.refundPercentage = refundPercentage;
+          slot.refundAmount = refundAmount;
+          await service.save();
+        }
+      }
+      
       return res.json({ 
         message: "Appointment cancelled successfully",
         refundPercentage,
@@ -854,6 +867,23 @@ exports.cancelAppointment = async (req, res) => {
       slot.refundPercentage = refundPercentage;
       slot.refundAmount = refundAmount;
       await service.save();
+      
+      // Also try to update in Appointment collection if it exists
+      const appointmentDoc = await Appointment.findOne({
+        queue: service._id,
+        user: userId,
+        date: slot.date,
+        startTime: slot.startTime,
+        status: { $ne: 'cancelled' }
+      });
+      
+      if (appointmentDoc) {
+        appointmentDoc.status = 'cancelled';
+        appointmentDoc.cancelledAt = new Date();
+        appointmentDoc.refundPercentage = refundPercentage;
+        appointmentDoc.refundAmount = refundAmount;
+        await appointmentDoc.save();
+      }
       
       return res.json({ 
         message: "Appointment cancelled successfully",
