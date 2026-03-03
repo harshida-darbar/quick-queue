@@ -1169,7 +1169,7 @@ exports.getUserServiceInteractions = async (req, res) => {
 exports.updateService = async (req, res) => {
   try {
     const serviceId = req.params.id;
-    const { title, description, serviceType, photo, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
+    const { title, description, serviceType, photo, photos, address, maxCapacity, price, appointmentEnabled, availabilityWindows } = req.body;
     
     const service = await Queue.findById(serviceId);
     if (!service || service.organizer.toString() !== req.user.id) {
@@ -1180,6 +1180,7 @@ exports.updateService = async (req, res) => {
     service.description = description || service.description;
     service.serviceType = serviceType || service.serviceType;
     service.photo = photo !== undefined ? photo : service.photo;
+    service.photos = photos !== undefined ? photos : service.photos; // Update photos array
     service.address = address !== undefined ? address : service.address;
     service.maxCapacity = maxCapacity || service.maxCapacity;
     service.price = price !== undefined ? price : service.price;

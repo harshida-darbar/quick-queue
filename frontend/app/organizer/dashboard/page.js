@@ -119,6 +119,11 @@ function OrganizerDashboard() {
   };
 
   const removeUploadedImage = (index) => {
+    // Don't allow removing the last image
+    if (uploadedImages.length <= 1) {
+      toast.error("At least one image is required. Upload another image before removing this one.");
+      return;
+    }
     setUploadedImages(uploadedImages.filter((_, i) => i !== index));
   };
 
@@ -145,6 +150,7 @@ function OrganizerDashboard() {
       
       console.log('Edit form submit - uploadedImages:', uploadedImages);
       console.log('Edit form submit - values.photos:', values.photos);
+      console.log('Edit form submit - values.photo:', values.photo);
       console.log('Edit form submit - photosArray:', photosArray);
       
       // Validate at least one image is provided
@@ -161,6 +167,7 @@ function OrganizerDashboard() {
           photos: photosArray,
           availabilityWindows: values.appointmentEnabled ? availabilityWindows : []
         };
+        console.log('Sending serviceData:', serviceData);
         await api.put(`/queue/services/${editingService._id}`, serviceData);
         toast.success("Service updated successfully!");
         setShowEditForm(false);
@@ -311,7 +318,7 @@ function OrganizerDashboard() {
       description: service.description,
       serviceType: service.serviceType,
       photo: "", // Don't use the old single photo field
-      photos: service.photos && service.photos.length > 0 ? service.photos.join(', ') : "",
+      photos: "", // Clear this since we're using uploadedImages state
       address: service.address || "",
       maxCapacity: service.maxCapacity,
       price: service.price || 0,
@@ -554,6 +561,7 @@ function OrganizerDashboard() {
                             type="button"
                             onClick={() => removeUploadedImage(index)}
                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer outline-none"
+                            title={uploadedImages.length === 1 ? 'Cannot remove last image' : 'Remove image'}
                           >
                             <FaTimes size={12} />
                           </button>
@@ -562,21 +570,23 @@ function OrganizerDashboard() {
                     </div>
                   )}
 
-                  {/* Optional: URL Input as fallback */}
-                  <details className="mt-2">
-                    <summary className={`text-xs ${theme.textMuted} cursor-pointer`}>
-                      Or enter image URLs manually
-                    </summary>
-                    <input
-                      name="photos"
-                      type="text"
-                      value={formik.values.photos}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      placeholder="Enter image URLs separated by commas"
-                      className={`w-full px-3 py-2 mt-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input} text-sm`}
-                    />
-                  </details>
+                  {/* URL Input - Only show if no uploaded images */}
+                  {uploadedImages.length === 0 && (
+                    <div className="mb-3">
+                      <input
+                        name="photos"
+                        type="text"
+                        value={formik.values.photos}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Or enter image URLs separated by commas"
+                        className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                      />
+                      <p className={`text-xs ${theme.textMuted} mt-1`}>
+                        Separate multiple URLs with commas
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Max Capacity and Price in One Row */}
@@ -838,9 +848,10 @@ function OrganizerDashboard() {
                 </div>
 
                 {/* Service Images Upload - Full Width */}
+                {/* Service Images Upload - Full Width */}
                 <div className="mb-4">
                   <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    Service Images (Upload from Device or URLs)
+                    Service Images (Upload from Device)
                   </label>
                   
                   {/* File Upload Button */}
@@ -868,22 +879,6 @@ function OrganizerDashboard() {
                     </label>
                   </div>
 
-                  {/* URL Input */}
-                  <div className="mb-3">
-                    <input
-                      name="photos"
-                      type="text"
-                      value={editFormik.values.photos}
-                      onChange={editFormik.handleChange}
-                      onBlur={editFormik.handleBlur}
-                      placeholder="Or enter image URLs separated by commas"
-                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                    />
-                    <p className={`text-xs ${theme.textMuted} mt-1`}>
-                      Separate multiple URLs with commas
-                    </p>
-                  </div>
-
                   {/* Uploaded Images Preview */}
                   {uploadedImages.length > 0 && (
                     <div className="grid grid-cols-5 gap-2 mb-3">
@@ -898,11 +893,30 @@ function OrganizerDashboard() {
                             type="button"
                             onClick={() => removeUploadedImage(index)}
                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer outline-none"
+                            title={uploadedImages.length === 1 ? 'Cannot remove last image' : 'Remove image'}
                           >
                             <FaTimes size={12} />
                           </button>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* URL Input - Only show if no uploaded images */}
+                  {uploadedImages.length === 0 && (
+                    <div className="mb-3">
+                      <input
+                        name="photos"
+                        type="text"
+                        value={editFormik.values.photos}
+                        onChange={editFormik.handleChange}
+                        onBlur={editFormik.handleBlur}
+                        placeholder="Or enter image URLs separated by commas"
+                        className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                      />
+                      <p className={`text-xs ${theme.textMuted} mt-1`}>
+                        Separate multiple URLs with commas
+                      </p>
                     </div>
                   )}
                 </div>
