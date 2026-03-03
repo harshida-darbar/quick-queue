@@ -969,18 +969,6 @@ function UserDashboard() {
                     {t('forms.cancel')}
                   </button>
                   
-                  {/* Original Book Table/Join Queue Button - Commented for Payment Flow */}
-                  {/* <button
-                    type="submit"
-                    disabled={joinFormik.isSubmitting}
-                    className="px-4 py-2 bg-
-                    
-                        [#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 outline-none cursor-pointer"
-                  >
-                    {joinFormik.isSubmitting
-                      ? t('forms.joining')
-                      : getButtonText(selectedService)}
-                  </button> */}
                   
                   {/* New Pay Now Button */}
                   <button

@@ -31,17 +31,17 @@ function SignupPage() {
     },
 
     validationSchema: Yup.object({
-      role: Yup.string().required("Role is required"),
-      name: Yup.string().trim().required("Name is required"),
-      email: Yup.string().email("Invalid email").required("Email is required"),
+      role: Yup.string().required("Role is required").trim(),
+      name: Yup.string().trim().required("Name is required").trim(),
+      email: Yup.string().email("Invalid email").required("Email is required").trim(),
       password: Yup.string()
-        .min(6, "Password must be at least 6 characters")
+        .min(6, "Password must be at least 6 characters").trim()
         .matches(/[^a-zA-Z0-9]/, "Must include a special character")
         .required("Password is required"),
       phone: Yup.string()
-        .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+        .matches(/^[0-9]{10}$/, "Phone number must be 10 digits").trim()
         .required("Phone number is required"),
-      city: Yup.string().trim().required("City is required"),
+      city: Yup.string().trim().required("City is required").trim(),
     }),
 
     onSubmit: async (values, { resetForm }) => {
@@ -99,6 +99,7 @@ function SignupPage() {
             <input
               type="text"
               name="name"
+              placeholder="Enter Your Name"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -116,6 +117,7 @@ function SignupPage() {
             <input
               type="email"
               name="email"
+              placeholder="Enter Your Email"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -136,7 +138,7 @@ function SignupPage() {
               value={formik.values.phone}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              placeholder="1234567890"
+              placeholder="Enter Your Phone Number"
               className={`w-full h-11 mt-1 rounded-lg border ${theme.border} px-3 focus:ring-2 focus:ring-[#8C00FF] outline-none ${theme.input}`}
             />
             {formik.touched.phone && formik.errors.phone && (
@@ -151,6 +153,7 @@ function SignupPage() {
             <input
               type="text"
               name="city"
+              placeholder="Enter Your City"
               value={formik.values.city}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -168,6 +171,7 @@ function SignupPage() {
             <input
               type={showPassword ? "text" : "password"}
               name="password"
+              placeholder="Enter Your Password"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}

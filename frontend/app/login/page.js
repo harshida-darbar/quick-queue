@@ -31,9 +31,11 @@ function LoginPage() {
       email: Yup.string()
 
         .email("Invalid email")
+        .trim()
         .required("Email is required"),
       password: Yup.string()
         .min(6, "Password must be at least 6 characters")
+        .trim()
         .matches(/[^a-zA-Z0-9]/, "Must include a special character")
         .required("Password is required"),
     }),
@@ -72,6 +74,7 @@ function LoginPage() {
             <input
               type="email"
               name="email"
+              placeholder="Enter Your Email"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -89,6 +92,7 @@ function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               name="password"
+              placeholder="Enter Your Password"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}

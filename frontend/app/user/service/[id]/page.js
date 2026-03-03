@@ -508,7 +508,7 @@ export default function ServiceDetails({ params }) {
                     className="px-6 py-3 bg-gradient-to-r from-[#4D2FB2] to-[#62109F] text-white rounded-lg hover:from-[#62109F] hover:to-[#8C00FF] transition-all duration-300 font-medium cursor-pointer"
                   >
                     {t('appointments.seeAllReviews')} ({reviews.length})
-                  </button>
+                  </button> 
                 </div>
               )}
             </>
