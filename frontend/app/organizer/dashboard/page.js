@@ -35,6 +35,7 @@ const validationSchema = Yup.object({
 
 function OrganizerDashboard() {
   const [services, setServices] = useState([]);
+  const [serviceTypes, setServiceTypes] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -55,6 +56,20 @@ function OrganizerDashboard() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   })();
+
+  useEffect(() => {
+    fetchServiceTypes();
+  }, []);
+
+  const fetchServiceTypes = async () => {
+    try {
+      const response = await api.get("/service-types");
+      setServiceTypes(response.data);
+    } catch (error) {
+      console.error("Error fetching service types:", error);
+      toast.error("Failed to fetch service types");
+    }
+  };
 
   const editFormik = useFormik({
     initialValues: {
@@ -352,15 +367,20 @@ function OrganizerDashboard() {
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('organizer.serviceType')}
                     </label>
-                    <input
+                    <select
                       name="serviceType"
-                      type="text"
-                      placeholder={t('organizer.serviceTypePlaceholder')}
                       value={formik.values.serviceType}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                    />
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input} cursor-pointer`}
+                    >
+                      <option value="">Select Service Type</option>
+                      {serviceTypes.map((type) => (
+                        <option key={type._id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                     {formik.touched.serviceType && formik.errors.serviceType && (
                       <div className="text-red-500 text-sm mt-1">
                         {formik.errors.serviceType}
@@ -514,7 +534,7 @@ function OrganizerDashboard() {
                             <button
                               type="button"
                               onClick={() => setAvailabilityWindows(availabilityWindows.filter((_, i) => i !== index))}
-                              className="text-red-500 hover:text-red-700 text-xs"
+                              className="text-red-500 hover:text-red-700 text-xs cursor-pointer outline-none"
                             >
                               {t('organizer.remove')}
                             </button>
@@ -523,27 +543,39 @@ function OrganizerDashboard() {
                       </div>
                     )}
                     
-                    <div className="grid grid-cols-1 gap-2 mb-2">
-                      <input
-                        type="date"
-                        id="windowDate"
-                        min={todayLocal}
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="time"
-                        placeholder={t('organizer.startTime')}
-                        id="windowStartTime"
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
-                      <input
-                        type="time"
-                        placeholder={t('organizer.endTime')}
-                        id="windowEndTime"
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
+                    {/* Add New Window - All in one line with labels */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          id="windowDate"
+                          min={todayLocal}
+                          className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          id="windowStartTime"
+                          className={`w-full px-3 py-2 text-sm ${theme.input} border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          id="windowEndTime"
+                          className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-sm ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
                     </div>
                     
                     <button
@@ -571,7 +603,7 @@ function OrganizerDashboard() {
                           toast.error('Please fill all availability window fields');
                         }
                       }}
-                      className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4]"
+                      className="w-full px-4 py-2 bg-[#85409D] text-white rounded-md text-sm hover:bg-[#C47BE4] transition-colors cursor-pointer outline-none"
                     >
                       {t('organizer.addAvailabilityWindow')}
                     </button>
@@ -634,15 +666,20 @@ function OrganizerDashboard() {
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('organizer.serviceType')}
                     </label>
-                    <input
+                    <select
                       name="serviceType"
-                      type="text"
-                      placeholder={t('organizer.serviceTypePlaceholder')}
                       value={editFormik.values.serviceType}
                       onChange={editFormik.handleChange}
                       onBlur={editFormik.handleBlur}
-                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                    />
+                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input} cursor-pointer`}
+                    >
+                      <option value="">Select Service Type</option>
+                      {serviceTypes.map((type) => (
+                        <option key={type._id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                     {editFormik.touched.serviceType && editFormik.errors.serviceType && (
                       <div className="text-red-500 text-sm mt-1">
                         {editFormik.errors.serviceType}
