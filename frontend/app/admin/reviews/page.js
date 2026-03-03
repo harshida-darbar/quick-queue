@@ -346,7 +346,7 @@ function ReviewsManagement() {
               <h3 className={`text-xl font-bold ${theme.textAccent} mb-2`}>Delete Review</h3>
               <p className={`${theme.textSecondary} mb-4`}>
                 Are you sure you want to delete this review by{" "}
-                <span className="font-semibold">{reviewToDelete.user?.name}</span>? This action
+                <span className=  "font-semibold">{reviewToDelete.user?.name}</span>? This action
                 cannot be undone.
               </p>
               {reviewToDelete.reviewText && (

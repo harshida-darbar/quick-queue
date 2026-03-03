@@ -21,8 +21,16 @@ const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
   description: Yup.string().required("Description is required"),
   serviceType: Yup.string().required("Service type is required"),
-  photo: Yup.string().url("Must be a valid URL"),
-  photos: Yup.string(), // Comma-separated image URLs
+  photo: Yup.string().test('is-url-or-empty', 'Must be a valid URL', (value) => {
+    if (!value || value.trim() === '') return true;
+    try {
+      new URL(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }),
+  photos: Yup.string(), // Comma-separated image URLs (optional, can use uploaded images instead)
   address: Yup.string().required("Address is required."),
   maxCapacity: Yup.number()
     .min(1, "Capacity must be at least 1")
@@ -46,6 +54,8 @@ function OrganizerDashboard() {
   const [availabilityWindows, setAvailabilityWindows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const servicesPerPage = 6;
   const { t } = useTranslation();
   const { isDark } = useTheme();
@@ -71,6 +81,41 @@ function OrganizerDashboard() {
     }
   };
 
+  const handleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
+
+    if (files.length > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+
+    setUploadingImages(true);
+    const formData = new FormData();
+    
+    Array.from(files).forEach((file) => {
+      formData.append("images", file);
+    });
+
+    try {
+      const response = await api.post("/services/upload-multiple", formData);
+
+      const newImages = response.data.imageUrls.map(url => `http://localhost:5000${url}`);
+      setUploadedImages([...uploadedImages, ...newImages]);
+      toast.success(`${response.data.count} image(s) uploaded successfully`);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to upload images";
+      console.error("Backend error:", errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const removeUploadedImage = (index) => {
+    setUploadedImages(uploadedImages.filter((_, i) => i !== index));
+  };
+
   const editFormik = useFormik({
     initialValues: {
       title: "",
@@ -80,17 +125,31 @@ function OrganizerDashboard() {
       photos: "",
       address: "",
       maxCapacity: 1,   
-      price: 0,
+      price: 0, 
       appointmentEnabled: false,
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
+      // Use uploaded images first, then fall back to URL input
+      const photosArray = uploadedImages.length > 0 
+        ? uploadedImages 
+        : (values.photos 
+            ? values.photos.split(',').map(url => url.trim()).filter(url => url)
+            : (values.photo ? [values.photo] : []));
+      
+      console.log('Edit form submit - uploadedImages:', uploadedImages);
+      console.log('Edit form submit - values.photos:', values.photos);
+      console.log('Edit form submit - photosArray:', photosArray);
+      
+      // Validate at least one image is provided
+      if (photosArray.length === 0) {
+        console.log('Validation failed - no images');
+        toast.error("At least one service image is required");
+        setSubmitting(false);
+        return;
+      }
+      
       try {
-        // Handle multiple photos
-        const photosArray = values.photos 
-          ? values.photos.split(',').map(url => url.trim()).filter(url => url)
-          : (values.photo ? [values.photo] : []);
-        
         const serviceData = {
           ...values,
           photos: photosArray,
@@ -100,6 +159,7 @@ function OrganizerDashboard() {
         toast.success("Service updated successfully!");
         setShowEditForm(false);
         setEditingService(null);
+        setUploadedImages([]);
         setAvailabilityWindows([]);
         fetchServices(true);
       } catch (error) {
@@ -125,10 +185,19 @@ function OrganizerDashboard() {
     validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        // Handle multiple photos
-        const photosArray = values.photos 
-          ? values.photos.split(',').map(url => url.trim()).filter(url => url)
-          : (values.photo ? [values.photo] : []);
+        // Use uploaded images instead of URL input
+        const photosArray = uploadedImages.length > 0 
+          ? uploadedImages 
+          : (values.photos 
+              ? values.photos.split(',').map(url => url.trim()).filter(url => url)
+              : (values.photo ? [values.photo] : []));
+        
+        // Validate at least one image is provided
+        if (photosArray.length === 0) {
+          toast.error("At least one service image is required");
+          setSubmitting(false);
+          return;
+        }
         
         const serviceData = {
           ...values,
@@ -138,6 +207,7 @@ function OrganizerDashboard() {
         await api.post("/queue/services", serviceData);
         toast.success("Service created successfully!");
         setShowCreateForm(false);
+        setUploadedImages([]);
         resetForm();
         setAvailabilityWindows([]);
         fetchServices();
@@ -234,13 +304,19 @@ function OrganizerDashboard() {
       title: service.title,
       description: service.description,
       serviceType: service.serviceType,
-      photo: service.photo || "",
+      photo: "", // Don't use the old single photo field
       photos: service.photos && service.photos.length > 0 ? service.photos.join(', ') : "",
       address: service.address || "",
       maxCapacity: service.maxCapacity,
       price: service.price || 0,
       appointmentEnabled: service.appointmentEnabled || false,
     });
+    // Initialize uploaded images from existing service photos
+    if (service.photos && service.photos.length > 0) {
+      setUploadedImages(service.photos);
+    } else {
+      setUploadedImages([]);
+    }
     setAvailabilityWindows(service.availabilityWindows || []);
     setShowEditForm(true);
   };
@@ -427,11 +503,64 @@ function OrganizerDashboard() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mb-4">
-                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                      Service Images (Multiple)
+                {/* Service Images Upload - Full Width */}
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
+                    Service Images (Upload from Device)
+                  </label>
+                  
+                  {/* File Upload Button */}
+                  <div className="mb-3">
+                    <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${theme.border} rounded-lg cursor-pointer hover:border-purple-500 transition-colors ${uploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      <div className="text-center">
+                        <svg className={`mx-auto h-12 w-12 ${theme.textMuted}`} stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <p className={`mt-2 text-sm ${theme.textPrimary}`}>
+                          {uploadingImages ? 'Uploading...' : 'Click to upload images'}
+                        </p>
+                        <p className={`text-xs ${theme.textMuted}`}>
+                          PNG, JPG, GIF up to 5MB (Max 5 images)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e.target.files)}
+                        disabled={uploadingImages}
+                        className="hidden"
+                      />
                     </label>
+                  </div>
+
+                  {/* Uploaded Images Preview */}
+                  {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-5 gap-2 mb-3">
+                      {uploadedImages.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeUploadedImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer outline-none"
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Optional: URL Input as fallback */}
+                  <details className="mt-2">
+                    <summary className={`text-xs ${theme.textMuted} cursor-pointer`}>
+                      Or enter image URLs manually
+                    </summary>
                     <input
                       name="photos"
                       type="text"
@@ -439,19 +568,14 @@ function OrganizerDashboard() {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="Enter image URLs separated by commas"
-                      className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
+                      className={`w-full px-3 py-2 mt-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input} text-sm`}
                     />
-                    <p className={`text-xs ${theme.textMuted} mt-1`}>
-                      Separate multiple URLs with commas
-                    </p>
-                    {formik.touched.photos && formik.errors.photos && (
-                      <div className="text-red-500 text-sm mt-1">
-                        {formik.errors.photos}
-                      </div>
-                    )}
-                  </div>
+                  </details>
+                </div>
 
-                  <div className="mb-6">
+                {/* Max Capacity and Price in One Row */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('organizer.maxCapacityLabel')}
                     </label>
@@ -471,7 +595,7 @@ function OrganizerDashboard() {
                     )}
                   </div>
 
-                  <div className="mb-6">
+                  <div>
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       Price (₹)
                     </label>
@@ -707,50 +831,79 @@ function OrganizerDashboard() {
                   )}
                 </div>
 
+                {/* Service Images Upload - Full Width */}
                 <div className="mb-4">
                   <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                    Address
+                    Service Images (Upload from Device or URLs)
                   </label>
-                  <textarea
-                    name="address"
-                    rows="2"
-                    value={editFormik.values.address}
-                    onChange={editFormik.handleChange}
-                    onBlur={editFormik.handleBlur}
-                    className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
-                  />
-                  {editFormik.touched.address && editFormik.errors.address && (
-                    <div className="text-red-500 text-sm mt-1">
-                      {editFormik.errors.address}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mb-4">
-                    <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
-                      Service Images (Multiple)
+                  
+                  {/* File Upload Button */}
+                  <div className="mb-3">
+                    <label className={`flex items-center justify-center w-full px-4 py-3 border-2 border-dashed ${theme.border} rounded-lg cursor-pointer hover:border-purple-500 transition-colors ${uploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                      <div className="text-center">
+                        <svg className={`mx-auto h-12 w-12 ${theme.textMuted}`} stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <p className={`mt-2 text-sm ${theme.textPrimary}`}>
+                          {uploadingImages ? 'Uploading...' : 'Click to upload images'}
+                        </p>
+                        <p className={`text-xs ${theme.textMuted}`}>
+                          PNG, JPG, GIF up to 5MB (Max 5 images)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e.target.files)}
+                        disabled={uploadingImages}
+                        className="hidden"
+                      />
                     </label>
+                  </div>
+
+                  {/* URL Input */}
+                  <div className="mb-3">
                     <input
                       name="photos"
                       type="text"
                       value={editFormik.values.photos}
                       onChange={editFormik.handleChange}
                       onBlur={editFormik.handleBlur}
-                      placeholder="Enter image URLs separated by commas"
+                      placeholder="Or enter image URLs separated by commas"
                       className={`w-full px-3 py-2 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] ${theme.input}`}
                     />
                     <p className={`text-xs ${theme.textMuted} mt-1`}>
                       Separate multiple URLs with commas
                     </p>
-                    {editFormik.touched.photos && editFormik.errors.photos && (
-                      <div className="text-red-500 text-sm mt-1">
-                        {editFormik.errors.photos}
-                      </div>
-                    )}
                   </div>
 
-                  <div className="mb-6">
+                  {/* Uploaded Images Preview */}
+                  {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-5 gap-2 mb-3">
+                      {uploadedImages.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeUploadedImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer outline-none"
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Max Capacity and Price in One Row */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       {t('organizer.maxCapacityLabel')}
                     </label>
@@ -770,7 +923,7 @@ function OrganizerDashboard() {
                     )}
                   </div>
 
-                  <div className="mb-6">
+                  <div>
                     <label className={`block text-sm font-medium ${theme.textPrimary} mb-2`}>
                       Price (₹)
                     </label>
@@ -827,7 +980,7 @@ function OrganizerDashboard() {
                       <div className="space-y-2 mb-3">
                         {availabilityWindows.map((window, index) => (
                           <div key={index} className={`flex items-center justify-between p-2 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
-                            <span className={`text-sm ${theme.textPrimary}`}>
+                            <span className={`text-sm ${theme.textPrimary} `}>
                               {window.date} | {window.startTime} - {window.endTime}
                             </span>
                             <button
@@ -842,27 +995,38 @@ function OrganizerDashboard() {
                       </div>
                     )}
                     
-                    <div className="grid grid-cols-1 gap-2 mb-2">
-                      <input
-                        type="date"
-                        id="editWindowDate"
-                        min={todayLocal}
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="time"
-                        placeholder={t('organizer.startTime')}
-                        id="editWindowStartTime"
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
-                      <input
-                        type="time"
-                        placeholder={t('organizer.endTime')}
-                        id="editWindowEndTime"
-                        className={`px-2 py-1 border ${theme.border} rounded text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
-                      />
+                    <div className="grid grid-cols-3 gap-3 mb-2">
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          id="editWindowDate"
+                          min={todayLocal}
+                          className={`w-full px-2 py-1 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          id="editWindowStartTime"
+                          className={`w-full px-2 py-1 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${theme.textPrimary} mb-1`}>
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          id="editWindowEndTime"
+                          className={`w-full px-2 py-1 border ${theme.border} rounded-md focus:outline-none focus:ring-2 focus:ring-[#4D2FB2] text-xs ${theme.input} [color-scheme:light] dark:[color-scheme:dark]`}
+                        />
+                      </div>
                     </div>
                     
                     <button
@@ -890,7 +1054,7 @@ function OrganizerDashboard() {
                           toast.error('Please fill all availability window fields');
                         }
                       }}
-                      className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4]"
+                      className="mt-2 px-3 py-1 bg-[#85409D] text-white rounded text-xs hover:bg-[#C47BE4] cursor-pointer"
                     >
                       {t('organizer.addAvailabilityWindow')}
                     </button>
@@ -911,6 +1075,12 @@ function OrganizerDashboard() {
                   <button
                     type="submit"
                     disabled={editFormik.isSubmitting}
+                    onClick={() => {
+                      console.log('Submit button clicked');
+                      console.log('Formik errors:', editFormik.errors);
+                      console.log('Formik touched:', editFormik.touched);
+                      console.log('Formik isValid:', editFormik.isValid);
+                    }}
                     className="px-4 py-2 bg-[#4D2FB2] text-white rounded-md hover:bg-[#62109F] transition-colors disabled:opacity-50 cursor-pointer outline-none"
                   >
                     {editFormik.isSubmitting ? t('organizer.updating') : t('organizer.updateService')}
