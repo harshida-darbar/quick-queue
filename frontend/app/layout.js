@@ -12,6 +12,7 @@ import FirebaseToken from "@/components/notifications/FirebaseToken";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "./context/Authcontext";
+import Head from "next/head";
 
 function LayoutContent({ children }) {
   const { user } = useAuth();
@@ -33,6 +34,14 @@ function LayoutContent({ children }) {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <title>Quick Queue - Smart Queue Management</title>
+        <meta name="description" content="Quick Queue - Efficient queue and appointment management system" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
+      </head>
       <body>
         <ThemeProvider>
           <I18nProvider>
