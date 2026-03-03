@@ -89,17 +89,23 @@ function OrganizerDashboard() {
       return;
     }
 
+    console.log('Uploading files:', files.length);
     setUploadingImages(true);
     const formData = new FormData();
     
     Array.from(files).forEach((file) => {
+      console.log('Adding file to FormData:', file.name);
       formData.append("images", file);
     });
 
     try {
       const response = await api.post("/services/upload-multiple", formData);
+      console.log('Upload response:', response.data);
 
       const newImages = response.data.imageUrls.map(url => `http://localhost:5000${url}`);
+      console.log('New images:', newImages);
+      console.log('Current uploadedImages:', uploadedImages);
+      
       setUploadedImages([...uploadedImages, ...newImages]);
       toast.success(`${response.data.count} image(s) uploaded successfully`);
     } catch (error) {
